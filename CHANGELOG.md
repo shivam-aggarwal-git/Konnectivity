@@ -1,5 +1,12 @@
 # Changelog
 
+## Personal space and automatic installation
+
+- Opt-in playlist references survive new room codes, with shared edits and a room-local opt-out.
+- Host-enabled personal appearance and settings survive new rooms and tunnel URLs; inherited backgrounds retain animation without exposing unrelated images.
+- Added guided macOS/Linux and Windows installers, a macOS double-click launcher, checked media tool setup and standalone downloader fallback without separate Python.
+- Added desktop smoke checks and documentation; runtime profiles and media remain outside public releases.
+
 ## Playlist arrangement and background framing
 
 - Queue multiple saved playlists in one action, with confirmed song totals and a 2,000-song batch limit.

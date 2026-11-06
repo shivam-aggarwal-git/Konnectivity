@@ -6,13 +6,13 @@ import { ArrowRight, Loader2, Radio } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 
-export default function CreateRoom() {
+export default function CreateRoom({defaultInviteOnly=true}:{defaultInviteOnly?:boolean}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState("");
-  const [inviteOnly, setInviteOnly] = useState(true);
+  const [inviteOnly, setInviteOnly] = useState(defaultInviteOnly);
   const inviteOnlyId = useId();
 
   async function start() {

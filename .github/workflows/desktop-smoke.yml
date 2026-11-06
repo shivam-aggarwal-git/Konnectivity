@@ -1,0 +1,25 @@
+name: Desktop installer smoke test
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --include=optional
+        env:
+          YOUTUBE_DL_SKIP_PYTHON_CHECK: '1'
+      - run: node scripts/test-installers.mjs
+      - run: node scripts/test-desktop-tools.mjs
+      - run: node scripts/test-launcher.mjs

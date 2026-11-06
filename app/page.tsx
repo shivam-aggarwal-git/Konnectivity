@@ -12,6 +12,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import {personalSpace} from "@/lib/personal-space.mjs";
 import CreateRoom from "@/components/CreateRoom";
 import SiteFooter from "@/components/SiteFooter";
 import Logo from "@/components/Logo";
@@ -125,7 +126,7 @@ export default function Home() {
           </p>
 
           <div className="mt-9 w-full max-w-md">
-            <CreateRoom />
+            <CreateRoom defaultInviteOnly={personalSpace.enabled ? (personalSpace.settings.inviteOnly ?? true) : true} />
           </div>
 
           <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted">

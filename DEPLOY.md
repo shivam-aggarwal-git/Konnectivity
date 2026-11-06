@@ -1,11 +1,12 @@
 # Deployment, backup and updates
 
-## Local server
+## Local server or native VPS install
 
 ```sh
-npm ci
-npm run launch -- --local
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/main/install.sh | bash
 ```
+
+The installer prepares the app and supported runtime dependencies automatically and opens localhost on a desktop. On a headless VPS, the localhost address is printed instead; use `ssh -L 3000:127.0.0.1:3000 user@your-vps` and claim `/setup` in your own browser. This foreground installer does not configure DNS, firewall rules or a system service; use the Docker option below for managed restarts. See [setup](docs/SETUP.md) for supported platforms and developer commands.
 
 Claim `/setup`, create a room, then choose how friends connect. LAN links only work on the same network. The default launcher (`npm run launch`) offers a Cloudflare quick tunnel after admin setup; it requires Internet access and the optional cloudflared package. A quick tunnel is temporary and does not provide uptime guarantees.
 
@@ -27,7 +28,7 @@ The current persistence design expects one process and a writable local filesyst
 
 ## Backups
 
-Stop the server for a consistent private backup. Back up `data/` (including uploads, playlists, room state, admin settings and image chat), your local `.env` and any external credential file to protected storage. `cache/` can be regenerated. Never attach a runtime backup to a public release.
+Stop the server for a consistent private backup. Back up `data/` (including `personal-space.json`, uploaded songs, playlists, room state, admin settings and background/image files), your local `.env` and any external credential file to protected storage. `cache/` can be regenerated. Never attach a runtime backup to a public release.
 
 For a **code-only** archive from a clean source checkout:
 

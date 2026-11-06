@@ -1355,3 +1355,7 @@ html { scroll-behavior: smooth; }
 .kn-library-expanded .kn-playlist-tools,.kn-library-expanded nav[aria-label="Music collection"]{display:none}
 .kn-library-expanded .kn-list-actions>button:not(:first-of-type){display:none}
 .kn-library-expanded .kn-list-actions{margin-top:8px}
+
+.kn-persistence-option{display:flex;align-items:flex-start;gap:12px;padding:14px;margin:14px 0;border:1px solid var(--kn-border);border-radius:16px;background:var(--accent-soft)}
+.kn-persistence-option>input{width:24px;height:24px;flex-shrink:0;margin-top:2px;accent-color:var(--accent)}
+.kn-persistence-option strong{display:block;font-size:13px}.kn-persistence-option small{display:block;font-size:11px;line-height:1.6;color:var(--muted);margin-top:4px}

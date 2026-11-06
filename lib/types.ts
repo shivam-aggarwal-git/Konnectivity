@@ -117,7 +117,7 @@ export type Mood = { id: string; emoji: string; label: string; why: string };
 /** A non-host joiner waiting on the host to let them into an invite-only room. */
 export type PendingRequest = { id: string; nick: string; requestedAt: number };
 
-export type Playlist = { id: string; name: string; tracks: Track[] };
+export type Playlist = { persistent?: boolean; id: string; name: string; tracks: Track[] };
 
 export type Repeat = "off" | "one" | "all";
 

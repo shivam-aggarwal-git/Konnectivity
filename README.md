@@ -32,28 +32,47 @@ The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are p
 | YouTube search and video | Search for music and automatically open the selected YouTube video when playing an online result. |
 | Link imports | Add supported YouTube and Spotify links; Spotify imports resolve to matching YouTube tracks. |
 | Local music library | Upload MP3, FLAC, WAV and other supported formats to your server, with duplicate detection and persistent storage. |
-| Saved playlists | Create, rename, save and reuse playlists, adding songs from search, the library or queue. |
+| Saved playlists | Create and arrange playlists; opt in to saving references across new room codes and tunnel links. |
 | Text and image chat | Chat while listening and share JPEG, PNG, GIF or WebP images. |
 | Reactions and presence | React to songs and see who is listening in the room. |
 | Optional AI DJ | Request music in plain English using your configured AI provider; disabled by default. |
 | Themes and atmosphere | Moonlight, Rosewood and Candlelight themes, locally hosted Lottie artwork, optional ambient visualizers and reduced-motion support. |
 | Mobile and PWA | Use a responsive interface with mobile volume controls, persistent search with All / Local library / YouTube filters and a clear button, and an installable web app. |
+| Personal space | Opt in to reusing appearance, settings and photo/GIF backgrounds throughout this server. |
+| One-click setup | Download/extract and start, or use the guided installer; runtime dependencies are set up automatically on supported platforms. |
 | Server administration | Manage password-protected settings, optional downloader cookies and proxy configuration. |
 
 Synchronization is automatic, but network outages, browser autoplay rules, YouTube ads and unreported headphone delay can affect how closely devices stay aligned.
 
 No songs, cookies, API keys, passwords, existing rooms or user chat are included. You supply your own content and any optional credentials.
 
-## Quick start
+## One-click start
 
-Requires **Node.js 22 or newer**, npm and Python 3. The optional packages supply ffmpeg, Deno and Cloudflare tunnel support on supported platforms. If unavailable, install ffmpeg and Deno separately; see [setup](docs/SETUP.md).
+[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/main.zip)
+
+Extract the ZIP, then open the launcher for your computer. It installs the required packages and media tools, builds the app, and opens localhost automatically. No personal playlists, songs, images, cookies or settings are included.
+
+| Computer | Start here |
+| --- | --- |
+| macOS | Double-click `Start-Konnectivity.command`. |
+| Windows | Double-click `Start-Konnectivity.bat`. |
+| Linux | Open a terminal in the extracted folder and run `bash start.sh --local`. |
+
+Prefer one command, without downloading/extracting manually?
+
+**macOS / Linux:**
 
 ```sh
-git clone https://github.com/shivam-aggarwal-git/Konnectivity.git
-cd Konnectivity
-npm ci
-npm run launch -- --local
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/main/install.sh | bash
 ```
+
+**Windows PowerShell:**
+
+```powershell
+& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/main/install.ps1)))
+```
+
+These commands install into your user folder’s `Konnectivity` directory and start locally. Re-running starts the existing installation without replacing its data. Node.js 22, npm dependencies, ffmpeg, Deno and a runnable downloader are set up automatically on supported desktop platforms. The standalone downloader avoids requiring a separate Python installation. Internet access is needed on first run; keep the terminal open while listening.
 
 Open **http://localhost:3000/setup**, set an admin password, then create a room. `--local` avoids a public tunnel. It binds to loopback by default. For LAN access set `BIND_HOST=0.0.0.0` and restrict access with your firewall.
 

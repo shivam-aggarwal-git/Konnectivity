@@ -10,6 +10,8 @@ import { existsSync, statSync, readdirSync, rmSync } from "fs";
 import net from "net";
 import path from "path";
 import os from "os";
+import {createRequire} from "node:module";
+import {ensureDownloader,executableWorks} from "./desktop-tools.mjs";
 import { fileURLToPath } from "url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -73,18 +75,16 @@ say(`${C.bold}${C.cyan}🌊 Konnectivity${C.reset} ${C.dim}· starting up${C.res
 // touching anything.
 function portInUse(port) {
   return new Promise((resolve) => {
-    // No host argument, so this binds the same wildcard address server.mjs does.
-    // Probing 127.0.0.1 instead can succeed while the real bind fails, because
-    // the running server holds the dual-stack :: address.
+    // Probe the same bind address as the server, which defaults to loopback.
     const probe = net
       .createServer()
       .once("error", (e) => resolve(e.code === "EADDRINUSE"))
       .once("listening", () => probe.close(() => resolve(false)))
-      .listen(port);
+      .listen(port, process.env.BIND_HOST || "127.0.0.1");
   });
 }
 
-if (await portInUse(Number(PORT))) {
+if (!process.argv.includes("--check") && await portInUse(Number(PORT))) {
   die(
     `Something is already using port ${PORT} — most likely another Konnectivity.\n\n` +
       `  Close that window (or whatever is on the port) and try again.\n` +
@@ -135,12 +135,25 @@ if (needsInstall) {
   step("Installing dependencies (first run — this takes a few minutes)");
   // youtube-dl-exec looks for a `python` binary at install time; the runtime
   // only needs python3, which the yt-dlp build finds itself.
-  if (!run(npm, ["install"], { YOUTUBE_DL_SKIP_PYTHON_CHECK: "1" })) {
+  if (!run(npm, [existsSync(path.join(ROOT,"package-lock.json"))?"ci":"install", "--include=optional"], { YOUTUBE_DL_SKIP_PYTHON_CHECK: "1" })) {
     die("Dependency installation failed. Scroll up for the reason.");
   }
 } else {
   say(`${C.dim}  dependencies already installed${C.reset}`);
 }
+
+// Validate required media tools before showing a working-looking app.
+const require=createRequire(import.meta.url);
+const packageBinary=(name)=>{try{if(name==='deno')return path.join(path.dirname(require.resolve('deno/package.json')),process.platform==='win32'?'deno.exe':'deno');const v=require(name);return typeof v==='string'?v:v?.bin||v?.default;}catch{return null;}};
+for(const [name,command,args] of [['ffmpeg-static','ffmpeg',['-version']],['deno','deno',['--version']]]){
+ if(executableWorks(command,args)||executableWorks(packageBinary(name),args))continue;
+ step(`Setting up ${command}`);
+ if(!run(npm,['install','--no-save','--package-lock=false','--include=optional',name],{YOUTUBE_DL_SKIP_PYTHON_CHECK:'1'}))die(`Could not install ${command}. Check your connection and rerun start.`);
+ if(!executableWorks(command,args)&&!executableWorks(packageBinary(name),args))die(`${command} is not available on this platform. See docs/SETUP.md.`);
+}
+try{await ensureDownloader(ROOT,require('youtube-dl-exec').constants.YOUTUBE_DL_PATH);}catch(error){die(`${error.message}. Check your connection and run start again.`);}
+
+if(process.argv.includes("--check")){say("Required desktop tools are ready");process.exit(0);}
 
 // ----------------------------------------------------------------------- build
 if (needsBuild) {
@@ -215,24 +228,20 @@ const server = spawn(process.execPath, ["server.mjs"], {
   env: { ...process.env, NODE_ENV: "production", PORT },
 });
 
-function openBrowser(path) {
-  const target = `http://localhost:${PORT}${path}`;
+function openBrowser(route) {
+  const target = `http://localhost:${PORT}${route}`;
+  if(process.platform==='linux'&&!process.env.DISPLAY&&!process.env.WAYLAND_DISPLAY){say(`  Open ${target} in your browser (use SSH forwarding on a VPS).`);return;}
   try {
-    if (isWin) {
-      spawn(`start "" "${target}"`, { stdio: "ignore", detached: true, shell: true }).unref();
-    } else {
-      const cmd = process.platform === "darwin" ? "open" : "xdg-open";
-      spawn(cmd, [target], { stdio: "ignore", detached: true }).unref();
-    }
-  } catch {
-    /* headless box, or no opener installed — the URLs are printed above */
-  }
+    const opener=isWin?spawn(`start "" "${target}"`,{stdio:"ignore",detached:true,shell:true}):spawn(process.platform==='darwin'?"open":"xdg-open",[target],{stdio:"ignore",detached:true});
+    opener.on('error',()=>say(`  Open ${target} in your browser.`));opener.unref();
+  } catch { say(`  Open ${target} in your browser.`); }
 }
 
 // Land on /setup when the instance has not been claimed yet. Opening the home
 // page instead just shows a working-looking app with no hint that a password is
 // the one thing standing between you and a shareable link.
 const opening = (async () => {
+  if(process.argv.includes("--no-open")||process.env.KONNECTIVITY_NO_OPEN==="1")return;
   if (!(await waitForServer())) return;
   const s = await get("/api/admin/session");
   openBrowser(s?.setupComplete ? "/" : "/setup");

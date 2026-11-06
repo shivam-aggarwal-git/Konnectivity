@@ -124,3 +124,14 @@ Open **Appearance**, upload a background, then drag its preview to choose the fo
 
 ![Expanded mobile playlist editor](screenshots/mobile-playlist-editor.png)
 ![Confirmed saved songs](screenshots/mobile-saved-state.png)
+
+## Keep your personal space when the room code changes
+
+Open a playlist and check **Keep this playlist across rooms**. This saves the name, song order and references on your server. No extra audio is downloaded just to save it. The playlist appears in other/new rooms on this instance and shared edits are retained. Leave it unchecked for a room-only playlist. Unchecking stops future inheritance and keeps existing copies; deleting a persistent playlist deletes its references across rooms.
+
+In **Appearance**, the host can enable **Keep appearance & room settings across rooms**. Theme, animation preferences, lights, uploaded background photo/GIF, crop, volume, shuffle/repeat and join-approval defaults are then reused. Either listener can continue changing the shared appearance. The new-room approval checkbox defaults to the saved preference; an explicit change there overrides it.
+
+Keep the server’s `data/` directory when updating or moving the app. A rotating Cloudflare hostname does not reset the server data. A new hostname may require the host to sign in again and send a fresh invitation; it does not silently copy browser login cookies between websites. Admin secrets stay server-side. Queue position, chat history, participants and host access are not copied into a new room.
+
+![Save playlist references across rooms](screenshots/persistent-playlist-mobile.png)
+![Retain personal appearance](screenshots/persistent-appearance-mobile.png)

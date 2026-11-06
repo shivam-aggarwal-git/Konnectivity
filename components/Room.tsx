@@ -113,6 +113,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [denied, setDenied] = useState(false);
   // Host-only: who's waiting to be let into an invite-only room.
   useAppViewport();
+  const [persistentSpace,setPersistentSpace]=useState(false);
   const [sceneOnly,setSceneOnly]=useState(false);
   const [inviteOnly,setInviteOnly]=useState(true);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
@@ -383,11 +384,13 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     socket.on(EVENTS.PENDING_UPDATE, (s: { pending: PendingRequest[] }) =>
       setPendingRequests(s.pending || [])
     );
+    socket.on(EVENTS.PERSONAL_SPACE_UPDATE,(s:{enabled:boolean})=>setPersistentSpace(s.enabled));
     socket.on(EVENTS.ROOM_ACCESS_UPDATE, (s: {inviteOnly:boolean})=>setInviteOnly(s.inviteOnly));
     socket.on(EVENTS.ROOM_STATE, async (s: any) => {
       if(s.appearance)receiveRoomAppearance(s.appearance);
       const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
       if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
+      setPersistentSpace(Boolean(s.persistentSpace));
       setInviteOnly(Boolean(s.inviteOnly));
       setYou(s.you);
       setUploadToken(s.uploadToken || "");
@@ -1069,7 +1072,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             onApprove={approveJoin} onDeny={denyJoin} onKick={kickParticipant} onMute={muteParticipant}/>
 
           <RoomClock/>
-          <AppearanceSettings onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
+          <AppearanceSettings persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
           <Button
             className="hidden sm:inline-flex"
             variant="ghost"

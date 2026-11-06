@@ -55,7 +55,7 @@ verify() { # file expected-sha256
     got="$(sha256sum "$1")"
   else
     echo "  ! No checksum tool found, so the download can't be verified." >&2
-    return 0
+    return 1
   fi
   [ "${got%% *}" = "$2" ] || {
     echo "  ! Checksum mismatch — the download was corrupted or tampered with." >&2
