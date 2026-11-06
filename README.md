@@ -2,7 +2,7 @@
 
 **Your friends. Your music. One shared room.**
 
-Konnectivity is a self-hosted music and video listening app with a shared queue, synchronized controls, saved playlists and chat. Run one server and invite friends through a room link.
+Start a room, send one link, and everyone hears the same second of the same song. There's a shared queue anyone can add to, live chat, reactions, and an optional AI DJ that takes requests in plain English. It runs on a computer you already own, and your friends connect to it.
 
 > **License:** This is a modified distribution of [Syncwave](https://github.com/SAKMZ/syncwave), under **PolyForm Noncommercial 1.0.0**. It is source-available, not OSI open source. The inherited noncommercial restriction cannot be removed by renaming the project. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [release guidance](docs/RELEASING.md).
 
@@ -20,14 +20,24 @@ The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are p
 
 ## Features
 
-- Shared play/pause, timeline seeking, ±10 seconds, volume and Play now.
-- Automatic room clock calibration, drift correction, buffering coordination and reconnect recovery.
-- YouTube search and automatic video playback from search; direct YouTube links and supported Spotify link imports.
-- Local uploads including MP3, FLAC and WAV, with duplicate detection and durable storage.
-- Create, rename, save and reuse playlists.
-- Text and image chat, reactions, presence, voting and optional AI DJ.
-- Responsive layout, mobile volume controls, persistent search and installable PWA.
-- Password-protected server settings, optional downloader cookies and proxy configuration.
+| Feature | What you can do |
+| --- | --- |
+| Listening rooms | Start a room and invite friends with one link to your self-hosted server. |
+| Shared queue | Anyone in the room can add songs, reorder the queue and vote on tracks. |
+| Synchronized controls | Play, pause, drag the song timeline, seek ±10 seconds and change shared volume. |
+| Automatic synchronization | Calibrate each device’s clock, correct drift, coordinate buffering and recover after reconnecting. |
+| Play now | Start a selected song immediately instead of adding it to the end of the queue. |
+| YouTube search and video | Search for music and automatically open the selected YouTube video when playing an online result. |
+| Link imports | Add supported YouTube and Spotify links; Spotify imports resolve to matching YouTube tracks. |
+| Local music library | Upload MP3, FLAC, WAV and other supported formats to your server, with duplicate detection and persistent storage. |
+| Saved playlists | Create, rename, save and reuse playlists, adding songs from search, the library or queue. |
+| Text and image chat | Chat while listening and share JPEG, PNG, GIF or WebP images. |
+| Reactions and presence | React to songs and see who is listening in the room. |
+| Optional AI DJ | Request music in plain English using your configured AI provider; disabled by default. |
+| Mobile and PWA | Use a responsive interface with mobile volume controls, persistent search and an installable web app. |
+| Server administration | Manage password-protected settings, optional downloader cookies and proxy configuration. |
+
+Synchronization is automatic, but network outages, browser autoplay rules, YouTube ads and unreported headphone delay can affect how closely devices stay aligned.
 
 No songs, cookies, API keys, passwords, existing rooms or user chat are included. You supply your own content and any optional credentials.
 
@@ -128,3 +138,14 @@ Screenshots use an isolated demo instance and generated demonstration audio, not
 - [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Code of conduct](CODE_OF_CONDUCT.md)
 
 YouTube embeds use each listener’s own browser session. A server-side cookie does not transfer Premium to friends. Autoplay, ads, embedding restrictions and unreported headphone delay can limit synchronization. Use only content you have permission to upload or access.
+
+
+## Legal
+
+Konnectivity is a self-host tool. You run it and are responsible for how it is used where you live, including compliance with applicable laws, copyright permissions and the terms of any services you access.
+
+Streaming audio from YouTube with unofficial tools may violate [YouTube’s Terms of Service](https://www.youtube.com/static?template=terms). Do not run a public or for-profit streaming service on top of it. A private invitation link is intended for listening with friends, not operating a public streaming platform. Only upload or access content you have permission to use and share.
+
+Konnectivity and its upstream project, Syncwave, are not affiliated with, endorsed by or sponsored by Spotify or YouTube. Product names and trademarks belong to their respective owners.
+
+Konnectivity retains Syncwave’s **PolyForm Noncommercial 1.0.0** license and required copyright notice. See [LICENSE](LICENSE) for the full terms and warranty disclaimer, and [NOTICE](NOTICE) for upstream attribution. The software license does not grant rights to third-party music or videos.
