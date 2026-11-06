@@ -1,5 +1,12 @@
 # Changelog
 
+## Shared room appearance
+
+- Either listener can change the room theme, lighting, visualizer and motion setting for everyone.
+- Appearance persists with the room and is included for late joins and reconnects.
+- Invalid values are rejected, rooms remain isolated, and reduced-motion accessibility remains device-specific.
+
+
 ## Vivid rooms and navigation
 
 - Contained activity empty states to prevent overlap with the chat header.

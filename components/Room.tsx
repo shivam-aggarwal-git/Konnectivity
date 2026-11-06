@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import RoomLights from "./RoomLights";
 import AppearanceSettings from "./AppearanceSettings";
-import {useAppearance} from "@/hooks/useAppearance";
+import {useAppearance,receiveRoomAppearance} from "@/hooks/useAppearance";
 import { io, type Socket } from "socket.io-client";
 import {
   Activity as ActivityIcon,
@@ -232,6 +232,13 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     []
   );
 
+  useEffect(() => {
+    if(!joined)return;
+    const change=(event:Event)=>emit(EVENTS.APPEARANCE_SET,(event as CustomEvent).detail);
+    window.addEventListener("konnectivity:appearance-request",change);
+    return()=>window.removeEventListener("konnectivity:appearance-request",change);
+  },[joined,emit]);
+
   const readinessRef = useRef({ key: "", badSince: 0, foregroundAt: 0 });
   const reportReady = useCallback((ready: boolean, key: string) => {
     if (!key) return;
@@ -351,6 +358,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       setPendingRequests(s.pending || [])
     );
     socket.on(EVENTS.ROOM_STATE, async (s: any) => {
+      if(s.appearance)receiveRoomAppearance(s.appearance);
       const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
       if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
       setYou(s.you);
@@ -372,6 +380,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       setAwaitingApproval(false);
       setJoined(true);
     });
+    socket.on(EVENTS.APPEARANCE_UPDATE, receiveRoomAppearance);
     socket.on(EVENTS.LIBRARY_UPDATE, (s: { playlists: Playlist[]; library: Track[] }) => { setPlaylists(s.playlists); setLibrary(s.library || []); });
     socket.on(EVENTS.QUEUE_UPDATE, (s: { queue: Track[] }) => setQueue(s.queue));
     socket.on(EVENTS.PARTICIPANTS_UPDATE, (s: { participants: Participant[] }) =>

@@ -169,3 +169,5 @@ This is a private, trusted-friends instance: complete invitation links grant roo
 Choose Moonlight, Rosewood, Candlelight, Aurora, Afterglow or Ocean in Appearance. Color glow, a song-timeline pulse and floating lights brighten your room. The Home button and logo return to the player without interrupting the song.
 
 ![Aurora room](docs/screenshots/aurora-room.png)
+
+Appearance changes are synchronized within each room: either participant can change the theme, lights, visualizer and motion setting. New and reconnecting listeners receive the saved room appearance. Device accessibility preferences such as reduced motion still take priority.
