@@ -103,3 +103,24 @@ New rooms require host approval. Incoming listeners trigger a named popup: choos
 ![Host participant controls on a phone](screenshots/mobile-host-controls.png)
 
 Lyrics use Lyrica. They follow the shared song position when timed lyrics are available. Only Latin and Devanagari lyric lines are displayed; unsupported translations or credits are omitted. YouTube credentials are never forwarded to the lyrics service.
+
+## Queue several playlists and arrange long lists
+
+In **Playlists**, check the collections you want, then press **Queue selected**. Songs are appended in selection order, with each playlist’s saved order preserved. Existing playback continues. You can queue another selection later; duplicate songs across playlists remain separate queue entries. A batch may contain up to 2,000 songs. **Queue all** appends only the open playlist.
+
+Open a playlist and press **Expand** for a full-screen editor. Playlist choices collapse when you open one; **Choose playlists** brings them back. All playlist songs are available, with search to jump straight to song 56. **Move → New position → 6** moves it directly to sixth place, even while searching. Drag handles work with touch or mouse and scroll at the list edges; arrow keys move one row. Saved playlist changes sync and persist. The queue also has **Expand queue**, drag handles and **Move**; queue changes do not change the saved playlist.
+
+**Save** changes to **✓ Saved** when the server’s playlist update confirms a song is saved. Already containing playlists are marked and disabled in the picker. Creating a playlist shows a saved confirmation or a timeout/error instead of waiting indefinitely.
+
+## Frame a photo or animated GIF
+
+Open **Appearance**, upload a background, then drag its preview to choose the focal point. Use **Fill screen / Fit whole image**, **Zoom**, horizontal/vertical position and optional blur. **Reset framing** restores the centered, sharp view. Framing changes are shared and saved; the original file is unchanged, so GIFs stay animated. Screen aspect ratios produce different crops; use Fit whole image when seeing the entire photo matters.
+
+**Hide panels · show background** sits above the mobile Now/Queue/Add/Chat row and hides the main cards while keeping playback controls available. **Show panels** restores them; selecting a tab also restores that panel. The expanded player has **Hide details** as well as the separate shared artwork toggle. Panel visibility is local to your device, while framing, themes, artwork visibility and lights remain shared.
+
+![Multiple playlists on mobile](screenshots/mobile-multiple-playlists.png)
+![Background framing](screenshots/mobile-background-framing.png)
+![Unobstructed background](screenshots/mobile-background-only.png)
+
+![Expanded mobile playlist editor](screenshots/mobile-playlist-editor.png)
+![Confirmed saved songs](screenshots/mobile-saved-state.png)

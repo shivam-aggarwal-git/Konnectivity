@@ -7,5 +7,5 @@ export default function RoomBackground({mediaQuery,artwork,videoId}:{mediaQuery:
  const candidates=p.background==='photo'&&p.backgroundImageId?[`/chat-media/${p.backgroundImageId}${mediaQuery}`]:p.background==='artwork'?[artworkUrl(artwork),videoId&&/^[\w-]{11}$/.test(videoId)?`/api/artwork?videoId=${encodeURIComponent(videoId)}`:'']:[];
  const source=candidates.find(value=>value&&!failed[value]);
  if(!source)return null;
- return <div className="kn-room-background" aria-hidden="true"><img src={source} alt="" onError={()=>setFailed(previous=>({...previous,[source]:true}))}/><div className="kn-background-shade" style={{opacity:p.backgroundDim}}/></div>;
+ return <div className="kn-room-background" aria-hidden="true"><img style={{objectFit:p.backgroundFit,objectPosition:`${p.backgroundX}% ${p.backgroundY}%`,transform:`scale(${p.backgroundZoom})`,transformOrigin:`${p.backgroundX}% ${p.backgroundY}%`,filter:`blur(${p.backgroundBlur}px)`}} src={source} alt="" onError={()=>setFailed(previous=>({...previous,[source]:true}))}/><div className="kn-background-shade" style={{opacity:p.backgroundDim}}/></div>;
 }

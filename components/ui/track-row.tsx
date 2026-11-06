@@ -142,6 +142,7 @@ export function TrackRow({
   actions,
   dragHandle,
   dragging = false,
+  dragOffset = 0,
   shift = 0,
   exiting = false,
   option,
@@ -170,6 +171,7 @@ export function TrackRow({
   /** Grip control; rendered at the leading edge when reordering is allowed. */
   dragHandle?: React.ReactNode;
   dragging?: boolean;
+  dragOffset?: number;
   /** Vertical offset while another row is being dragged past this one. */
   shift?: number;
   /** Rendered on its way out — see useListTransition. */
@@ -195,7 +197,7 @@ export function TrackRow({
       )}
       style={
         dragging || shift
-          ? { transform: `translate3d(0, ${dragging ? 0 : shift}px, 0)` }
+          ? { transform: `translate3d(0, ${dragging ? dragOffset : shift}px, 0)` }
           : undefined
       }
       onClick={onClick}
@@ -260,7 +262,7 @@ export function DragHandle(props: React.ComponentPropsWithoutRef<"button">) {
     <button
       type="button"
       aria-label="Reorder — drag, or use the arrow keys"
-      className="sw-focus -ml-1 hidden shrink-0 cursor-grab touch-none rounded-sm p-1 text-muted/50 transition-colors duration-200 ease-[var(--ease)] hover:text-ink active:cursor-grabbing md:block"
+      className="sw-focus -ml-1 grid min-h-11 w-11 shrink-0 cursor-grab touch-none place-items-center rounded-sm p-1 text-muted/50 transition-colors duration-200 ease-[var(--ease)] hover:text-ink active:cursor-grabbing"
       {...props}
     >
       <GripVertical className="size-4" />

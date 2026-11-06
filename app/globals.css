@@ -1210,7 +1210,7 @@ html { scroll-behavior: smooth; }
 .kn-background-dim { display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:12px;color:var(--ink-soft); }
 .kn-background-dim input { min-width:0;width:50%;accent-color:var(--accent); }
 
-.kn-expanded-player { width:100vw!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;display:flex!important;flex-direction:column;gap:0!important;padding:0!important;border:0!important;border-radius:0!important;background:var(--kn-panel-b)!important;overflow:hidden!important; }
+.kn-expanded-player { width:100vw!important;max-width:none!important;height:var(--kn-app-height,100dvh)!important;max-height:var(--kn-app-height,100dvh)!important;display:flex!important;flex-direction:column;gap:0!important;padding:0!important;border:0!important;border-radius:0!important;background:var(--kn-panel-b)!important;overflow:hidden!important; }
 .kn-expanded-heading { display:flex;align-items:center;gap:16px;padding:20px 60px 12px 20px;flex-shrink:0; }
 .kn-expanded-heading>button { display:grid;place-items:center;width:44px;height:44px;flex-shrink:0;border:1px solid var(--kn-border);border-radius:50%;color:var(--accent-2);background:#ffffff08; }
 .kn-expanded-heading h2 { font-size:18px;font-weight:600; }
@@ -1305,3 +1305,53 @@ html { scroll-behavior: smooth; }
  .sw-couple .sw-love-toolbar{padding:6px 10px}
  .sw-couple .sw-love-toolbar .sw-love-caption{display:none}
 }
+
+/* Shared image framing never rasterizes animated GIFs. */
+.kn-background-editor{display:flex;flex-direction:column;gap:14px}
+.kn-background-crop-preview{position:relative;width:100%;height:260px;overflow:hidden;border:1px solid var(--kn-border);border-radius:16px;background:#080b16}
+.kn-background-crop-preview>img{width:100%;height:100%;pointer-events:none}
+.kn-move-track{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:8px 12px;white-space:nowrap;border:1px solid var(--kn-border);border-radius:12px;background:#ffffff06;color:var(--accent-2);font-size:12px;font-weight:600}
+.sw-playlist-picker{width:100px;min-width:100px;min-height:40px;padding:8px 20px 8px 9px;font-size:12px;border-radius:12px;color:var(--accent-2);background:var(--kn-panel-b)}
+.kn-library-expanded{inset:0!important;width:100%!important;max-width:none!important;height:var(--kn-app-height,100dvh)!important;max-height:var(--kn-app-height,100dvh)!important;transform:none!important;border-radius:0!important}
+.kn-playlist-collection{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:16px}
+.kn-playlist-selection{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--kn-border);border-radius:15px;background:#ffffff04;min-width:0}
+.kn-playlist-selection.active{border-color:var(--accent);background:var(--accent-soft)}
+.kn-playlist-selection>input{width:22px;height:22px;flex-shrink:0;accent-color:var(--accent)}
+.kn-playlist-selection>button{flex:1;min-width:0;text-align:left;padding:4px;min-height:44px}
+.kn-playlist-selection strong,.kn-playlist-selection small{display:block;overflow-wrap:anywhere}
+.kn-playlist-selection small{color:var(--muted);font-size:11px;margin-top:4px}
+.kn-playlist-batch{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px;margin-top:12px;border-radius:14px;border:1px solid var(--accent);background:var(--kn-panel-b);font-size:12px}
+.kn-saved-song{position:relative;flex-wrap:wrap;min-height:76px;transition:transform .12s ease-out}
+.kn-saved-index{font-size:11px;color:var(--muted);width:24px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.kn-saved-actions{display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex-shrink:0}
+.kn-queue-expanded{background:var(--kn-panel-b)!important;padding-top:max(20px,env(safe-area-inset-top))!important;padding-bottom:max(16px,env(safe-area-inset-bottom))!important}
+.kn-queue-expanded>.flex{flex:1;min-height:0}
+.kn-scene-controls{position:relative;z-index:40;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;padding:4px 12px;background:color-mix(in srgb,var(--bg) 78%,transparent);flex-shrink:0}
+.kn-scene-controls>button{display:flex;align-items:center;gap:6px;min-height:36px;border:1px solid var(--kn-border);border-radius:99px;padding:6px 12px;font-size:11px;color:var(--accent-2)}
+.kn-scene-controls>span{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--muted)}
+@media(max-width:767px){
+ .sw-love-library{height:calc(var(--kn-app-height,100dvh) - 20px)!important;max-height:calc(var(--kn-app-height,100dvh) - 20px)!important;width:calc(100vw - 16px)!important}
+ .kn-library-expanded{height:var(--kn-app-height,100dvh)!important;max-height:var(--kn-app-height,100dvh)!important;width:100%!important}
+ .kn-playlist-collection{grid-template-columns:1fr}
+ .kn-saved-song>.min-w-0{flex-basis:calc(100% - 84px)}
+ .kn-saved-actions{width:100%;padding-left:28px;justify-content:flex-end}
+ .kn-saved-actions button,.kn-move-track,.sw-playlist-picker{min-height:44px}
+ .kn-saved-actions .sw-library-icon{width:44px;height:44px}
+ .kn-background-crop-preview{height:320px}
+ .kn-background-dim{flex-wrap:wrap;gap:8px}.kn-background-dim input{width:100%;min-height:32px}
+ .kn-queue-row .kn-track-actions{gap:6px}
+ .kn-scene-controls>button{min-height:40px}
+}
+
+.kn-background-crop-preview{touch-action:none;cursor:grab}.kn-background-crop-preview:active{cursor:grabbing}
+
+.kn-playlist-tools{margin-bottom:16px;border:1px solid var(--kn-border);border-radius:14px;padding:10px}
+.kn-playlist-tools>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:13px;font-weight:600;color:var(--accent-2)}
+.kn-playlist-tools .kn-playlist-import{margin-top:8px}
+@media(max-width:767px){.sw-love-library button{min-height:44px}.sw-love-library .sw-library-tab{padding:8px 10px}.sw-love-library>div:first-child{padding-top:16px;padding-bottom:12px}.sw-love-library>div:first-child>p:last-child{display:none}.kn-saved-actions{padding-left:0}}
+
+@media(max-width:767px){.sw-couple .kn-queue-row>.kn-track-info{flex-basis:calc(100% - 140px)}}
+
+.kn-library-expanded .kn-playlist-tools,.kn-library-expanded nav[aria-label="Music collection"]{display:none}
+.kn-library-expanded .kn-list-actions>button:not(:first-of-type){display:none}
+.kn-library-expanded .kn-list-actions{margin-top:8px}

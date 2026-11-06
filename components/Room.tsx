@@ -113,6 +113,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [denied, setDenied] = useState(false);
   // Host-only: who's waiting to be let into an invite-only room.
   useAppViewport();
+  const [sceneOnly,setSceneOnly]=useState(false);
   const [inviteOnly,setInviteOnly]=useState(true);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -258,9 +259,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
   useEffect(() => {
     if(!joined)return;
-    const change=(event:Event)=>emit(EVENTS.APPEARANCE_SET,(event as CustomEvent).detail);
+    let pending:Record<string,unknown>={},timer:ReturnType<typeof setTimeout>|undefined;
+    const change=(event:Event)=>{Object.assign(pending,(event as CustomEvent).detail);if(!timer)timer=setTimeout(()=>{emit(EVENTS.APPEARANCE_SET,pending);pending={};timer=undefined;},200);};
     window.addEventListener("konnectivity:appearance-request",change);
-    return()=>window.removeEventListener("konnectivity:appearance-request",change);
+    return()=>{window.removeEventListener("konnectivity:appearance-request",change);if(timer)clearTimeout(timer);};
   },[joined,emit]);
 
   const readinessRef = useRef({ key: "", badSince: 0, foregroundAt: 0 });
@@ -954,11 +956,12 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" data-room-background={appearance.background} aria-describedby="expanded-player-description">
           <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
           <button type="button" className="kn-artwork-toggle" onClick={()=>appearance.update({showArtwork:!appearance.showArtwork})}>{appearance.showArtwork?<EyeOff size={15}/>:<Eye size={15}/>} {appearance.showArtwork?"Hide artwork":"Show artwork"}</button>
+          <button type="button" className="kn-artwork-toggle" aria-pressed={sceneOnly} onClick={()=>setSceneOnly(v=>!v)}>{sceneOnly?"Show song details":"Hide details · enjoy background"}</button>
           {renderChatNotice()}
           <div className="kn-expanded-scene">
             <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
             <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>
-          <NowPlaying current={current} isPlaying={isPlaying} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className="kn-expanded-artwork flex-1"/>
+          <NowPlaying current={current} isPlaying={isPlaying} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className={cn("kn-expanded-artwork flex-1",sceneOnly&&"!hidden")}/>
           </div>
           {renderPlayer(true)}
         </DialogContent>
@@ -1019,7 +1022,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       {/* z-50 so the search dropdown clears the bottom player (z-40) rather
           than sliding behind it on a short window. */}
       <header className="sw-safe-t sw-safe-x z-50 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 px-4 py-3 backdrop-blur-xl">
-        <button type="button" onClick={goHome} aria-label="Konnectivity — open player" aria-haspopup="dialog" aria-expanded={playerExpanded} className="kn-brand-button flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
+        <button type="button" onClick={()=>{setSceneOnly(false);goHome();}} aria-label="Konnectivity — open player" aria-haspopup="dialog" aria-expanded={playerExpanded} className="kn-brand-button flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
           {/* Same mark as the landing page and the favicon, tinted by the
               artwork like everything else in the room. */}
           <Logo size="md" tint="art" animated={isPlaying} />
@@ -1122,7 +1125,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         {/* The bottom padding on phones is the reaction pill's safe area: it
             floats over this region, and without the gap it sits on top of
             whatever the panel ends with. */}
-        <div className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-4 px-4 pb-8 pt-4 md:grid md:h-full md:grid-cols-[minmax(0,1fr)_360px] md:pb-4 xl:grid-cols-[340px_minmax(0,1fr)_380px]">
+        <div className={cn(sceneOnly&&"!hidden","mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-4 px-4 pb-8 pt-4 md:grid md:h-full md:grid-cols-[minmax(0,1fr)_360px] md:pb-4 xl:grid-cols-[340px_minmax(0,1fr)_380px]")}>
           {/* ── column 1: the hero ── */}
           <NowPlaying
             current={current}
@@ -1272,10 +1275,12 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
           </Panel>
         </div>
 
-        <div className="px-4 pb-2 md:hidden">
+        <div className={cn("px-4 pb-2 md:hidden",sceneOnly&&"hidden")}>
           <InstallBanner code={code} />
         </div>
       </main>
+
+      <div className="kn-scene-controls"><button type="button" aria-pressed={sceneOnly} onClick={()=>setSceneOnly(value=>!value)}>{sceneOnly?<Eye size={15}/>:<EyeOff size={15}/>} {sceneOnly?"Show panels":"Hide panels · show background"}</button>{sceneOnly&&<span>{current?.title||"Your shared soundtrack"}</span>}</div>
 
       {/* ── phone chrome: reactions and tabs, both within thumb reach ──
           The tab bar used to sit at the top of the content, which on a 6"
@@ -1294,7 +1299,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       </aside>
 
       <div className="sw-safe-x relative z-40 shrink-0 border-t border-white/8 bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] px-4 py-2 backdrop-blur-xl md:hidden">
-        <TabBar tab={tab} setTab={(value) => value === "search" ? openSearch() : setTab(value)} queueCount={queue.length} unread={unread} />
+        <TabBar tab={tab} setTab={(value) => value === "search" ? openSearch() : (setSceneOnly(false),setTab(value))} queueCount={queue.length} unread={unread} />
       </div>
 
       {/* ── fixed bottom player ── */}

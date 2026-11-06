@@ -1,5 +1,13 @@
 # Changelog
 
+## Playlist arrangement and background framing
+
+- Queue multiple saved playlists in one action, with confirmed song totals and a 2,000-song batch limit.
+- Expand saved playlists and queue; drag with touch/mouse edge scrolling, use arrow keys, or move directly to a numbered position.
+- Added persistent shared image/GIF framing, Fill/Fit, zoom, focal point, optional blur and reset.
+- Added local panel Show/Hide above mobile tabs and detail hiding in the expanded player.
+- Corrected clipped Save controls and show confirmed Saved state.
+
 ## Lyrica, admission popups and mobile controls
 
 - Replaced LRCLIB lookups with the configurable Lyrica HTTP API; exact provider sequences exclude LRCLIB. Bounded requests, coalescing, cached misses and Hindi/Latin line filtering keep lyrics independent of audio.

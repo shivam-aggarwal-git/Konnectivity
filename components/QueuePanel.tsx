@@ -1,4 +1,6 @@
 "use client";
+import MoveTrack from "./MoveTrack";
+import {Dialog,DialogContent,DialogTitle,DialogDescription} from "./ui/dialog";
 import PlaylistPicker from "./PlaylistPicker";
 import type { Playlist } from "@/lib/types";
 
@@ -61,6 +63,7 @@ function QueuePanel({
   onOpenSearch: () => void;
   className?: string;
 }) {
+  const [expanded,setExpanded]=useState(false);
   const totalSec = queue.reduce((n, t) => n + (t.duration || 0), 0);
   const mins = Math.round(totalSec / 60);
 
@@ -72,18 +75,18 @@ function QueuePanel({
   }, []);
 
   const rows = useListTransition(queue, keyOf);
-  const { state, start, move, end, shiftFor } = useReorder(onReorder);
+  const { state, start, move, end, cancel, shiftFor } = useReorder(onReorder);
 
   const indexOf = useCallback((key: string) => queue.findIndex((t) => keyOf(t) === key), [queue]);
 
-  return (
-    <div className={cn("flex min-h-0 flex-col", className)}>
+  const content=(
+    <div className={cn("flex min-h-0 flex-col", expanded?"h-full":className)}>
       <SectionHeader
         icon={<ListMusic className="size-3.5" />}
         title="Up next"
         trailing={
           queue.length > 0 ? (
-            <span className="text-[11px] text-muted">
+            <span className="flex flex-wrap items-center justify-end gap-2 text-[11px] text-muted"><button type="button" className="kn-move-track" onClick={()=>setExpanded(v=>!v)}>{expanded?"Restore queue":"Expand queue"}</button>
               {queue.length} {queue.length === 1 ? "track" : "tracks"}
               {mins > 0 ? ` · ${mins} min` : ""}
             </span>
@@ -106,7 +109,7 @@ function QueuePanel({
           }
         />
       ) : (
-        <ul className="sw-scroll -mx-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-1">
+        <ul data-reorder-scroll className="sw-scroll -mx-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-1">
           {rows.map(({ item: t, key, exiting }) => {
             const i = indexOf(key);
             const liked = (t.likes ?? []).includes(you);
@@ -126,6 +129,7 @@ function QueuePanel({
                 now={now}
                 exiting={exiting}
                 dragging={state.activeKey === key}
+                dragOffset={state.offsetY}
                 shift={exiting ? 0 : shiftFor(i)}
                 dragHandle={
                   isHost && !exiting ? (
@@ -133,7 +137,7 @@ function QueuePanel({
                       onPointerDown={(e) => start(e, key, i, queue.length)}
                       onPointerMove={move}
                       onPointerUp={end}
-                      onPointerCancel={end}
+                      onPointerCancel={cancel}
                       onKeyDown={(e) => {
                         if (!id) return;
                         // Keyboard parity for the drag: the whole point of a
@@ -184,9 +188,9 @@ function QueuePanel({
                 }
                 actions={
                   isHost && id ? (
-                    <RowAction label={`Remove ${t.title}`} tone="danger" onClick={() => onRemove(id)}>
+                    <><MoveTrack title={t.title} index={i} total={queue.length} onMove={to=>onReorder(id,to)}/><RowAction label={`Remove ${t.title}`} tone="danger" onClick={() => onRemove(id)}>
                       <X className="size-3.5" />
-                    </RowAction>
+                    </RowAction></>
                   ) : undefined
                 }
               />
@@ -196,6 +200,8 @@ function QueuePanel({
       )}
     </div>
   );
+  return expanded?<Dialog open onOpenChange={setExpanded}><DialogContent fullscreen className="kn-queue-expanded !p-4"><DialogTitle className="pr-12">Arrange your queue</DialogTitle><DialogDescription className="text-muted">Drag a handle, or use Move to send a song directly to any position.</DialogDescription>{content}</DialogContent></Dialog>:content;
+
 }
 
 /** Whether this track is ready to play the moment it reaches the front. */

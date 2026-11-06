@@ -6,7 +6,7 @@ import {spawnSync} from 'node:child_process';
 const root=mkdtempSync(path.join(tmpdir(),'konnectivity-tests-'));
 let failed=false;
 try {
- for(const suite of ['test-lyrica','test-playlist-import','test-image-lyrics','test-appearance','test-security','test-auto-sync','test-media','test-library','test-shared']) {
+ for(const suite of ['test-playlist-arrange','test-lyrica','test-playlist-import','test-image-lyrics','test-appearance','test-security','test-auto-sync','test-media','test-library','test-shared']) {
   const data=path.join(root,suite,'data'),cache=path.join(root,suite,'cache');
   mkdirSync(data,{recursive:true});mkdirSync(cache,{recursive:true});
   const result=spawnSync(process.execPath,[`scripts/${suite}.mjs`],{stdio:'inherit',env:{...process.env,DATA_DIR:data,CACHE_DIR:cache,YTDLP_AUTO_UPDATE:'false'}});

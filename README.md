@@ -195,3 +195,13 @@ You can import a YouTube playlist from Playlists (up to 100 available tracks per
 Lyrics now come through [Lyrica](https://github.com/Wilooper/Lyrica). Thank you to Wilooper and the Lyrica contributors. Konnectivity explicitly excludes its LRCLIB provider; configure `LYRICA_URL` to use your own Lyrica service. Availability and timing depend on upstream providers. Only public song metadata is sent, never YouTube cookies.
 
 New listeners require approval by default, with a popup showing their name and **Let in / Decline** actions. Hosts can change this under **People**, mute chat, and remove listeners with confirmation. Phone layouts use keyboard-aware sheets and larger touch targets. See [configuration](docs/CONFIGURATION.md#lyrics-and-room-approval) for temporary removal limits and migration details.
+
+### Playlists and backgrounds on mobile
+
+- Select several saved playlists and queue them together, up to 2,000 songs per batch.
+- Expand a playlist or queue, drag with edge scrolling, or move any song directly to a numbered position.
+- Save shows confirmed saved state and marks playlists already containing the song.
+- Frame photos and animated GIFs with drag, zoom, Fill/Fit and sharpness controls. Framing syncs across the room.
+- Hide the main panels to enjoy your background while keeping playback controls at hand.
+
+See the [user guide](docs/USER_GUIDE.md#queue-several-playlists-and-arrange-long-lists) for instructions and screenshots.
