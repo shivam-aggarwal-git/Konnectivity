@@ -24,6 +24,8 @@ Open **Library → Playlists**, enter a name and click **Create playlist**. Use 
 
 ## Chat and reactions
 
+Use **Expand** in the Chat header for a larger conversation view. Scroll the message history independently; the message box stays at the bottom. New messages follow automatically when you are near the bottom, while scrolling up lets you read older messages without jumping. Use **Collapse** or Escape to return to the room.
+
 Use Chat to send text or attach JPEG, PNG, GIF or WebP images (up to **8 MB**). Images are stored on the server and scoped to the room’s upload token; do not use chat as a private encrypted messenger. Reactions appear beside the player without covering its main controls.
 
 ## Automatic sync

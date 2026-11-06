@@ -1,11 +1,12 @@
 "use client";
 
 import { memo, useEffect, useRef, useState } from "react";
-import { ImagePlus, X, Loader2, MessageSquare, Send, Smile } from "lucide-react";
+import { ImagePlus, X, Loader2, MessageSquare, Send, Smile, Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { ChatMsg, PresenceStatus } from "@/lib/types";
 import { Avatar, nickColor } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { SectionHeader } from "@/components/ui/panel";
 
 /**
@@ -59,16 +60,20 @@ function ChatPanel({
   const photoInput = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
   const [pickerOpen, setPickerOpen] = useState(false);
-  const endRef = useRef<HTMLDivElement | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const followRef = useRef(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chat]);
+    const list = scrollRef.current;
+    if (list && followRef.current) list.scrollTo({ top: list.scrollHeight, behavior: "auto" });
+  }, [chat, expanded]);
 
   const send = () => {
     const clean = text.trim();
     if ((!clean && !image) || uploading) return;
+    followRef.current = true;
     onSend(clean, image?.id);
     setImage(undefined);
     setText("");
@@ -91,15 +96,15 @@ function ChatPanel({
     .filter(([nick, status]) => status === "typing" && nick !== you)
     .map(([nick]) => nick);
 
-  return (
-    <div className={cn("flex min-h-0 flex-col", className)}>
+  const content = (
+    <div className={cn("flex min-h-0 flex-col overflow-hidden", expanded ? "h-full w-full" : className)}>
       <SectionHeader
         icon={<MessageSquare className="size-3.5" />}
         title="Chat"
-        trailing={aiDj ? <span className="text-[11px] text-muted">🎧 {aiDj} is in here</span> : undefined}
+        trailing={<>{aiDj && <span className="text-[11px] text-muted">🎧 {aiDj} is in here</span>}<button type="button" onClick={() => { followRef.current = true; setExpanded(v => !v); }} aria-label={expanded ? "Collapse chat" : "Expand chat"} title={expanded ? "Collapse chat" : "Expand chat"} className="flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1.5 text-xs text-ink hover:bg-white/10">{expanded ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}<span>{expanded ? "Collapse" : "Expand"}</span></button></>}
       />
 
-      <div className="sw-scroll -mr-2 min-h-0 flex-1 space-y-2 overflow-y-auto pr-2">
+      <div ref={node => { scrollRef.current = node; if (node && followRef.current) node.scrollTop = node.scrollHeight; }} role="log" aria-label="Chat messages" aria-live="polite" tabIndex={0} onScroll={() => { const list = scrollRef.current; if (list) followRef.current = list.scrollHeight - list.clientHeight - list.scrollTop < 64; }} className="sw-scroll -mr-2 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-2">
         {!hasConversation && (
           <EmptyState
             icon={<MessageSquare className="size-5" />}
@@ -125,7 +130,7 @@ function ChatPanel({
               key={m.id}
               msg={m}
               mediaQuery={mediaQuery}
-              onMediaLoad={() => endRef.current?.scrollIntoView({ behavior: "smooth" })}
+              onMediaLoad={() => { const list = scrollRef.current; if (list && followRef.current) list.scrollTop = list.scrollHeight; }}
               own={!m.dj && m.nick === you}
               grouped={grouped}
               status={m.nick ? statuses?.[m.nick] : undefined}
@@ -136,7 +141,7 @@ function ChatPanel({
         {djTyping && aiDj && <TypingRow names={[aiDj]} dj />}
         {typists.length > 0 && <TypingRow names={typists} />}
 
-        <div ref={endRef} />
+
       </div>
 
       {/* Composer */}
@@ -232,6 +237,7 @@ function ChatPanel({
       </div>
     </div>
   );
+  return expanded ? <Dialog open onOpenChange={setExpanded}><DialogContent className="!flex !h-[85dvh] !max-h-[900px] !w-[calc(100vw-24px)] !max-w-3xl !flex-col !gap-0 !overflow-hidden [&>button]:hidden"><DialogTitle className="sr-only">Room chat</DialogTitle>{content}</DialogContent></Dialog> : content;
 }
 
 /**

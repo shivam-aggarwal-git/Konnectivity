@@ -1113,7 +1113,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
           {/* ── column 3: the people ── */}
           <Panel
-            className={cn(tab === "chat" ? "flex flex-1" : "hidden", "md:flex md:h-full md:gap-4")}
+            className={cn(tab === "chat" ? "flex flex-1" : "hidden", "min-h-0 overflow-hidden md:flex md:h-full md:gap-4")}
           >
             {/* Two surfaces, one column. Desktop stacks them; a phone hasn't the
                 height for that, so they take turns. */}
@@ -1150,7 +1150,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               reactions={reactionLog}
               className={cn(
                 pane === "activity" ? "max-md:flex max-md:flex-1" : "max-md:hidden",
-                "md:flex md:min-h-0 md:basis-[38%] md:border-b md:border-white/8 md:pb-4"
+                "md:flex md:min-h-0 md:max-h-[28%] md:basis-[25%] md:border-b md:border-white/8 md:pb-4"
               )}
             />
             <ChatPanel
