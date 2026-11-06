@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { SectionHeader } from "@/components/ui/panel";
 import { CountButton } from "@/components/ui/track-row";
 import { PresenceAvatar } from "@/components/PresenceCard";
+import {useAppearance} from "@/hooks/useAppearance";
 import TrackArtwork from "./TrackArtwork";
 import Lyrics from "@/components/Lyrics";
 
@@ -124,6 +125,7 @@ export default function NowPlaying({
   onSeek: (seconds: number) => void;
   className?: string;
 }) {
+  const appearance=useAppearance();
   const loading = preparing || buffering;
   const dur = current?.duration ?? 0;
   // A per-listener preference, remembered across rooms.
@@ -187,7 +189,7 @@ export default function NowPlaying({
           "sw-art-glow mx-auto aspect-square w-full max-w-[min(300px,30vh)] shrink-0",
           "[@media(max-height:720px)]:max-w-[170px]",
           isPlaying && !loading && "sw-art-playing",
-          lyricsOpen && "hidden"
+          (lyricsOpen || !appearance.showArtwork) && "hidden"
         )}
       >
         <div className="sw-art size-full">

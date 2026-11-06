@@ -187,3 +187,5 @@ Click the Konnectivity logo/tagline to open the full player, then the down-chevr
 HEIC/HEIF uploads convert privately to JPEG, while GIF backgrounds retain animation. The visible bottom-bar chevron and mobile swipe gestures expand/collapse the player. A device-local clock appears in the header/player. Lyrics use Hindi/English scripts only when a suitable version is available; no automatic translation is claimed.
 
 The full player shares your selected GIF/photo background and mood lights. Incoming chat banners show unread counts and open chat directly; mobile room controls stay aligned in one row.
+
+You can import a YouTube playlist from Playlists (up to 100 available tracks per import), save it under its original or a custom name, then rename or delete it. The full player also has a shared Hide artwork control for an unobstructed GIF/light background. The clock is explicitly labelled Local time and includes AM/PM and the date.

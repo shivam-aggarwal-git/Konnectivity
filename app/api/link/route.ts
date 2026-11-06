@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveLink } from "@/lib/links.mjs";
+import { resolveLink, resolveYoutubePlaylist } from "@/lib/links.mjs";
 import { clientIp, rateLimit } from "@/lib/ratelimit.mjs";
 
 export const dynamic = "force-dynamic";
@@ -25,10 +25,10 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    return NextResponse.json(await resolveLink(url));
+    return NextResponse.json(await (req.nextUrl.searchParams.get("playlist")==="1"?resolveYoutubePlaylist(url):resolveLink(url)));
   } catch (err) {
     return NextResponse.json(
-      { error: "link_failed", message: String((err as Error)?.message || err) },
+      { error: "link_failed", message: req.nextUrl.searchParams.get("playlist")==="1"?"Could not read this playlist. Use a public or unlisted YouTube playlist, or one your server account can access.":"Could not read this link. Check its visibility and try again." },
       { status: 422 }
     );
   }

@@ -88,3 +88,9 @@ Incoming messages show an in-app notification with a numeric unread count and th
 The expanded player now uses the same shared photo/GIF background, song artwork, theme colors and room lights as the room view. Choose a GIF in Appearance to animate the player background, and choose Color glow or Song pulse for the lights. Gentle motion and reduced-motion preferences still govern the decorative light effects. GIF images retain their own animation.
 
 On phones, the Library, Playlists, Upload, Home and Video/Audio buttons use one aligned row. The shorter Video/Audio labels keep the mode control from wrapping to three lines.
+
+## Import a YouTube playlist
+
+Open **Playlists**, paste a YouTube or YouTube Music playlist link into **Import YouTube playlist**, then press **Import playlist**. A watch link with a `list` parameter works too. Up to 100 available songs are saved as a new shared playlist; playback and the queue stay unchanged. Larger lists report the import limit. Use the playlist’s Rename or Delete controls afterward; deleting a playlist keeps uploaded library files. Public/unlisted lists work, while private lists require access through the server’s configured account cookies. Auto-generated endless mixes are not imported.
+
+**Hide artwork** is available in the full player and as **Appearance → Show artwork**. It is shared and saved with the room, leaving your GIF/photo background and mood lights visible. The labelled Local time clock includes AM/PM and the date, using each device’s local timezone.

@@ -1,5 +1,13 @@
 # Changelog
 
+## Playlist import and immersive view
+
+- Labelled local clock with AM/PM and date.
+- YouTube playlist import saves up to 100 available entries as a new shared playlist; rename/delete controls are visible.
+- Shared artwork visibility toggle in Appearance and the full player.
+- Playlist metadata imports use the standard macOS system CA bundle where available, keeping certificate verification enabled.
+
+
 ## Mobile controls, chat notices and player atmosphere
 
 - Aligned mobile toolbar with equal-height controls and compact Video/Audio labels.

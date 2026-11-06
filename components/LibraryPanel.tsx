@@ -14,6 +14,8 @@ type Props = { open: boolean; section: LibrarySection; onSection: (s: LibrarySec
   emit: (event: string, payload?: unknown, ack?: (result: any) => void) => unknown };
 export default function LibraryPanel({ open, section, onSection, onClose, code, uploadToken, playlists, library, tracks, seed, onAdd, onAddMany, onPlayNow, onPlaylistAdd, emit }: Props) {
   const [busy, setBusy] = useState(false), [message, setMessage] = useState("");
+  const [playlistUrl,setPlaylistUrl]=useState("");
+  const [confirmDelete,setConfirmDelete]=useState(false);
   const [name, setName] = useState(""), [selected, setSelected] = useState("");
   const [query, setQuery] = useState(""), [rename, setRename] = useState<string | null>(null);
   const [progress, setProgress] = useState({ done: 0, total: 0, failed: 0 });
@@ -39,6 +41,17 @@ export default function LibraryPanel({ open, section, onSection, onClose, code, 
     }
     setMessage(`${audio.length - failed} songs imported into your saved library.${failed ? ` ${failed} failed; select those files again to retry. Duplicates are skipped.` : " Ready for your next listening session."}`);
     setBusy(false);
+  }
+  async function importPlaylist(){
+    if(busy||!playlistUrl.trim())return;
+    setBusy(true);setMessage('Reading YouTube playlist…');
+    try{
+      const response=await fetch(`/api/link?playlist=1&url=${encodeURIComponent(playlistUrl.trim())}`,{signal:AbortSignal.timeout(75000)});
+      const data=await response.json();if(!response.ok)throw Error(data.message||'Could not read this playlist');
+      const imported=data.list;if(data.kind!=='list'||!Array.isArray(imported?.tracks)||!imported.tracks.length)throw Error('No available songs were found in this playlist.');
+      const result:any=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Saving timed out. Reconnect and check your playlists before retrying.')),12000);emit(EVENTS.PLAYLIST_SAVE,{name:name.trim()||imported.title||'YouTube playlist',tracks:imported.tracks},(reply:any)=>{clearTimeout(timer);reply?.error?reject(Error(reply.error)):resolve(reply);});});
+      setSelected(result.id);setRename(null);setName('');setPlaylistUrl('');setConfirmDelete(false);setMessage(`${imported.tracks.length} songs saved as a new playlist.${imported.total>imported.tracks.length?` Source has ${imported.total} entries; this import includes up to 100 available songs.`:''} Rename or delete it below.`);
+    }catch(error){setMessage(error instanceof Error?error.message:'Playlist import failed.');}finally{setBusy(false);}
   }
   function save(tracksToSave: Track[]) {
     if (!name.trim()) return;
@@ -74,9 +87,11 @@ export default function LibraryPanel({ open, section, onSection, onClose, code, 
         <p className="mt-4 text-xs leading-relaxed text-muted">Imports continue while this dialog is closed. Keep this browser tab open until the batch completes. Already-imported files are detected automatically.</p>
       </> : <>
         {section==='playlists' && <>
+          <form className="kn-playlist-import" onSubmit={event=>{event.preventDefault();void importPlaylist();}}><label className="flex min-w-0 flex-1 flex-col gap-2"><strong className="text-sm">Import YouTube playlist</strong><input type="url" className={field} aria-label="YouTube playlist link" placeholder="Paste a YouTube playlist link…" required value={playlistUrl} maxLength={2048} onChange={event=>setPlaylistUrl(event.target.value)}/><small className="text-xs text-muted">Save up to 100 available songs as a new playlist. This does not start playback.</small></label><Button type="submit" disabled={busy||!playlistUrl.trim()}>{busy?'Importing…':'Import playlist'}</Button></form>
           <form onSubmit={e => { e.preventDefault(); save(seed ? [seed] : []); }} className="flex gap-2"><input className={`${field} flex-1`} aria-label="New playlist name" placeholder="Playlist name…" required maxLength={80} value={name} onChange={e => setName(e.target.value)} /><Button type="submit" size="sm"><Plus size={15} />Create playlist</Button></form>
-          <div className="mt-4 flex flex-wrap gap-2">{playlists.map(p => <button key={p.id} className={`sw-playlist-card ${selected===p.id?'active':''}`} onClick={() => { setSelected(p.id); setRename(null); setQuery(''); }}><Heart size={15} /><span>{p.name}<small>{p.tracks.length} songs</small></span></button>)}</div>
-          {list && <div className="mt-4 flex flex-wrap items-center gap-2"><h3 className="mr-auto font-semibold">{list.name}</h3><Button size="sm" variant="secondary" disabled={!list.tracks.length} onClick={() => onAddMany(list.tracks,list.name)}>Queue all</Button><Button size="sm" variant="secondary" onClick={() => setRename(list.name)}>Rename</Button><Button size="sm" variant="secondary" onClick={() => { for (const t of tracks) onPlaylistAdd(list.id,t); }}>Add room songs</Button></div>}
+          <div className="mt-4 flex flex-wrap gap-2">{playlists.map(p => <button key={p.id} className={`sw-playlist-card ${selected===p.id?'active':''}`} onClick={() => { setSelected(p.id); setRename(null); setConfirmDelete(false); setQuery(''); }}><Heart size={15} /><span>{p.name}<small>{p.tracks.length} songs</small></span></button>)}</div>
+          {list && <div className="mt-4 flex flex-wrap items-center gap-2"><h3 className="mr-auto font-semibold">{list.name}</h3><Button size="sm" variant="secondary" disabled={!list.tracks.length} onClick={() => onAddMany(list.tracks,list.name)}>Queue all</Button><Button size="sm" variant="secondary" onClick={() => setRename(list.name)}>Rename</Button><Button size="sm" variant="secondary" onClick={()=>setConfirmDelete(true)}>Delete</Button><Button size="sm" variant="secondary" onClick={() => { for (const t of tracks) onPlaylistAdd(list.id,t); }}>Add room songs</Button></div>}
+          {confirmDelete&&list&&<div role="alert" className="kn-playlist-delete"><p>Delete “{list.name}”? Songs in your library are kept.</p><div className="mt-2 flex gap-2"><Button size="sm" onClick={()=>{emit(EVENTS.PLAYLIST_DELETE,{id:list.id});setSelected('');setConfirmDelete(false);setMessage('Playlist deleted. Your library songs are unchanged.');}}>Delete playlist</Button><Button size="sm" variant="secondary" onClick={()=>setConfirmDelete(false)}>Cancel</Button></div></div>}
           {rename!==null && list && <form className="mt-3 flex gap-2" onSubmit={e => { e.preventDefault(); emit(EVENTS.PLAYLIST_RENAME,{id:list.id,name:rename}); setRename(null); }}><input className={`${field} flex-1`} aria-label="Rename playlist" required value={rename} maxLength={80} onChange={e => setRename(e.target.value)} /><Button size="sm">Save name</Button></form>}
           {(!list || !list.tracks.length) && <p className="my-5 text-sm leading-relaxed text-muted">{playlists.length ? 'Choose a playlist above. Use ♡ Save beside songs in Library, search or the queue to add them here.' : 'Create your first playlist, then use ♡ Save beside any song to keep it here forever.'}</p>}
         </>}

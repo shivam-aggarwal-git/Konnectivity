@@ -19,6 +19,8 @@ import {
   Home,
   ChevronDown,
   ChevronUp,
+  Eye,
+  EyeOff,
   Keyboard,
   ListMusic,
   Heart,
@@ -948,6 +950,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
         <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" data-room-background={appearance.background} aria-describedby="expanded-player-description">
           <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
+          <button type="button" className="kn-artwork-toggle" onClick={()=>appearance.update({showArtwork:!appearance.showArtwork})}>{appearance.showArtwork?<EyeOff size={15}/>:<Eye size={15}/>} {appearance.showArtwork?"Hide artwork":"Show artwork"}</button>
           {renderChatNotice()}
           <div className="kn-expanded-scene">
             <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
