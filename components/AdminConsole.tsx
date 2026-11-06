@@ -1,0 +1,75 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Settings, ArrowLeft, LogOut, Cookie, Network, HardDrive } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import CookiesPanel from "@/components/CookiesPanel";
+import ProxyPanel from "@/components/ProxyPanel";
+import StoragePanel from "@/components/StoragePanel";
+import AiDjSettings from "@/components/AiDjSettings";
+
+export default function AdminConsole() {
+  const router = useRouter();
+
+  async function logout() {
+    await fetch("/api/admin/session", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ action: "logout" }),
+    });
+    router.push("/admin/login");
+    router.refresh();
+  }
+
+  return (
+    <main className="mx-auto max-w-2xl px-6 py-10">
+      <div className="mb-6 flex items-center justify-between">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink"
+        >
+          <ArrowLeft className="size-4" /> Back
+        </Link>
+        <Button variant="outline" size="sm" onClick={logout} className="gap-1.5">
+          <LogOut className="size-3.5" /> Sign out
+        </Button>
+      </div>
+
+      <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold tracking-eyebrow text-accent-2 uppercase">
+        <Settings className="size-3.5" /> Setup
+      </div>
+      <h1 className="mb-8 font-display text-4xl font-bold">
+        <span className="sw-gradient-text">Konnectivity</span>
+        <span className="text-ink"> settings</span>
+      </h1>
+
+      <section className="sw-glass mb-6 p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <Cookie className="size-4 text-accent-2" />
+          <h2 className="text-lg font-semibold text-ink">YouTube access</h2>
+        </div>
+        <CookiesPanel />
+      </section>
+
+      <section className="sw-glass mb-6 p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <Network className="size-4 text-accent-2" />
+          <h2 className="text-lg font-semibold text-ink">Proxy pool</h2>
+          <span className="ml-auto text-[11px] text-muted">for cloud hosts</span>
+        </div>
+        <ProxyPanel />
+      </section>
+
+      <section className="sw-glass mb-6 p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <HardDrive className="size-4 text-accent-2" />
+          <h2 className="text-lg font-semibold text-ink">Storage</h2>
+        </div>
+        <StoragePanel />
+      </section>
+
+      <AiDjSettings />
+    </main>
+  );
+}

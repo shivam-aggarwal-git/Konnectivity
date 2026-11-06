@@ -1,0 +1,48 @@
+# Dependencies, generated builds and local tools
+node_modules/
+.next/
+out/
+build/
+.runtime/
+next-env.d.ts
+*.tsbuildinfo
+
+# Runtime: includes music, image messages, admin credentials and room tokens
+/data/
+/cache/
+/test-results/
+*.log
+
+# Local configuration and credentials (only the empty example is publishable)
+.env*
+!.env.example
+*cookie*
+!components/CookiesPanel.tsx
+!lib/cookies.mjs
+!app/api/admin/cookies/
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Personal audio must never be committed
+*.mp3
+*.flac
+*.wav
+*.m4a
+*.aac
+*.ogg
+*.opus
+*.aiff
+*.alac
+*.wma
+
+# Local archives, OS and editor files
+*.tar.gz
+*.zip
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
+_reference/

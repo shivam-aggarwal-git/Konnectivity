@@ -1,0 +1,18 @@
+Konnectivity is a modified distribution of Syncwave.
+Upstream: https://github.com/SAKMZ/syncwave
+Upstream version in this source snapshot: 1.3.0
+Original checkout base commit: c9b4adcefd6fa182fea93003201f7f22b67c1807
+
+Required Notice: Copyright (c) 2026 Syncwave contributors
+
+The original LICENSE is preserved verbatim (PolyForm Noncommercial 1.0.0).
+Third-party dependencies retain their own licenses.
+
+Changes in this distribution include shared playback controls, local file
+uploads and a durable library, saved playlists, image chat, YouTube watch mode,
+automatic clock and buffering synchronization, responsive interface changes,
+Konnectivity branding, documentation and isolated regression tests.
+
+This distribution contains no personal music library, session cookies,
+room data or credentials. No affiliation or endorsement by upstream,
+YouTube, Spotify or Cloudflare is implied.

@@ -1,0 +1,1085 @@
+@import "tailwindcss";
+
+/* Manual dark/light pin via [data-theme]; defaults to dark. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, :root));
+
+/* ===========================================================================
+   Konnectivity design system
+   ---------------------------------------------------------------------------
+   One vocabulary for the whole app. Components should reach for a token or a
+   `.sw-*` primitive here rather than inventing a value; if something needs a
+   radius, a glow or an easing that isn't in this file, the right move is to add
+   it here once, not to hard-code it at the call site.
+
+   Radius   — four steps only: control 12, card 18, panel 24, pill.
+   Spacing  — 8pt grid (Tailwind steps 2/4/6/8/10 = 8/16/24/32/40px).
+   Colour   — a single violet→pink accent ramp, plus success green and danger
+              red. No stray blues.
+   Depth    — soft coloured glows rather than heavy black shadows.
+   Motion   — 150–250ms on one easing curve.
+=========================================================================== */
+
+@theme {
+  --color-bg: var(--bg);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-overlay: var(--overlay);
+  --color-soft-border: var(--soft-border);
+  --color-field: var(--field);
+  --color-surface: var(--surface);
+  --color-surface-border: var(--surface-border);
+  --color-line: var(--line);
+  --color-vermilion: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-3: var(--accent-3);
+  --color-accent-soft: var(--accent-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--destructive);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent-color);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Four radii, and only four. `rounded-sm` = a control, `rounded-md` = a card,
+     `rounded-lg` = a panel, `rounded-full` = a pill. */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+
+  --shadow-drawer: 0 24px 60px -12px rgba(0, 0, 0, 0.7);
+  --tracking-eyebrow: 0.22em;
+
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  /* --- surfaces: very dark navy/graphite, panels a step lighter ---------- */
+  --bg: #08090f;
+  --bg-2: #0b0c14;
+  --ink: #f2f2f8;
+  --ink-soft: #c9cad8;
+  --muted: #8a8ca4;
+  --overlay: rgba(5, 5, 10, 0.7);
+  --soft-border: rgba(255, 255, 255, 0.07);
+  --line: rgba(255, 255, 255, 0.12);
+  --separator-strong: rgba(255, 255, 255, 0.14);
+  --field: rgba(255, 255, 255, 0.04);
+  --surface: rgba(21, 22, 34, 0.55);
+  --surface-border: rgba(255, 255, 255, 0.08);
+
+  /* --- one accent ramp: violet → fuchsia → pink ------------------------- */
+  --accent: #8b5cf6;
+  --accent-2: #c084fc;
+  --accent-3: #ff4d8d;
+  --accent-soft: rgba(139, 92, 246, 0.16);
+  --accent-gradient: linear-gradient(135deg, var(--accent) 0%, var(--accent-3) 100%);
+
+  /* --- semantic ----------------------------------------------------------
+     Warning is the amber already carrying the host crown and the reconnecting
+     dot — one amber for "look at this, but nothing is broken". */
+  --success: #34d399;
+  --warning: #fbbf24;
+  --destructive: #f43f5e;
+
+  /* --- artwork-derived tint ---------------------------------------------
+     Set at runtime from the current cover (see hooks/useArtworkTheme). They
+     default to the brand accent so every surface that leans on them still
+     looks intentional before a track loads, or if sampling is unavailable. */
+  --art-1: var(--accent);
+  --art-2: var(--accent-3);
+
+  /* --- 8pt spacing scale, for CSS that can't use a Tailwind step --------- */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+
+  /* --- motion: one curve, three durations -------------------------------- */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast: 150ms;
+  --dur: 200ms;
+  --dur-slow: 250ms;
+
+  /* --- depth: coloured glows, not black boxes ---------------------------- */
+  --glow-accent: 0 0 0 1px rgba(139, 92, 246, 0.22), 0 12px 40px -14px rgba(139, 92, 246, 0.65);
+  --glow-pink: 0 0 0 1px rgba(255, 77, 141, 0.2), 0 12px 36px -16px rgba(255, 77, 141, 0.6);
+  --glow-art: 0 18px 60px -22px color-mix(in oklab, var(--art-1) 70%, transparent);
+
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: rgba(21, 22, 34, 0.6);
+  --card-foreground: var(--ink);
+  --popover: #12131d;
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --accent-color: rgba(255, 255, 255, 0.06);
+  --accent-foreground: var(--ink);
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.09);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: var(--accent);
+}
+
+html {
+  height: 100%;
+  background: var(--bg);
+  /* Kill any horizontal overflow so mobile browsers never shrink-to-fit
+     (which makes the phone render the desktop layout). */
+  overflow-x: hidden;
+}
+body {
+  min-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  /* Deliberately NOT `overflow-x: hidden`. Any non-visible overflow makes an
+     element a scroll container, and a `position: sticky` child then sticks to
+     *that* box rather than to the viewport — which, on a page that scrolls the
+     document, means it doesn't stick at all. The clamp above on <html> already
+     stops the shrink-to-fit this was guarding against, and it does it at the
+     viewport, where sticky still resolves. */
+  background: transparent;
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+/* Media never forces the layout wider than the screen. */
+img,
+svg,
+video {
+  max-width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Ambient background
+--------------------------------------------------------------------------- */
+
+/* Animated aurora backdrop — the base ambience behind every page (real element
+   in the layout so it paints reliably below all content). Tinted by the current
+   artwork once one is playing, which is what ties the room to the song. */
+.sw-aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  pointer-events: none;
+  background:
+    radial-gradient(45% 55% at 12% 6%, color-mix(in oklab, var(--art-1) 42%, transparent), transparent 66%),
+    radial-gradient(42% 52% at 90% 10%, color-mix(in oklab, var(--art-2) 30%, transparent), transparent 66%),
+    radial-gradient(55% 60% at 74% 94%, color-mix(in oklab, var(--art-1) 24%, transparent), transparent 66%);
+  filter: blur(30px) saturate(1.25);
+  animation: sw-aurora 22s ease-in-out infinite alternate;
+  transition: background 1.2s ease;
+}
+@keyframes sw-aurora {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(2%, -2%, 0) scale(1.08); }
+  100% { transform: translate3d(-2%, 2%, 0) scale(1.04); }
+}
+.sw-grain {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Ambient per-track backdrop (room). The current album art, blurred into the
+   background. This has to stay *very* restrained: at full strength a saturated
+   cover (a rainbow, a red sleeve) floods the whole app and destroys text
+   contrast. So it is a low-opacity tint sitting under two scrims. */
+.sw-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  filter: blur(90px) saturate(1.35);
+  opacity: 0;
+  transform: scale(1.3);
+  transition: opacity 1.4s ease;
+}
+.sw-ambient.on {
+  opacity: 0.3;
+}
+/* Two-layer scrim: a vignette to pull the edges down, plus a flat floor so even
+   the brightest cover can't lift the midtones enough to hurt readability. */
+.sw-ambient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(75% 65% at 50% 30%, rgba(8, 9, 15, 0.45), rgba(8, 9, 15, 0.88) 100%),
+    linear-gradient(180deg, rgba(8, 9, 15, 0.55) 0%, rgba(8, 9, 15, 0.35) 40%, rgba(8, 9, 15, 0.8) 100%);
+}
+
+/* ---------------------------------------------------------------------------
+   Safe areas
+
+   layout.tsx sets viewportFit: "cover", which is what lets the ambient
+   background reach the edges of a notched phone. The cost of that is that the
+   viewport now extends *under* the home indicator and the notch, so anything
+   pinned to an edge needs to say how far in it actually sits. Without this the
+   bottom player's controls and the phone tab bar render beneath the home
+   indicator on every iPhone since the X — tappable in theory, and swiping the
+   app away in practice.
+
+   Applied as padding rather than margin so the blurred bar itself still
+   reaches the physical bottom of the screen; only its contents come inward.
+--------------------------------------------------------------------------- */
+.sw-safe-b {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.sw-safe-x {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+/* Top inset is 0 in an ordinary browser tab — the browser's own chrome is
+   already holding that space. It only becomes non-zero once a room is
+   installed to the home screen and runs standalone, which is exactly the mode
+   this app encourages, and exactly where the header would otherwise sit
+   underneath the status bar. The 0.75rem matches the header's own py-3, since
+   this replaces that side rather than adding to it. */
+.sw-safe-t {
+  padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
+}
+
+/* ---------------------------------------------------------------------------
+   Surfaces — panel (24) / card (18) / row (12)
+--------------------------------------------------------------------------- */
+
+/* A major panel: the three columns of the room, the join card, admin sections. */
+.sw-panel,
+.sw-glass {
+  background: linear-gradient(180deg, rgba(20, 21, 33, 0.72), rgba(13, 14, 22, 0.68));
+  backdrop-filter: blur(24px) saturate(1.25);
+  -webkit-backdrop-filter: blur(24px) saturate(1.25);
+  border: 1px solid var(--soft-border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 20px 50px -28px rgba(0, 0, 0, 0.9);
+}
+/* Same material, raised — dialogs, popovers, anything floating over a panel. */
+.sw-glass-strong {
+  background: linear-gradient(180deg, rgba(28, 29, 44, 0.82), rgba(16, 17, 27, 0.78));
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 30px 70px -34px rgba(0, 0, 0, 0.95);
+}
+
+/* A card *inside* a panel — one step down in radius and contrast. */
+.sw-card {
+  border: 1px solid var(--soft-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.028);
+  transition:
+    background var(--dur) var(--ease),
+    border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.sw-card-hover:hover {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+  box-shadow: var(--glow-pink);
+}
+
+/* An interactive list row — queue item, recommendation, search result. The
+   accent bleeds in on hover rather than a flat grey wash. */
+.sw-row {
+  position: relative;
+  border-radius: var(--radius-sm);
+}
+.sw-row:hover {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--accent) 12%, transparent),
+    color-mix(in oklab, var(--accent-3) 8%, transparent)
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+.sw-row:active {
+  transform: scale(0.995);
+}
+/* Rows shift out of each other's way while one is being dragged. The dragged
+   row itself opts out of the transition — it must track the pointer exactly,
+   and a 200ms ease on that reads as lag. */
+.sw-row {
+  transition:
+    background var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.sw-row-dragging {
+  transition: none;
+  z-index: 2;
+  cursor: grabbing;
+  background: color-mix(in oklab, var(--art-1) 18%, transparent);
+  box-shadow: var(--glow-art), inset 0 0 0 1px color-mix(in oklab, var(--art-1) 40%, transparent);
+}
+
+/* Leaving the list — a track starting to play, or one the host removed. It
+   collapses rather than blinking out, so the rows below arrive rather than
+   snap. See useListTransition for why this needs help from JS at all. */
+@keyframes sw-row-exit {
+  from { opacity: 1; transform: none; max-height: 64px; }
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); max-height: 0; }
+}
+.sw-row-exit {
+  pointer-events: none;
+  overflow: hidden;
+  animation: sw-row-exit 260ms var(--ease) forwards;
+}
+
+/* The row that is currently playing. */
+.sw-row-active {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--art-1) 22%, transparent),
+    color-mix(in oklab, var(--art-2) 12%, transparent)
+  );
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--art-1) 35%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+   Depth — soft coloured glows
+--------------------------------------------------------------------------- */
+.sw-glow { box-shadow: var(--glow-accent); }
+.sw-glow-pink { box-shadow: var(--glow-pink); }
+.sw-glow-art { box-shadow: var(--glow-art); }
+
+.sw-gradient-text {
+  background: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 45%, var(--accent-3) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.sw-accent-bar {
+  background: linear-gradient(90deg, var(--accent), var(--accent-3));
+}
+
+/* Album art with a glow sampled from its own colours — the focal point of the
+   now-playing panel. */
+.sw-art {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.14) inset,
+    0 30px 60px -26px rgba(0, 0, 0, 0.9);
+}
+/* Goes on a WRAPPER around .sw-art, never on it: .sw-art clips its overflow, so
+   a blurred pseudo-element inside would be cut off exactly where it should bleed. */
+.sw-art-glow {
+  position: relative;
+  isolation: isolate;
+}
+/* Negative inset so the halo actually bleeds past the artwork's edges — at a
+   positive inset the cover sits on top of it and nothing shows. */
+.sw-art-glow::before {
+  content: "";
+  position: absolute;
+  inset: -7%;
+  z-index: -1;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--art-1), var(--art-2) 65%, var(--art-1));
+  filter: blur(40px);
+  opacity: 0.5;
+  transition: background 900ms ease, opacity 700ms ease;
+}
+/* Breathes gently while audio is actually playing. */
+.sw-art-playing {
+  animation: sw-art-breathe 6s ease-in-out infinite alternate;
+}
+@keyframes sw-art-breathe {
+  from { transform: scale(1); }
+  to { transform: scale(1.018); }
+}
+
+/* ---------------------------------------------------------------------------
+   Audio signatures — equalizer and waveform
+--------------------------------------------------------------------------- */
+.sw-eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.sw-eq > span {
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--art-2), var(--art-1));
+  animation: sw-eq 900ms ease-in-out infinite;
+}
+.sw-eq > span:nth-child(2) { animation-delay: 150ms; }
+.sw-eq > span:nth-child(3) { animation-delay: 300ms; }
+.sw-eq > span:nth-child(4) { animation-delay: 450ms; }
+.sw-eq > span:nth-child(5) { animation-delay: 600ms; }
+.sw-eq.paused > span { animation-play-state: paused; height: 4px; }
+@keyframes sw-eq {
+  0%, 100% { height: 3px; }
+  50% { height: 14px; }
+}
+
+/* The wide waveform under the now-playing artwork. Bars past the playhead are
+   dimmed by the component; these rules own the shape and the idle motion. */
+.sw-wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 34px;
+  width: 100%;
+}
+.sw-wave > span {
+  flex: 1 1 0;
+  min-width: 1px;
+  border-radius: 999px;
+  background: currentColor;
+  transform-origin: center;
+  transition:
+    background var(--dur-slow) var(--ease),
+    opacity var(--dur-slow) var(--ease);
+}
+.sw-wave-playing > span {
+  animation: sw-wave-pulse 1.4s ease-in-out infinite alternate;
+}
+@keyframes sw-wave-pulse {
+  from { transform: scaleY(0.82); }
+  to { transform: scaleY(1.06); }
+}
+
+/* ---------------------------------------------------------------------------
+   Motion primitives
+--------------------------------------------------------------------------- */
+@keyframes sw-fade-in { from { opacity: 0; } to { opacity: 1; } }
+.sw-fade-in { animation: sw-fade-in var(--dur-fast) var(--ease); }
+
+/* Entrance for list items — queue rows, activity events, chat messages. */
+@keyframes sw-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.sw-rise { animation: sw-rise var(--dur-slow) var(--ease) both; }
+
+/* Entrance for a chat bubble — a touch of scale so a new message reads as
+   arriving rather than appearing. */
+@keyframes sw-pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.sw-pop-in { animation: sw-pop-in var(--dur-slow) var(--ease) both; }
+
+/* Cross-fade for the artwork when the track changes. */
+@keyframes sw-art-in {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: none; }
+}
+.sw-art-in { animation: sw-art-in 400ms var(--ease) both; }
+
+@keyframes sw-modal-pop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.97); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
+.sw-modal-pop, .sw-alert-content { animation: sw-modal-pop var(--dur-fast) var(--ease); }
+@keyframes sw-drawer-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.sw-drawer-content { animation: sw-drawer-in var(--dur) var(--ease); }
+
+/* Bottom sheet — the phone's form of an anchored popover. Rises from the edge
+   it is attached to, which is what makes it read as coming from the thumb
+   rather than appearing over the page. */
+@keyframes sw-sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.sw-sheet {
+  animation: sw-sheet-in var(--dur-slow) var(--ease);
+  /* No transition on transform: while a finger is dragging it, the sheet has
+     to track exactly, and an ease on that reads as lag. */
+}
+
+/* --- Reactions -----------------------------------------------------------
+   One tap sends a burst rather than a single balloon, and each emoji gets the
+   gesture that suits it: hearts drift, sparks race, confetti is thrown and
+   falls, laughter bounces, sparkles twinkle in place. Every particle carries
+   its own drift/scale/delay so a burst never reads as one thick stripe.
+
+   All five are transform + opacity only, so they composite on the GPU and
+   don't touch layout — which is what keeps a room full of enthusiastic
+   people from costing frames.
+
+   Shared inputs, set per particle:
+     --sw-f-drift  horizontal travel
+     --sw-f-scale  size multiplier
+     --sw-f-delay  stagger
+     --sw-f-spin   final rotation
+     --sw-f-rise   vertical travel                                         */
+.sw-fx {
+  animation-fill-mode: forwards;
+  animation-delay: var(--sw-f-delay, 0ms);
+  animation-timing-function: ease-out;
+  /* Without this the emoji is painted at full size until its delay elapses. */
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Hearts — the original: a slow, swaying climb. */
+@keyframes sw-float {
+  0% { transform: translate(0, 0) scale(calc(var(--sw-f-scale, 1) * 0.5)); opacity: 0; }
+  12% {
+    transform: translate(calc(var(--sw-f-drift, 0px) * 0.15), -16px)
+      scale(calc(var(--sw-f-scale, 1) * 1.1));
+    opacity: 1;
+  }
+  75% { opacity: 1; }
+  100% {
+    transform: translate(var(--sw-f-drift, 0px), var(--sw-f-rise, -260px))
+      scale(calc(var(--sw-f-scale, 1) * 1.3)) rotate(var(--sw-f-spin, 8deg));
+    opacity: 0;
+  }
+}
+.sw-float,
+.sw-fx-hearts { animation-name: sw-float; animation-duration: 2.6s; }
+.sw-float { animation: sw-float 2.6s ease-out forwards; animation-delay: var(--sw-f-delay, 0ms); opacity: 0; }
+
+/* Sparks — smaller, faster, gone before you finish looking at them. */
+@keyframes sw-fx-spark {
+  0% { transform: translate(0, 0) scale(calc(var(--sw-f-scale, 1) * 0.3)); opacity: 0; }
+  10% { opacity: 1; }
+  100% {
+    transform: translate(var(--sw-f-drift, 0px), var(--sw-f-rise, -300px))
+      scale(calc(var(--sw-f-scale, 1) * 0.6)) rotate(var(--sw-f-spin, 0deg));
+    opacity: 0;
+  }
+}
+.sw-fx-sparks { animation-name: sw-fx-spark; animation-duration: 1.5s; }
+
+/* Confetti — thrown up and out, then falls. Two stages in one timeline: the
+   launch is fast and the fall is slow, which is what makes it read as weight
+   rather than as a balloon going the wrong way. */
+@keyframes sw-fx-confetti {
+  0% { transform: translate(0, 0) rotate(0deg) scale(var(--sw-f-scale, 1)); opacity: 0; }
+  8% { opacity: 1; }
+  35% {
+    transform: translate(calc(var(--sw-f-drift, 0px) * 0.6), var(--sw-f-rise, -220px))
+      rotate(calc(var(--sw-f-spin, 180deg) * 0.5)) scale(var(--sw-f-scale, 1));
+  }
+  100% {
+    transform: translate(var(--sw-f-drift, 0px), 40px)
+      rotate(var(--sw-f-spin, 180deg)) scale(calc(var(--sw-f-scale, 1) * 0.9));
+    opacity: 0;
+  }
+}
+.sw-fx-confetti { animation-name: sw-fx-confetti; animation-duration: 2.2s; animation-timing-function: cubic-bezier(0.2, 0.6, 0.3, 1); }
+
+/* Laughter — two bounces on the spot, then away. */
+@keyframes sw-fx-bounce {
+  0% { transform: translate(0, 0) scale(calc(var(--sw-f-scale, 1) * 0.4)); opacity: 0; }
+  15% { transform: translate(0, -70px) scale(var(--sw-f-scale, 1)); opacity: 1; }
+  35% { transform: translate(calc(var(--sw-f-drift, 0px) * 0.3), -30px) scale(calc(var(--sw-f-scale, 1) * 1.05)); }
+  55% { transform: translate(calc(var(--sw-f-drift, 0px) * 0.6), -90px) scale(var(--sw-f-scale, 1)); }
+  75% { transform: translate(calc(var(--sw-f-drift, 0px) * 0.8), -60px) scale(var(--sw-f-scale, 1)); opacity: 1; }
+  100% {
+    transform: translate(var(--sw-f-drift, 0px), var(--sw-f-rise, -160px))
+      scale(calc(var(--sw-f-scale, 1) * 0.9)) rotate(var(--sw-f-spin, 0deg));
+    opacity: 0;
+  }
+}
+.sw-fx-bounce { animation-name: sw-fx-bounce; animation-duration: 2.4s; animation-timing-function: cubic-bezier(0.34, 1.3, 0.64, 1); }
+
+/* Sparkles — barely move, mostly twinkle. */
+@keyframes sw-fx-sparkle {
+  0% { transform: translate(0, 0) scale(0) rotate(0deg); opacity: 0; }
+  25% { transform: translate(calc(var(--sw-f-drift, 0px) * 0.4), -30px) scale(var(--sw-f-scale, 1)) rotate(90deg); opacity: 1; }
+  55% { transform: translate(calc(var(--sw-f-drift, 0px) * 0.7), -60px) scale(calc(var(--sw-f-scale, 1) * 0.55)) rotate(180deg); opacity: 0.7; }
+  80% { transform: translate(var(--sw-f-drift, 0px), -90px) scale(calc(var(--sw-f-scale, 1) * 1.1)) rotate(270deg); opacity: 1; }
+  100% { transform: translate(var(--sw-f-drift, 0px), var(--sw-f-rise, -120px)) scale(0) rotate(var(--sw-f-spin, 360deg)); opacity: 0; }
+}
+.sw-fx-sparkles { animation-name: sw-fx-sparkle; animation-duration: 2s; }
+
+/* Spinning disc for the artwork while playing. */
+/* In-page links glide rather than jump. The reduced-motion block below puts
+   this back to `auto`, where an instant jump is the correct behaviour. */
+html { scroll-behavior: smooth; }
+
+/* Three dots, walking. The classic, because it is instantly legible and
+   nothing else in the app means "hold on, words are coming". */
+@keyframes sw-typing-dot {
+  0%, 60%, 100% { opacity: 0.25; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+.sw-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.sw-typing > span {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: sw-typing-dot 1.2s var(--ease) infinite;
+}
+.sw-typing > span:nth-child(2) { animation-delay: 160ms; }
+.sw-typing > span:nth-child(3) { animation-delay: 320ms; }
+
+/* Brand mark. `scaleY` about the bar's own centre, so the bars grow both ways
+   from the middle line and stay a compositor-only animation. `fill-box` is what
+   makes `transform-origin: center` mean the rect rather than the whole SVG. */
+@keyframes sw-logo-bar {
+  from { transform: scaleY(0.42); }
+  to { transform: scaleY(1); }
+}
+.sw-logo-bars rect {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sw-logo-bar 900ms var(--ease) infinite alternate;
+  animation-delay: var(--sw-logo-delay, 0ms);
+}
+
+@keyframes sw-spin { to { transform: rotate(360deg); } }
+.sw-spin { animation: sw-spin 8s linear infinite; }
+.sw-spin.paused { animation-play-state: paused; }
+
+/* Presence dot for a transient status — typing, queueing, voting, reconnecting.
+   A slow halo rather than a blink: it should be noticeable in peripheral
+   vision and completely ignorable when you're reading something else. */
+@keyframes sw-status-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50% { box-shadow: 0 0 0 3px transparent; opacity: 0.75; }
+}
+.sw-status-pulse { animation: sw-status-pulse 1.6s var(--ease) infinite; }
+
+/* Loading skeleton — a shimmer, so a pending list reads as loading rather than
+   as an empty result. */
+.sw-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+}
+.sw-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  animation: sw-shimmer 1.4s infinite;
+}
+@keyframes sw-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+
+/* ---------------------------------------------------------------------------
+   Typography helpers
+--------------------------------------------------------------------------- */
+.sw-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: 600;
+  color: var(--muted);
+}
+/* Section label — the small caps eyebrow on every panel header. */
+.sw-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Focus, everywhere, by default.
+   Most controls here are custom elements with their own hover treatment, and
+   an app you can play music in without a mouse needs every one of them to say
+   where the keyboard is. `:focus-visible` keeps it off mouse clicks. The
+   accent ring reads against both the glass panels and the artwork glow.
+   `--focus-ring` lets a control opt into a different offset without
+   re-deriving the whole thing. */
+:where(a, button, [role="button"], [role="tab"], [role="option"], [role="radio"],
+  summary, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: var(--focus-ring-offset, 2px);
+  border-radius: inherit;
+}
+.sw-focus:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+/* Visually hidden but announced. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+.sw-scroll { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.15) transparent; }
+.sw-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+.sw-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 8px; }
+.sw-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.28); }
+.sw-drawer-overlay, .sw-alert-overlay { position: fixed; }
+.sw-toast { border: 1px solid var(--soft-border); background: var(--surface); color: var(--ink); border-radius: var(--radius-sm); }
+
+/* ---------------------------------------------------------------------------
+   Segmented control — mobile tab bar, chat/activity switch
+--------------------------------------------------------------------------- */
+.sw-seg {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--soft-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+.sw-seg-item {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  transition:
+    color var(--dur) var(--ease),
+    background var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+.sw-seg-item:hover { color: var(--ink); }
+.sw-seg-item[aria-current="true"],
+.sw-seg-item[data-active="true"] {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* ---------------------------------------------------------------------------
+   Chat bubbles
+--------------------------------------------------------------------------- */
+.sw-bubble {
+  border-radius: var(--radius-md);
+  border-top-left-radius: 6px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid var(--soft-border);
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+/* Your own messages, mirrored to the right. */
+.sw-bubble-own {
+  border-top-left-radius: var(--radius-md);
+  border-top-right-radius: 6px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--accent) 32%, transparent),
+    color-mix(in oklab, var(--accent-3) 22%, transparent)
+  );
+  border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  color: #fff;
+}
+/* The AI DJ speaks with the accent behind it so it never reads as a person. */
+.sw-bubble-dj {
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+  border-color: color-mix(in oklab, var(--accent) 38%, transparent);
+  color: var(--ink);
+}
+
+/* ---------------------------------------------------------------------------
+   Seek / scrub bar
+   A generous invisible hit area around a thin visual track, so the bar reads as
+   1.5x2px but is comfortably clickable — especially with a thumb on mobile.
+--------------------------------------------------------------------------- */
+.sw-seek {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 8px 0;
+  cursor: pointer;
+  touch-action: none;
+}
+.sw-seek-track {
+  position: relative;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  transition: height 120ms var(--ease);
+}
+.sw-seek:hover .sw-seek-track { height: 7px; }
+.sw-seek-fill {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--art-1), var(--art-2));
+  transition: background 900ms ease;
+}
+.sw-seek-thumb {
+  position: absolute;
+  top: 50%;
+  width: 13px;
+  height: 13px;
+  margin-left: -6.5px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translateY(-50%) scale(0);
+  box-shadow: 0 0 12px -1px var(--art-1);
+  transition: transform 130ms var(--ease);
+}
+.sw-seek:hover .sw-seek-thumb,
+.sw-seek:focus-visible .sw-seek-thumb { transform: translateY(-50%) scale(1); }
+/* Buffer/cache fill while a track is still downloading. */
+.sw-seek-buffer {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------------------------------------------------------------------------
+   Range input (volume)
+   Native range styling differs wildly per engine, so the track and thumb are
+   both drawn from scratch to match the seek bar.
+--------------------------------------------------------------------------- */
+.sw-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 16px;
+  background: transparent;
+  cursor: pointer;
+}
+.sw-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.sw-range::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.sw-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+.sw-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 120ms var(--ease);
+}
+.sw-range::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+}
+.sw-range:hover::-webkit-slider-thumb { transform: scale(1.2); }
+.sw-range:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 999px; }
+
+/* ---------------------------------------------------------------------------
+   High contrast
+   The default palette leans on very low-contrast hairlines and translucent
+   fills, which is what makes the glass read as glass. For anyone who has asked
+   the OS for more contrast, that is the wrong trade: borders become visible,
+   muted text stops being muted, and the decorative glow steps back.
+--------------------------------------------------------------------------- */
+@media (prefers-contrast: more) {
+  :root {
+    --muted: #b9bbd0;
+    --ink-soft: #e8e9f2;
+    --soft-border: rgba(255, 255, 255, 0.28);
+    --line: rgba(255, 255, 255, 0.4);
+    --separator-strong: rgba(255, 255, 255, 0.45);
+    --border: rgba(255, 255, 255, 0.32);
+    --input: rgba(255, 255, 255, 0.4);
+    --field: rgba(255, 255, 255, 0.08);
+  }
+  .sw-panel,
+  .sw-glass,
+  .sw-glass-strong {
+    background: linear-gradient(180deg, rgba(14, 15, 24, 0.96), rgba(10, 11, 18, 0.96));
+  }
+  .sw-aurora,
+  .sw-grain { opacity: 0.15; }
+  .sw-ambient.on { opacity: 0.1; }
+  .sw-art-glow::before { opacity: 0.2; }
+}
+
+/* ---------------------------------------------------------------------------
+   Respect reduced-motion
+   The aurora, spinning disc, waveform and equalizer are all decorative; users
+   who ask for less motion should get a still, calm interface, not no interface.
+--------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .sw-aurora,
+  .sw-spin,
+  .sw-logo-bars rect,
+  .sw-typing > span,
+  .sw-eq > span,
+  .sw-wave-playing > span,
+  .sw-float,
+  .sw-art-playing,
+  .sw-status-pulse,
+  .sw-skeleton::after,
+  .sw-rise,
+  .sw-pop-in,
+  .sw-art-in {
+    animation: none !important;
+  }
+  .sw-eq > span { height: 8px; }
+  /* Without the animation the dots rest at their faded keyframe, which is
+     almost invisible — and the whole point of them is to be noticed. */
+  .sw-typing > span { opacity: 0.8; }
+  .sw-rise,
+  .sw-pop-in,
+  .sw-art-in { opacity: 1; transform: none; }
+  /* The exit still has to finish — it is what removes the row — so it keeps
+     its animation and just loses the movement. */
+  .sw-row-exit { animation-duration: 1ms !important; }
+  /* Reactions still need to be *seen*, or someone who asked for less motion
+     simply stops being told the room is cheering. They fade instead of fly. */
+  .sw-fx { animation: sw-fx-still 900ms ease-out forwards !important; }
+}
+@keyframes sw-fx-still {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Shared listening room theme. */
+.sw-couple {
+  --bg: #130d16; --bg-2: #1c121e; --surface: rgba(43,25,40,.68);
+  --ink: #fff2f0; --ink-soft: #e6cbd5; --muted: #b99caa;
+  --accent: #ce719b; --accent-2: #f5afc9; --accent-3: #eda58f;
+  --art-1: #ce719b !important; --art-2: #eda58f !important;
+  --field: rgba(255,208,224,.045);
+  background: radial-gradient(ellipse at 10% 0%, #51243c55, transparent 55%), radial-gradient(ellipse at 90% 80%, #713c2b22, transparent 50%), #130d16;
+}
+.sw-couple .sw-ambient { opacity: .12; }
+.sw-love-toolbar { display:flex; flex-shrink:0; align-items:center; justify-content:center; gap:8px; padding:8px 16px; border-bottom:1px solid #ffbfdc14; background:#eaa6c407; }
+.sw-love-toolbar button { display:flex; align-items:center; gap:7px; border:1px solid #f5afc925; border-radius:999px; padding:8px 14px; color:#f5c5d6; font-size:12px; font-weight:600; background:#edafc508; }
+.sw-love-toolbar button:hover { background:#f5afc920; border-color:#f5afc950; }
+.sw-love-caption { display:flex; align-items:center; gap:7px; margin-right:auto; color:#bb92a5; font-size:12px; font-style:italic; }
+.sw-library-count { border-radius:99px; background:#f5afc91a; padding:0 6px; font-size:10px; }
+.sw-love-library { height:min(760px,88dvh); background:linear-gradient(140deg,#2c1929,#1a121c 65%) !important; color:#fff2f0; border:1px solid #e8a2bc30; --muted:#b99caa; --bg:#201523; --ink:#fff2f0; --accent:#ce719b; --accent-2:#f5afc9; --accent-3:#eda58f; }
+.sw-love-eyebrow { display:flex; align-items:center; gap:7px; color:#efaac5; font-size:9px; letter-spacing:.2em; }
+.sw-library-tab { display:flex; align-items:center; justify-content:center; gap:7px; flex:1; border-radius:12px; padding:10px 8px; font-size:12px; color:#b99caa; }
+.sw-library-tab.active { background:#f5afc91a; color:#ffd5e4; }
+.sw-library-tab span { border-radius:20px; padding:0 6px; background:#ffd5e411; font-size:10px; }
+.sw-library-field { min-width:0; border:1px solid #f5afc929; border-radius:12px; padding:11px 12px; background:#ffffff04; color:#fff2f0; font-size:13px; outline:none; }
+.sw-library-field:focus { border-color:#f5afc980; box-shadow:0 0 0 3px #f5afc915; }
+.sw-library-field::placeholder { color:#a78b9b; }
+.sw-library-song { display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid #f5afc910; }
+.sw-library-note { display:grid; place-items:center; flex-shrink:0; width:36px; height:40px; border-radius:10px; background:linear-gradient(140deg,#e5a8bd25,#b36f9b10); color:#e4aac2; }
+.sw-library-icon { display:grid; place-items:center; flex-shrink:0; width:32px; height:36px; border-radius:10px; color:#f5c1d4; }
+.sw-library-icon:hover { background:#f5afc915; }
+.sw-upload-drop { display:flex; align-items:center; flex-direction:column; text-align:center; border:1px dashed #f5afc950; border-radius:20px; padding:28px 18px; background:radial-gradient(ellipse at 50% 0%,#f5afc911,transparent 75%); }
+.sw-upload-heart { display:grid; place-items:center; width:66px; height:66px; border-radius:24px; color:#ffd1df; background:linear-gradient(135deg,#cc769e44,#edaa8e22); box-shadow:0 12px 40px #d57d9f15; }
+.sw-playlist-card { display:flex; align-items:center; gap:10px; max-width:100%; padding:12px 14px; border:1px solid #f5afc925; border-radius:14px; text-align:left; color:#eec4d3; font-size:12px; background:#ffffff03; }
+.sw-playlist-card span { overflow-wrap:anywhere; }
+.sw-playlist-card small { display:block; color:#ac8e9e; font-size:10px; margin-top:2px; }
+.sw-playlist-card.active { border-color:#f5afc980; background:#f5afc914; }
+.sw-playlist-picker { width:65px; min-width:0; border:1px solid #eab4cc25; border-radius:10px; padding:7px 3px; background:#231821; color:#f4b5d0; font-size:10px; cursor:pointer; }
+.sw-save-notice { position:fixed; left:50%; top:150px; z-index:100; transform:translateX(-50%); width:max-content; max-width:90vw; border:1px solid #f5afc950; border-radius:16px; padding:12px 18px; background:#3a2036; color:#ffe0ec; font-size:12px; box-shadow:0 8px 32px #0005; }
+.sw-timeline { height:28px; cursor:pointer; }
+.sw-timeline:disabled { opacity:.35; cursor:default; }
+@media(max-width:639px) {
+  .sw-love-caption { display:none; }
+  .sw-love-toolbar { gap:6px; padding:7px 12px; }
+  .sw-love-toolbar button { flex:1; justify-content:center; padding:8px 7px; font-size:11px; }
+}
+@media(prefers-reduced-motion:reduce) { .sw-couple *, .sw-love-library * { animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+.sw-timeline::-webkit-slider-runnable-track { background:linear-gradient(to right,var(--accent-2) var(--seek-percent),#ffffff29 var(--seek-percent)); }
+
+/* Reactions stay beside the content, clear of transport and timeline targets. */
+.sw-reaction-dock { position:fixed; right:8px; top:44%; z-index:45; display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; }
+.sw-reaction-dock-toggle { pointer-events:auto; display:grid; place-items:center; width:34px; height:38px; border-radius:16px; color:#f6b4cf; border:1px solid #eeb9cb35; background:#2c192bf2; box-shadow:0 8px 22px #0003; }
+.sw-side-reactions { pointer-events:auto; display:flex !important; flex-direction:column; gap:0; padding:4px; background:#241520f5; border:1px solid #eeb9cb30; border-radius:22px; box-shadow:0 12px 30px #0004; backdrop-filter:blur(12px); }
+.sw-side-reactions button { width:34px; height:34px; }
+.sw-love-stars { position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+.sw-love-stars i { position:absolute; color:#f0aec2; opacity:0; font-style:normal; animation:sw-love-drift 16s linear infinite; }
+.sw-love-stars i:nth-child(1) { left:6%; animation-delay:-2s; font-size:16px; }
+.sw-love-stars i:nth-child(2) { left:31%; animation-delay:-10s; font-size:10px; }
+.sw-love-stars i:nth-child(3) { left:64%; animation-delay:-6s; font-size:20px; }
+.sw-love-stars i:nth-child(4) { left:90%; animation-delay:-13s; font-size:13px; }
+.sw-love-stars i:nth-child(5) { left:47%; animation-delay:-4s; font-size:11px; }
+@keyframes sw-love-drift { 0% { transform:translateY(75vh) rotate(-15deg); opacity:0; } 20% { opacity:.16; } 75% { opacity:.1; } 100% { transform:translateY(-40px) rotate(20deg); opacity:0; } }
+.sw-couple header h1 span { display:inline-block; animation:sw-love-beat 4s ease-in-out infinite; }
+@keyframes sw-love-beat { 0%,75%,100%{transform:scale(1)} 81%,92%{transform:scale(1.18)} 86%{transform:scale(1)} }
+.sw-chat-photo-preview { display:flex; align-items:center; gap:10px; margin-bottom:8px; padding:8px; border:1px solid #f0b4ca30; border-radius:14px; font-size:11px; color:#d9abba; }
+.sw-chat-photo-preview img { width:54px; height:54px; object-fit:cover; border-radius:9px; }
+.sw-chat-photo-preview span { flex:1; }
+.sw-chat-photo-preview button { padding:8px; }
+.sw-chat-image { display:block; width:auto; max-width:100%; max-height:320px; min-width:80px; border-radius:12px; object-fit:contain; }
+.sw-watching { overflow-y:auto; }
+.sw-watching > div.max-w-\[1600px\] { flex-shrink:0; min-height:340px; }
+.sw-watching > div.md\:grid { min-height:340px; }
+.sw-video-stage { position:relative; z-index:20; display:flex; flex-shrink:0; justify-content:center; width:100%; padding:12px 16px 0; }
+.sw-watch-card { width:100%; max-width:640px; border:1px solid #edb5cd26; border-radius:22px; padding:16px; background:linear-gradient(140deg,#342035,#1c131f); box-shadow:0 15px 50px #0002; }
+.sw-youtube-frame { position:relative; margin-top:12px; aspect-ratio:16/9; width:100%; min-height:200px; overflow:hidden; border-radius:12px; background:#000; }
+.sw-youtube-frame iframe { width:100%; height:100%; min-height:200px; }
+.sw-video-loading { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:#e9b7cf; font-size:12px; pointer-events:none; }
+.sw-video-enable { display:flex; gap:8px; align-items:center; margin-top:12px; border-radius:20px; padding:10px 14px; background:#da88b0; color:#24131d; font-size:12px; }
+.sw-love-toolbar button[aria-pressed=true] { background:#f5afc92b; border-color:#f5afc980; }
+@media(min-width:1280px) { .sw-watching > div.md\:grid { grid-template-columns:minmax(0,1fr) 380px !important; min-height:340px; } }
+@media(max-width:767px) { .sw-watching > div.md\:grid { min-height:320px; } .sw-watch-card { padding:12px; } .sw-video-stage { padding:10px 12px 0; } .sw-couple main { padding-bottom:0; } }
+@media(prefers-reduced-motion:reduce) { .sw-love-stars i,.sw-couple header h1 span { animation:none !important; } }
+@media(max-width:767px) { .sw-watching[data-view="now"] > div.md\:grid { display:none; } }
+.sw-reaction-dock { top:auto; bottom:calc(240px + env(safe-area-inset-bottom,0px)); }
+.sw-side-reactions { max-height:max(80px,calc(100dvh - 440px)); overflow-y:auto; }
+@media(min-width:1024px) { .sw-reaction-dock { display:none; } }
+.sw-video-link-form { display:flex; flex-shrink:0; align-items:center; gap:8px; padding:8px 16px; border-bottom:1px solid #f1b3cc1a; }
+.sw-video-link-form input { min-width:0; flex:1; border:1px solid #f1b3cc25; border-radius:12px; padding:9px 12px; background:#ffffff05; font-size:12px; outline:none; }
+.sw-video-link-form button { display:flex; align-items:center; gap:6px; flex-shrink:0; border-radius:12px; background:#d086a8; color:#1c121b; padding:9px 12px; font-size:12px; font-weight:600; }
+@media(max-width:1023px) { .sw-reactions-open { margin-right:44px; } }
+.sw-sync-message { flex-shrink:0; padding:9px 16px; border-bottom:1px solid #f0b9ca20; color:#e9b6cc; background:#b56b9510; text-align:center; font-size:12px; }

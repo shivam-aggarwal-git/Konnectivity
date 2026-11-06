@@ -1,0 +1,24 @@
+name: Validate source
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg python3
+      - run: npm ci
+        env:
+          YOUTUBE_DL_SKIP_PYTHON_CHECK: '1'
+      - run: npm run check:release
+      - run: npm test
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npm run typecheck
