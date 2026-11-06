@@ -1,5 +1,13 @@
 # Changelog
 
+## Vivid rooms and navigation
+
+- Contained activity empty states to prevent overlap with the chat header.
+- Added Home navigation to the toolbar and logo/tagline, retaining playback.
+- Added Aurora, Afterglow and Ocean themes, with a responsive six-theme picker.
+- Brighter color washes, shared-timeline pulses and floating fireflies; motion preferences remain respected.
+
+
 ## Private access, search and atmosphere
 
 - Protected room creation, token invitations and approved-member access to music and search.

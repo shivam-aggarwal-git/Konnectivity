@@ -129,6 +129,11 @@ export default function NowPlaying({
   // A per-listener preference, remembered across rooms.
   const [showLyrics, setShowLyrics] = useState(false);
   useEffect(() => {
+    const home = () => { setShowLyrics(false); try { localStorage.setItem("sw_lyrics", "0"); } catch {} };
+    window.addEventListener("konnectivity:home", home);
+    return () => window.removeEventListener("konnectivity:home", home);
+  }, []);
+  useEffect(() => {
     try {
       setShowLyrics(localStorage.getItem("sw_lyrics") === "1");
     } catch {}

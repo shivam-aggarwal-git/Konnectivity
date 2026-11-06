@@ -50,3 +50,9 @@ Open Search to see suggestions and recent queries. Use the small **×** beside a
 ## Audio, video and room lights
 
 Rooms start in Audio mode. **Switch to Video** uses the current YouTube song and position; **Switch to Audio** returns to audio. A local file has no automatic YouTube video. In Appearance, choose **Room lights → Off / Soft glow / Song pulse**. Song pulse follows the shared playback timeline rather than claiming beat detection. Gentle motion and reduced-motion preferences are respected. Popups dismiss on outside click or Escape.
+
+## Vivid atmosphere and Home
+
+The **Home** button and the **Konnectivity** logo/tagline return to Now Playing, close lyrics, and restore Up Next without restarting the song or leaving the room.
+
+Appearance now offers six themes: Moonlight, Rosewood, Candlelight, Aurora, Afterglow, and Ocean. **Color glow** gives the room visible washes of color; **Song pulse** changes their intensity on the shared playback timeline while music plays. Floating fireflies add ambient motion. Turn Room lights off or disable Gentle motion when you prefer a quieter view. These effects are decorative, not beat detection, and do not process your audio.

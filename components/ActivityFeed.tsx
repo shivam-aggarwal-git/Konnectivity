@@ -120,7 +120,7 @@ function ActivityFeed({
   }, [events, reactions, limit]);
 
   return (
-    <div className={cn("flex min-h-0 flex-col", className)}>
+    <div className={cn("flex min-h-0 flex-col overflow-hidden", className)}>
       <SectionHeader
         icon={<ActivityIcon className="size-3.5" />}
         title="Room activity"
@@ -138,6 +138,8 @@ function ActivityFeed({
 
       {items.length === 0 ? (
         <EmptyState
+          compact
+          className="min-h-0 overflow-y-auto !items-start !py-3"
           icon={<ActivityIcon className="size-5" />}
           title="Nothing has happened yet"
           hint="Joins, queued tracks, skips and reactions show up here as they happen."

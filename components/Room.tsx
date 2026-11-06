@@ -11,6 +11,7 @@ import {
   BarChart3,
   Check,
   History as HistoryIcon,
+  Home,
   Keyboard,
   ListMusic,
   Heart,
@@ -130,6 +131,11 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [repeat, setRepeat] = useState<Repeat>("off");
   const [dl, setDl] = useState<Record<string, number>>({});
   const [tab, setTab] = useState<Tab>("now");
+  const goHome = useCallback(() => {
+    setTab("now");
+    setCenter("queue");
+    window.dispatchEvent(new Event("konnectivity:home"));
+  }, []);
   const [center, setCenter] = useState<CenterView>("queue");
   useAppearance();
   const [pane, setPane] = useState<SidePane>("chat");
@@ -923,7 +929,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       {/* z-50 so the search dropdown clears the bottom player (z-40) rather
           than sliding behind it on a short window. */}
       <header className="sw-safe-t sw-safe-x z-50 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 px-4 py-3 backdrop-blur-xl">
-        <div className="flex min-w-0 flex-1 items-center gap-3 md:flex-initial">
+        <button type="button" onClick={goHome} aria-label="Konnectivity home" className="flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
           {/* Same mark as the landing page and the favicon, tinted by the
               artwork like everything else in the room. */}
           <Logo size="md" tint="art" animated={isPlaying} />
@@ -938,7 +944,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               A little closer, one song at a time
             </div>
           </div>
-        </div>
+        </button>
 
         {/* Search floats over the layout rather than taking a column from it —
             it is used in bursts, and the queue deserves the space the rest of
@@ -1021,6 +1027,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         <button onClick={() => openLibrary("songs")}><Music2 size={15} />Library <span className="sw-library-count">{library.length}</span></button>
         <button onClick={() => openLibrary("playlists")}><ListMusic size={15} />Playlists</button>
         <button onClick={() => openLibrary("upload")}><Upload size={15} />Upload</button>
+        <button type="button" onClick={goHome} aria-label="Home — now playing"><Home size={15}/>Home</button>
         <button aria-pressed={watchVideo} onClick={() => setVideoMode(!watchVideo)}><Video size={15} />{watchVideo ? "Switch to Audio" : "Switch to Video"}</button>
       </nav>
       {syncHolding && <div className="sw-sync-message" role="status">♡ Keeping you together{waitingFor.length ? ` — waiting for ${waitingFor.join(" & ")}` : ""}. Playback resumes automatically.</div>}
@@ -1164,7 +1171,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               reactions={reactionLog}
               className={cn(
                 pane === "activity" ? "max-md:flex max-md:flex-1" : "max-md:hidden",
-                "md:flex md:min-h-0 md:max-h-[28%] md:basis-[25%] md:border-b md:border-white/8 md:pb-4"
+                "md:flex md:min-h-0 md:max-h-[35%] md:flex-none md:border-b md:border-white/8 md:pb-4"
               )}
             />
             <ChatPanel

@@ -1178,3 +1178,23 @@ html { scroll-behavior: smooth; }
 
 .kn-room-lights { position:absolute; inset:0; pointer-events:none; z-index:0; background:radial-gradient(ellipse at 0% 10%,var(--accent) 0%,transparent 48%),radial-gradient(ellipse at 100% 85%,var(--accent-3) 0%,transparent 50%); transition:opacity .35s linear; }
 :root[data-room-visibility="hidden"] .kn-room-lights { display:none; }
+
+/* Atmosphere stays above opaque panels, but below controls and overlays. */
+.kn-room-lights { position:absolute; inset:0; z-index:5; overflow:hidden; pointer-events:none; background:none; opacity:1; isolation:isolate; border-radius:24px; }
+.kn-light-wash { position:absolute; width:55%; height:85%; top:0; opacity:var(--light-strength); transition:opacity .3s linear,transform .5s linear; mix-blend-mode:screen; }
+.kn-light-left { left:-23%; background:radial-gradient(ellipse,var(--accent) 0%,transparent 68%); transform:translateY(var(--light-shift)); }
+.kn-light-right { right:-23%; top:20%; background:radial-gradient(ellipse,var(--accent-3) 0%,transparent 68%); transform:translateY(calc(-1 * var(--light-shift))); }
+.kn-light-ribbon { position:absolute; inset:0; border:2px solid color-mix(in srgb,var(--accent) 45%,transparent); box-shadow:inset 0 0 35px color-mix(in srgb,var(--accent) 22%,transparent); border-radius:24px; opacity:var(--light-strength); }
+.kn-light-dust i { position:absolute; width:4px; height:4px; border-radius:50%; left:calc(4% + var(--i)*8%); top:calc(15% + mod(var(--i)*23,75)*1%); background:var(--accent-2); box-shadow:0 0 12px 3px var(--accent); opacity:.5; }
+.kn-room-lights[data-moving="true"] .kn-light-dust i { animation:kn-firefly 7s ease-in-out infinite alternate; animation-delay:calc(var(--i)*-.7s); }
+@keyframes kn-firefly { 0% {transform:translate3d(0,10px,0);opacity:.15} 50% {opacity:.8} 100% {transform:translate3d(12px,-18px,0);opacity:.3} }
+:root[data-room-theme="aurora"] { --kn-panel-a:#142c32;--kn-panel-b:#101b29;--kn-border:#77edce30;--kn-glow:#75e9c324;--accent:#68dfbe;--accent-2:#bcffe7;--accent-3:#b48aff; }
+:root[data-room-theme="sunset"] { --kn-panel-a:#362032;--kn-panel-b:#21172c;--kn-border:#ffc0a530;--kn-glow:#ffad8d24;--accent:#f5a38c;--accent-2:#ffdbb9;--accent-3:#e87ac0; }
+:root[data-room-theme="ocean"] { --kn-panel-a:#142e42;--kn-panel-b:#0c1b30;--kn-border:#77cced30;--kn-glow:#64ccf024;--accent:#66cde6;--accent-2:#b1f3ff;--accent-3:#7c8cff; }
+:root:is([data-room-theme="aurora"],[data-room-theme="sunset"],[data-room-theme="ocean"]) .sw-couple { --accent:inherit;--accent-2:inherit;--accent-3:inherit;--bg:var(--kn-panel-b);--bg-2:var(--kn-panel-a);background:radial-gradient(ellipse at top left,var(--kn-glow),transparent 65%),var(--bg); }
+.kn-theme-aurora {background:#142c32}.kn-theme-aurora .kn-theme-preview{background:linear-gradient(125deg,#37856e,#8260b3);color:#d3fff0}
+.kn-theme-sunset {background:#362032}.kn-theme-sunset .kn-theme-preview{background:linear-gradient(125deg,#e49679,#9a4b8b);color:#fff0da}
+.kn-theme-ocean {background:#142e42}.kn-theme-ocean .kn-theme-preview{background:linear-gradient(125deg,#298d9c,#5056a6);color:#ddfbff}
+@media(prefers-reduced-motion:reduce){.kn-light-dust i{animation:none!important}}
+:root[data-room-motion="off"] .kn-light-dust i{animation:none!important}
+@media(max-width:480px){.kn-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kn-theme-preview{height:42px}.kn-theme-card small{font-size:9px}}

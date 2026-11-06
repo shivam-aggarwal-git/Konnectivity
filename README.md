@@ -163,3 +163,9 @@ Konnectivity retains Syncwave’s **PolyForm Noncommercial 1.0.0** license and r
 Search remembers recent queries on your device, with an **×** to remove each one, and offers song suggestions. Playback starts in **Audio** mode; **Switch to Video** uses the same YouTube song at its current position, without another link. Local uploads remain audio-only. Appearance includes soft glow and a slow song-timeline pulse, with reduced-motion support.
 
 This is a private, trusted-friends instance: complete invitation links grant room access, and approved participants share the server music library. In approval rooms, waiting guests cannot receive chat or media. Old bare room codes do not grant access; send a fresh link from **Share** after upgrading. See [security](SECURITY.md) and [VPS deployment](DEPLOY.md).
+
+### More room atmosphere
+
+Choose Moonlight, Rosewood, Candlelight, Aurora, Afterglow or Ocean in Appearance. Color glow, a song-timeline pulse and floating lights brighten your room. The Home button and logo return to the player without interrupting the song.
+
+![Aurora room](docs/screenshots/aurora-room.png)
