@@ -185,3 +185,5 @@ Click the Konnectivity logo/tagline to open the full player, then the down-chevr
 ### iPhone media and player controls
 
 HEIC/HEIF uploads convert privately to JPEG, while GIF backgrounds retain animation. The visible bottom-bar chevron and mobile swipe gestures expand/collapse the player. A device-local clock appears in the header/player. Lyrics use Hindi/English scripts only when a suitable version is available; no automatic translation is claimed.
+
+The full player shares your selected GIF/photo background and mood lights. Incoming chat banners show unread counts and open chat directly; mobile room controls stay aligned in one row.

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from "./ui/dialog";
+import ChatNotice from "./ChatNotice";
 import RoomClock from "./RoomClock";
 import {usePlayerSwipe} from "@/hooks/usePlayerSwipe";
 import RoomBackground from "./RoomBackground";
@@ -149,6 +150,17 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const appearance = useAppearance();
   const [pane, setPane] = useState<SidePane>("chat");
   const [unread, setUnread] = useState(0);
+  const [latestChat,setLatestChat]=useState<{nick:string;text:string}|null>(null);
+  const [dismissedUnread,setDismissedUnread]=useState(0);
+  const [chatExpanded,setChatExpanded]=useState(false);
+  const chatView=useRef({tab,pane,playerExpanded,chatExpanded});
+  chatView.current={tab,pane,playerExpanded,chatExpanded};
+  const chatIsVisible=useCallback(()=>{
+    const view=chatView.current;
+    return document.visibilityState==='visible'&&!view.playerExpanded&&(view.chatExpanded||(!document.querySelector('[role="dialog"]')&&(matchMedia('(min-width: 768px)').matches?Boolean(document.activeElement?.closest('[data-room-chat]')):(view.tab==='chat'&&view.pane==='chat'))));
+  },[]);
+  const openChatNotice=useCallback(()=>{setPlayerExpanded(false);setTab('chat');setPane('chat');setUnread(0);setDismissedUnread(0);window.dispatchEvent(new Event('konnectivity:open-chat'));},[]);
+
   const [helpOpen, setHelpOpen] = useState(false);
   const [searchSignal, setSearchSignal] = useState(0);
   const [library, setLibrary] = useState<Track[]>([]);
@@ -402,7 +414,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     socket.on(EVENTS.PLAYBACK_UPDATE, (s: any) => applyPlayback(s));
     socket.on(EVENTS.CHAT_NEW, (m: ChatMsg) => {
       setChat((c) => [...c.slice(-199), m]);
-      if (!m.system) setUnread((u) => u + 1);
+      if (!m.system && m.nick!==nick.trim() && !chatIsVisible()) {
+        setUnread((count)=>Math.min(999,count+1));
+        setLatestChat({nick:m.nick||'Someone',text:m.text||(m.image?'Sent an image':'New message')});
+      }
     });
     socket.on(
       EVENTS.REACTION_NEW,
@@ -448,10 +463,12 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [joined]);
 
-  // clear the chat badge when the chat tab is open
-  useEffect(() => {
-    if (tab === "chat" && pane === "chat") setUnread(0);
-  }, [tab, pane, chat]);
+  useEffect(()=>{
+    const read=()=>{if(chatIsVisible()){setUnread(0);setDismissedUnread(0);}};
+    read();document.addEventListener('visibilitychange',read);document.addEventListener('focusin',read);
+    const desktop=matchMedia('(min-width: 768px)');desktop.addEventListener('change',read);
+    return()=>{document.removeEventListener('visibilitychange',read);document.removeEventListener('focusin',read);desktop.removeEventListener('change',read);};
+  },[tab,pane,chat,playerExpanded,chatExpanded,chatIsVisible]);
 
   /**
    * Audio sync loop — only runs once the server says the track is ready.
@@ -890,6 +907,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     );
   }
 
+  const renderChatNotice=()=>unread>dismissedUnread&&latestChat?<ChatNotice count={unread} sender={latestChat.nick} preview={latestChat.text} onOpen={openChatNotice} onDismiss={()=>setDismissedUnread(unread)}/>:null;
+
   const renderPlayer = (expanded=false) => (
     <BottomPlayer
         expanded={expanded}
@@ -927,12 +946,18 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   return (
     <div className="sw-couple flex h-[100dvh] flex-col overflow-hidden" data-room-background={appearance.background}>
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
-        <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" aria-describedby="expanded-player-description">
+        <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" data-room-background={appearance.background} aria-describedby="expanded-player-description">
           <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
+          {renderChatNotice()}
+          <div className="kn-expanded-scene">
+            <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
+            <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>
           <NowPlaying current={current} isPlaying={isPlaying} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className="kn-expanded-artwork flex-1"/>
+          </div>
           {renderPlayer(true)}
         </DialogContent>
       </Dialog>
+      {!playerExpanded&&renderChatNotice()}
       {/* ambient backdrop that glows with the current album art */}
       <div
         className={`sw-ambient ${current?.thumbnail ? "on" : ""}`}
@@ -1089,7 +1114,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         <button onClick={() => openLibrary("playlists")}><ListMusic size={15} />Playlists</button>
         <button onClick={() => openLibrary("upload")}><Upload size={15} />Upload</button>
         <button type="button" onClick={goHome} aria-label="Home — now playing"><Home size={15}/>Home</button>
-        <button aria-pressed={watchVideo} onClick={() => setVideoMode(!watchVideo)}><Video size={15} />{watchVideo ? "Switch to Audio" : "Switch to Video"}</button>
+        <button aria-label={watchVideo?"Switch to Audio":"Switch to Video"} aria-pressed={watchVideo} onClick={() => setVideoMode(!watchVideo)}><Video size={15} /><span className="kn-mode-label-full">{watchVideo?"Switch to Audio":"Switch to Video"}</span><span className="kn-mode-label-short">{watchVideo?"Audio":"Video"}</span></button>
       </nav>
       {syncHolding && <div className="sw-sync-message" role="status">♡ Keeping you together{waitingFor.length ? ` — waiting for ${waitingFor.join(" & ")}` : ""}. Playback resumes automatically.</div>}
       {/* ── body ── */}
@@ -1244,6 +1269,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               onSend={sendChat}
               onUploadImage={uploadChatImage}
               mediaQuery={mediaQuery}
+              onExpandedChange={setChatExpanded}
               onTyping={onTyping}
               statuses={statuses}
               muted={participants.find((p) => p.id === you)?.muted}

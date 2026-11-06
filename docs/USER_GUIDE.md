@@ -80,3 +80,11 @@ If the high-resolution cover or thumbnail fails, the player tries a fixed YouTub
 - **Lyrics:** display is restricted to Latin/English and Hindi/Devanagari scripts. The app looks for a supported alternative rather than displaying Urdu or another script. It does not automatically translate lyrics; when no suitable version exists, it shows an availability message.
 
 HEIC conversion uses [heic-decode](https://github.com/catdad-experiments/heic-decode) and the existing Sharp image library. The local validation used the [libheif public example](https://github.com/strukturag/libheif/tree/master/examples), not a personal photo; that fixture is not included in this source release.
+
+## Chat notifications and player atmosphere
+
+Incoming messages show an in-app notification with a numeric unread count and the latest sender when you are away from chat, including while the full player is open. Tap the banner to open chat and clear the count. Your own messages do not count as unread. Dismissing a banner hides it without marking the conversation read; another incoming message shows it again.
+
+The expanded player now uses the same shared photo/GIF background, song artwork, theme colors and room lights as the room view. Choose a GIF in Appearance to animate the player background, and choose Color glow or Song pulse for the lights. Gentle motion and reduced-motion preferences still govern the decorative light effects. GIF images retain their own animation.
+
+On phones, the Library, Playlists, Upload, Home and Video/Audio buttons use one aligned row. The shorter Video/Audio labels keep the mode control from wrapping to three lines.

@@ -30,7 +30,7 @@ function ChatPanel({
   you,
   aiDj,
   djTyping,
-  onUploadImage, mediaQuery,
+  onUploadImage, mediaQuery, onExpandedChange,
   onSend,
   onTyping,
   statuses,
@@ -38,6 +38,7 @@ function ChatPanel({
   className,
 }: {
   chat: ChatMsg[];
+  onExpandedChange?: (expanded:boolean)=>void;
   /** nick → presence, so a name in the thread says whether they're still here. */
   statuses?: Record<string, PresenceStatus>;
   /** Your own nickname, so your messages can sit on the other side. */
@@ -62,6 +63,8 @@ function ChatPanel({
   const emojiPanel=useRef<HTMLDivElement>(null),emojiButton=useRef<HTMLButtonElement>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  useEffect(()=>{onExpandedChange?.(expanded);},[expanded,onExpandedChange]);
+  useEffect(()=>{const open=()=>setExpanded(true);window.addEventListener('konnectivity:open-chat',open);return()=>window.removeEventListener('konnectivity:open-chat',open);},[]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const followRef = useRef(true);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -99,7 +102,7 @@ function ChatPanel({
     .map(([nick]) => nick);
 
   const content = (
-    <div className={cn("flex min-h-0 flex-col overflow-hidden", expanded ? "h-full w-full" : className)}>
+    <div data-room-chat className={cn("flex min-h-0 flex-col overflow-hidden", expanded ? "h-full w-full" : className)}>
       <SectionHeader
         icon={<MessageSquare className="size-3.5" />}
         title="Chat"

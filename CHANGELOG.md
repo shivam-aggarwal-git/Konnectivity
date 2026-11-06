@@ -1,5 +1,12 @@
 # Changelog
 
+## Mobile controls, chat notices and player atmosphere
+
+- Aligned mobile toolbar with equal-height controls and compact Video/Audio labels.
+- Added counted incoming-chat banners, previews, direct chat opening and read-state handling.
+- Full player now renders the shared GIF/photo/artwork background and mood lights.
+
+
 ## Mobile player and iPhone images
 
 - Correct tab title: Konnectivity : A Little Closer.
