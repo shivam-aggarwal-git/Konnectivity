@@ -1,5 +1,12 @@
 # Changelog
 
+## Shared photo backgrounds
+
+- Upload a private room photo or automatically use the current song artwork as the background.
+- Synchronized, saved background selection and adjustable darkness for readable controls.
+- Reuse room-protected image uploads; reject cross-room image selection and preserve existing privacy limits.
+
+
 ## Shared room appearance
 
 - Either listener can change the room theme, lighting, visualizer and motion setting for everyone.

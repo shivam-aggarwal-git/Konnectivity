@@ -58,3 +58,9 @@ The **Home** button and the **Konnectivity** logo/tagline return to Now Playing,
 Appearance now offers six themes: Moonlight, Rosewood, Candlelight, Aurora, Afterglow, and Ocean. **Color glow** gives the room visible washes of color; **Song pulse** changes their intensity on the shared playback timeline while music plays. Floating fireflies add ambient motion. Turn Room lights off or disable Gentle motion when you prefer a quieter view. These effects are decorative, not beat detection, and do not process your audio.
 
 Appearance changes are synchronized within each room: either participant can change the theme, lights, visualizer and motion setting. New and reconnecting listeners receive the saved room appearance. Device accessibility preferences such as reduced motion still take priority.
+
+## Shared photo backgrounds
+
+Open **Appearance → Room background**. Choose **Upload a photo** to use a picture together (JPEG, PNG, WebP or GIF, up to 8 MB), or select **Song artwork** to follow the current song’s thumbnail automatically. Use **Darken background** to keep text readable. **Theme only** switches the image off; **Our photo** returns to the uploaded photo.
+
+Either participant can change the background and darkness for the room. The choice is saved and synchronized to new and reconnecting listeners. Photos use private room-protected image storage on your own server, share the configured image-storage quota, and are not automatically posted to chat. Switching to Theme only does not delete the stored photo. If a local song has no artwork, the theme remains visible.

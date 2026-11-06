@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import RoomBackground from "./RoomBackground";
 import RoomLights from "./RoomLights";
 import AppearanceSettings from "./AppearanceSettings";
 import {useAppearance,receiveRoomAppearance} from "@/hooks/useAppearance";
@@ -137,7 +138,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     window.dispatchEvent(new Event("konnectivity:home"));
   }, []);
   const [center, setCenter] = useState<CenterView>("queue");
-  useAppearance();
+  const appearance = useAppearance();
   const [pane, setPane] = useState<SidePane>("chat");
   const [unread, setUnread] = useState(0);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -882,7 +883,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   }
 
   return (
-    <div className="sw-couple flex h-[100dvh] flex-col overflow-hidden">
+    <div className="sw-couple flex h-[100dvh] flex-col overflow-hidden" data-room-background={appearance.background}>
       {/* ambient backdrop that glows with the current album art */}
       <div
         className={`sw-ambient ${current?.thumbnail ? "on" : ""}`}
@@ -998,7 +999,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             />
           )}
 
-          <AppearanceSettings />
+          <AppearanceSettings onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
           <Button
             className="hidden sm:inline-flex"
             variant="ghost"
@@ -1048,6 +1049,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             onMetadata={(duration, title) => emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title })}
             getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} />
         </div>}
+        <RoomBackground mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
         <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>
         <div className="sw-love-stars" aria-hidden><i>♡</i><i>✦</i><i>♡</i><i>✧</i><i>♡</i></div>
         {/* The bottom padding on phones is the reaction pill's safe area: it
