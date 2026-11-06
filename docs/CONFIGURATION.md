@@ -29,3 +29,13 @@ Copy `.env.example` to `.env` for optional local settings. Do not commit the res
 YouTube cookies and proxies are optional and not included. Configure only your own credentials. A downloader cookie is not a browser login and does not transfer Premium to guests. Provider configuration and model availability are controlled by the provider; AI DJ is off by default.
 
 `PUBLIC_URL` also influences Socket.IO origin handling. Use the actual public URL for a reverse-proxy deployment. For the launcher’s changing quick tunnel, leave it unset rather than pinning localhost.
+
+### Lyrics and room approval
+
+Konnectivity uses [Lyrica](https://github.com/Wilooper/Lyrica) through its HTTP API. Thanks to Wilooper and the Lyrica contributors. Set `LYRICA_URL` to a self-hosted Lyrica v1.5 base URL (for example `http://lyrica:8000`) or use the default public demo. Only song title and artist are sent; cookies and music files are never sent. The demo may sleep, rate-limit or be unavailable. Lyrics are optional and do not block audio playback. Provider sequences explicitly exclude LRCLIB. Timed results are normalized from milliseconds; Hindi/Latin script filtering is retained, with an alternate-provider attempt when needed. This is not a translation service.
+
+New rooms require host approval by default. Existing rooms are upgraded once to require approval for future joins. Hosts can turn **Approve new joins** off in **People**; that choice persists. New requests open a popup, including above the expanded player. Dismissing it leaves the request waiting; use the waiting button to reopen. Approval does not expose room chat or media before acceptance.
+
+Open **People** to mute chat or remove a listener. Removal asks for confirmation inside the panel, disconnects that listener and blocks their IP temporarily (30 minutes). Other listeners sharing that IP may also be unable to rejoin during that period. Hosts can still reconnect. A host cannot remove themselves or another host. Restarting clears temporary blocks.
+
+On phones, sheets fit the available visual viewport as the keyboard opens. Text fields use a 16px font to avoid iPhone focus zoom, and primary People/approval controls have 44px touch targets. Add the app to your home screen for its standalone app view.

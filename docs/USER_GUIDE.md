@@ -8,9 +8,9 @@ All admitted listeners can use shared playback controls. Play/pause, timeline dr
 
 ## Search, queue and video
 
-Use the always-visible search field or magnifier. Choose **All**, **Local library** or **YouTube** to filter the source. Local library searches uploaded songs without contacting YouTube. Use the **× Clear search** button to delete the query, including while results are loading. Click a search result or **Play now** to start it immediately; **+** adds it to the queue. Online search playback automatically opens the corresponding YouTube embed. A selected upload may show album artwork rather than an official music video. Local library results stay audio.
+Use the always-visible search field or magnifier. Choose **All**, **Local library** or **YouTube** to filter the source. Local library searches uploaded songs without contacting YouTube. Use the **× Clear search** button to delete the query, including while results are loading. Click a search result or **Play now** to start it immediately; **+** adds it to the queue. Playback starts in audio mode. Switch to Video to open the corresponding YouTube video at the shared position. A selected upload may show album artwork rather than an official music video. Local library results stay audio.
 
-The watch control can also accept a direct YouTube video link. Spotify links are resolved to matching YouTube tracks; this is not Spotify account playback. YouTube can reject an embed or downloader request. Server cookies do not sign another person into Premium.
+You can also paste a direct YouTube link into search. Spotify links are resolved to matching YouTube tracks; this is not Spotify account playback. YouTube can reject an embed or downloader request. Server cookies do not sign another person into Premium.
 
 ## Upload your library
 
@@ -94,3 +94,12 @@ On phones, the Library, Playlists, Upload, Home and Video/Audio buttons use one 
 Open **Playlists**, paste a YouTube or YouTube Music playlist link into **Import YouTube playlist**, then press **Import playlist**. A watch link with a `list` parameter works too. Up to 100 available songs are saved as a new shared playlist; playback and the queue stay unchanged. Larger lists report the import limit. Use the playlist’s Rename or Delete controls afterward; deleting a playlist keeps uploaded library files. Public/unlisted lists work, while private lists require access through the server’s configured account cookies. Auto-generated endless mixes are not imported.
 
 **Hide artwork** is available in the full player and as **Appearance → Show artwork**. It is shared and saved with the room, leaving your GIF/photo background and mood lights visible. The labelled Local time clock includes AM/PM and the date, using each device’s local timezone.
+
+## Approve joins and manage people
+
+New rooms require host approval. Incoming listeners trigger a named popup: choose **Let in** or **Decline**. Closing the popup keeps the request waiting; reopen it from the waiting button. Use **People → Approve new joins** to control admission. Hosts can mute another listener’s chat or use **Remove → Remove now**. Removal disconnects them and temporarily blocks rejoining from their IP for 30 minutes; people sharing that IP may be affected, while hosts can reconnect.
+
+![Join request on a phone](screenshots/mobile-join-request.png)
+![Host participant controls on a phone](screenshots/mobile-host-controls.png)
+
+Lyrics use Lyrica. They follow the shared song position when timed lyrics are available. Only Latin and Devanagari lyric lines are displayed; unsupported translations or credits are omitted. YouTube credentials are never forwarded to the lyrics service.

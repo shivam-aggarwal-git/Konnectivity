@@ -3,7 +3,7 @@ import { getLyrics } from "@/lib/lyrics.mjs";
 
 export const dynamic = "force-dynamic";
 
-/** Lyrics for the track playing, synced line by line where LRCLIB has them. */
+/** Lyrics for the track playing, synced line by line where Lyrica has them. */
 export async function GET(req: NextRequest) {
   const p = req.nextUrl.searchParams;
   const title = p.get("title")?.trim();

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from "./ui/dialog";
+import RoomPeople from "./RoomPeople";
+import {useAppViewport} from "@/hooks/useAppViewport";
 import ChatNotice from "./ChatNotice";
 import RoomClock from "./RoomClock";
 import {usePlayerSwipe} from "@/hooks/usePlayerSwipe";
@@ -14,7 +16,6 @@ import { io, type Socket } from "socket.io-client";
 import {
   Activity as ActivityIcon,
   BarChart3,
-  Check,
   History as HistoryIcon,
   Home,
   ChevronDown,
@@ -33,7 +34,6 @@ import {
   Radio,
   Search as SearchIcon,
   SlidersHorizontal,
-  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -62,7 +62,7 @@ import { useShortcuts } from "@/hooks/useShortcuts";
 import { useSwipe } from "@/hooks/useSwipe";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarStack } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { Panel } from "@/components/ui/panel";
 import { Popover } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -95,7 +95,6 @@ const ShortcutsDialog = dynamic(() => import("@/components/ShortcutsDialog"));
 const SoundSettings = dynamic(() => import("@/components/SoundSettings"));
 
 /** Upper bound for the per-device audio delay (matches the settings slider). */
-import { PresenceCard } from "@/components/PresenceCard";
 import InstallButton, { InstallBanner } from "@/components/InstallButton";
 import ShareButton from "@/components/ShareButton";
 
@@ -113,6 +112,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [awaitingApproval, setAwaitingApproval] = useState(false);
   const [denied, setDenied] = useState(false);
   // Host-only: who's waiting to be let into an invite-only room.
+  useAppViewport();
+  const [inviteOnly,setInviteOnly]=useState(true);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [roomName, setRoomName] = useState(`Room ${code}`);
@@ -380,10 +381,12 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     socket.on(EVENTS.PENDING_UPDATE, (s: { pending: PendingRequest[] }) =>
       setPendingRequests(s.pending || [])
     );
+    socket.on(EVENTS.ROOM_ACCESS_UPDATE, (s: {inviteOnly:boolean})=>setInviteOnly(s.inviteOnly));
     socket.on(EVENTS.ROOM_STATE, async (s: any) => {
       if(s.appearance)receiveRoomAppearance(s.appearance);
       const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
       if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
+      setInviteOnly(Boolean(s.inviteOnly));
       setYou(s.you);
       setUploadToken(s.uploadToken || "");
       setPlaylists(s.playlists || []);
@@ -946,7 +949,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   );
 
   return (
-    <div className="sw-couple flex h-[100dvh] flex-col overflow-hidden" data-room-background={appearance.background}>
+    <div className="sw-couple flex h-[var(--kn-app-height,100dvh)] flex-col overflow-hidden" data-room-background={appearance.background}>
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
         <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" data-room-background={appearance.background} aria-describedby="expanded-player-description">
           <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
@@ -1049,7 +1052,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
           className="order-last w-full md:order-none md:mx-auto md:max-w-xl md:flex-1"
         />
 
-        <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
+        <div className="kn-room-controls ml-auto flex shrink-0 items-center gap-2 md:ml-0">
           {/* Room code, spelled out for reading aloud across a room. */}
           <span className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 lg:flex">
             <span className="text-[10px] font-semibold tracking-eyebrow text-muted uppercase">
@@ -1058,24 +1061,9 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             <span className="font-mono text-xs font-bold tracking-[0.18em] text-ink">{code}</span>
           </span>
 
-          {isHost && pendingRequests.length > 0 && (
-            <PendingRequestsMenu
-              requests={pendingRequests}
-              onApprove={approveJoin}
-              onDeny={denyJoin}
-            />
-          )}
-
-          {participants.length > 0 && (
-            <ParticipantsMenu
-              list={participants}
-              statuses={statuses}
-              you={you}
-              isHost={isHost}
-              onMute={muteParticipant}
-              onKick={kickParticipant}
-            />
-          )}
+          <RoomPeople list={participants} you={you} isHost={Boolean(isHost)} pending={pendingRequests} inviteOnly={inviteOnly}
+            onApprovalChange={enabled=>socketRef.current?.emit(EVENTS.HOST_APPROVAL_SET,{enabled})}
+            onApprove={approveJoin} onDeny={denyJoin} onKick={kickParticipant} onMute={muteParticipant}/>
 
           <RoomClock/>
           <AppearanceSettings onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
@@ -1417,117 +1405,3 @@ function TabBar({
  * actually is — an invite-only room with nobody waiting shouldn't carry a
  * permanent empty button in the header.
  */
-function PendingRequestsMenu({
-  requests,
-  onApprove,
-  onDeny,
-}: {
-  requests: PendingRequest[];
-  onApprove: (id: string) => void;
-  onDeny: (id: string) => void;
-}) {
-  return (
-    <Popover
-      label={`${requests.length} waiting to join`}
-      width={264}
-      buttonClassName="relative flex items-center gap-1.5 rounded-full border border-[var(--accent)]/40 bg-accent-soft px-3 py-1.5 text-[var(--accent-2)] transition-colors duration-200 ease-[var(--ease)] hover:bg-[color-mix(in_oklab,var(--accent)_26%,transparent)]"
-      button={
-        <>
-          <UserPlus className="size-3.5" />
-          <span className="text-xs font-semibold">{requests.length}</span>
-        </>
-      }
-    >
-      <div className="sw-label mb-2 px-1 text-[10px]">Waiting to join ({requests.length})</div>
-      <ul className="sw-scroll max-h-72 space-y-1 overflow-y-auto">
-        {requests.map((r) => (
-          <li key={r.id} className="flex items-center gap-2 p-1.5">
-            <Avatar name={r.nick} size="sm" />
-            <span className="min-w-0 flex-1 truncate text-sm text-ink">{r.nick}</span>
-            <button
-              type="button"
-              onClick={() => onApprove(r.id)}
-              aria-label={`Let ${r.nick} in`}
-              title="Let in"
-              className="grid size-7 shrink-0 place-items-center rounded-full text-[var(--success)] transition-colors duration-200 ease-[var(--ease)] hover:bg-[var(--success)]/10"
-            >
-              <Check className="size-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onDeny(r.id)}
-              aria-label={`Turn ${r.nick} away`}
-              title="Turn away"
-              className="grid size-7 shrink-0 place-items-center rounded-full text-[var(--destructive)] transition-colors duration-200 ease-[var(--ease)] hover:bg-[var(--destructive)]/10"
-            >
-              <X className="size-4" />
-            </button>
-          </li>
-        ))}
-      </ul>
-    </Popover>
-  );
-}
-
-/**
- * Who is here, as faces. The stack is the affordance and the list behind it is
- * the detail — a room of twelve is unreadable as twelve names in a top bar.
- */
-function ParticipantsMenu({
-  list,
-  statuses,
-  you,
-  isHost,
-  onMute,
-  onKick,
-}: {
-  list: Participant[];
-  statuses: Record<string, string>;
-  you: string | null;
-  isHost: boolean;
-  onMute: (id: string, muted: boolean) => void;
-  onKick: (id: string) => void;
-}) {
-  return (
-    <Popover
-      label={`${list.length} listening`}
-      width={264}
-      buttonClassName="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1 pl-1 pr-3 transition-[background-color,border-color] duration-200 ease-[var(--ease)] hover:border-white/20 hover:bg-white/10"
-      button={
-        <>
-          <AvatarStack
-            names={list.map((p) => p.nick)}
-            statuses={statuses as Record<string, Participant["status"]>}
-            max={3}
-            size="sm"
-          />
-          <span className="flex items-center gap-1 text-xs font-semibold text-ink/80">
-            <Users className="size-3.5" /> {list.length}
-          </span>
-        </>
-      }
-    >
-      <div className="sw-label mb-2 px-1 text-[10px]">Listening ({list.length})</div>
-      <ul className="sw-scroll max-h-72 space-y-1 overflow-y-auto">
-        {list.map((p) => (
-          <li key={p.id}>
-            <details className="group">
-              <summary className="sw-row sw-focus flex cursor-pointer list-none items-center gap-2 p-1.5 text-sm text-ink">
-                <Avatar name={p.nick} size="sm" isHost={p.isHost} status={p.status} />
-                <span className="truncate">{p.nick}</span>
-              </summary>
-              <div className="px-1 pb-2 pt-3">
-                <PresenceCard
-                  p={p}
-                  canModerate={isHost && p.id !== you && !p.isHost}
-                  onMute={onMute}
-                  onKick={onKick}
-                />
-              </div>
-            </details>
-          </li>
-        ))}
-      </ul>
-    </Popover>
-  );
-}

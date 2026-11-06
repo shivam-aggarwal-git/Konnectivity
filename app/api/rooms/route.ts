@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await limitedJson(req);
     name = body?.name;
-    inviteOnly = Boolean(body?.inviteOnly);
+    inviteOnly = body?.inviteOnly !== false;
   } catch {
     /* no body */
   }

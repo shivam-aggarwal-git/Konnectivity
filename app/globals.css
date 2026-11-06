@@ -1269,3 +1269,39 @@ html { scroll-behavior: smooth; }
 .kn-playlist-import{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--kn-border);border-radius:16px;margin-bottom:18px;background:#ffffff04}
 .kn-playlist-delete{margin-top:12px;padding:12px;border:1px solid #f8717150;border-radius:12px;font-size:12px}
 @media(max-width:767px){.sw-couple>header>.kn-room-clock{order:10000;flex-basis:100%;justify-content:center;border-top:1px solid var(--kn-border);padding-top:6px}.kn-playlist-import{flex-direction:column;align-items:stretch}.kn-playlist-import label{width:100%}.kn-expanded-heading .kn-room-clock{gap:3px 5px}.kn-expanded-heading .kn-clock-label{font-size:8px}}
+
+/* Phone-sized controls and keyboard-aware room sheets. */
+@media (max-width: 767px) {
+  input:not([type="range"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]), textarea, select { font-size: 16px; }
+  input:not([type="range"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]), select { min-height: 44px; }
+  [role="dialog"] { overscroll-behavior: contain; scroll-padding-bottom: env(safe-area-inset-bottom, 0px); }
+  [role="tablist"] button { min-height: 44px; }
+  button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+}
+
+@media(max-width:767px){
+ .sw-couple>header>.kn-brand-button{flex-basis:100%;width:100%}
+ .kn-room-controls{width:100%;min-width:0;flex-wrap:wrap;margin-left:0;gap:6px}
+ .kn-room-controls>.kn-room-clock{flex:1;min-width:0;white-space:normal;justify-content:center;gap:2px 5px}
+ .kn-room-controls>.kn-room-clock .kn-clock-date{flex-basis:100%;text-align:center}
+ .kn-room-controls .kn-appearance-button{width:44px;min-height:44px}
+ .sw-couple .sw-love-toolbar>button{height:44px;min-height:44px;max-height:44px}
+}
+
+@media(max-width:767px){.kn-room-controls button{min-height:44px}.kn-room-controls button[aria-label="Share this room"]{min-width:44px}}
+/* Keep useful content visible on short landscape phones and tablets. */
+@media(min-width:768px) and (max-width:1023px) and (max-height:500px){
+ .sw-couple>header{flex-wrap:nowrap;gap:8px;padding:8px}
+ .sw-couple>header>.kn-brand-button{flex:0 1 150px;min-width:100px}
+ .sw-couple>header>.kn-brand-button>div>div:last-child{display:none}
+ .sw-couple>header>.kn-brand-button>svg{display:none}
+ .sw-couple>header>.kn-brand-button img{width:28px;height:28px}
+ .kn-room-controls{gap:4px}
+ .kn-room-controls>.kn-room-clock{max-width:85px;font-size:9px;gap:2px}
+ .kn-room-controls>.kn-room-clock .kn-clock-date{display:none}
+ .kn-room-controls .kn-appearance-button{width:40px;padding:0}
+ .kn-room-controls .kn-appearance-button span{display:none}
+ .kn-room-controls>button[aria-label="Sound settings"]{display:none}
+ .sw-couple .sw-love-toolbar{padding:6px 10px}
+ .sw-couple .sw-love-toolbar .sw-love-caption{display:none}
+}

@@ -189,3 +189,9 @@ HEIC/HEIF uploads convert privately to JPEG, while GIF backgrounds retain animat
 The full player shares your selected GIF/photo background and mood lights. Incoming chat banners show unread counts and open chat directly; mobile room controls stay aligned in one row.
 
 You can import a YouTube playlist from Playlists (up to 100 available tracks per import), save it under its original or a custom name, then rename or delete it. The full player also has a shared Hide artwork control for an unobstructed GIF/light background. The clock is explicitly labelled Local time and includes AM/PM and the date.
+
+### Lyrics and host controls
+
+Lyrics now come through [Lyrica](https://github.com/Wilooper/Lyrica). Thank you to Wilooper and the Lyrica contributors. Konnectivity explicitly excludes its LRCLIB provider; configure `LYRICA_URL` to use your own Lyrica service. Availability and timing depend on upstream providers. Only public song metadata is sent, never YouTube cookies.
+
+New listeners require approval by default, with a popup showing their name and **Let in / Decline** actions. Hosts can change this under **People**, mute chat, and remove listeners with confirmation. Phone layouts use keyboard-aware sheets and larger touch targets. See [configuration](docs/CONFIGURATION.md#lyrics-and-room-approval) for temporary removal limits and migration details.

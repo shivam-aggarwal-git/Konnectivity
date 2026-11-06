@@ -12,7 +12,7 @@ export default function CreateRoom() {
   const [code, setCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState("");
-  const [inviteOnly, setInviteOnly] = useState(false);
+  const [inviteOnly, setInviteOnly] = useState(true);
   const inviteOnlyId = useId();
 
   async function start() {

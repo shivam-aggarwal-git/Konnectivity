@@ -46,6 +46,20 @@ try{
  const memberCookie=member.headers.get('set-cookie').split(';')[0];await status('/api/search?q=test',{headers:{Cookie:memberCookie}},200);
  const id='local_00000000000000000000000000000000';await status(`/audio/${id}?room=${room.code}&token=${state.uploadToken}`,{},403);room.library.push({videoId:id});await status(`/audio/${id}?room=${room.code}&token=${state.uploadToken}`,{},200);
  guest.emit('join',null);guest.emit('control:seek',{position:{invalid:true}});guest.emit('chat:send',null);await wait(100);await status('/',{},200);
+ // Host-only approval policy and removal, including shared-IP host reconnect.
+ guest.emit('host:approval-set',{enabled:false});await wait(50);assert.equal(room.inviteOnly,true);
+ guest.emit('host:kick',{id:host.id});await wait(50);assert.ok(room.participants.has(host.id));
+ let policy=event(host,'room:access-update');host.emit('host:approval-set',{enabled:false});assert.equal((await policy).inviteOnly,false);
+ policy=event(host,'room:access-update');host.emit('host:approval-set',{enabled:true});await policy;
+ const denied=socket({Cookie:cookie});await event(denied,'connect');pending=event(denied,'join:pending');denied.emit('join',{code:room.code,nick:'Declined guest'});await pending;
+ let denial=event(denied,'join:denied');host.emit('host:deny',{id:denied.id});await denial;assert.equal(room.pending.size,0);assert.equal(room.participants.has(denied.id),false);
+ let kicked=event(guest,'kicked');host.emit('host:kick',{id:guest.id});await kicked;await wait(50);assert.equal(room.participants.has(state.you),false);
+ await status('/api/search?q=test',{headers:{Cookie:memberCookie}});
+ host.disconnect();await wait(50);
+ const returning=socket({},{code:room.code,ownerToken:room.ownerToken});await event(returning,'connect');ready=event(returning,'room:state');returning.emit('join',{code:room.code,nick:'Returning host',ownerToken:room.ownerToken});await ready;
+ const blockedGuest=socket({Cookie:cookie});await event(blockedGuest,'connect');const removal=event(blockedGuest,'sw:error');blockedGuest.emit('join',{code:room.code,nick:'Removed guest'});
+ // The protocol error is checked below using its declared event name.
+ await removal;
  const adminCookie=`${SESSION_COOKIE}=${createSession()}`;await status('/api/rooms',{method:'POST',headers:{Cookie:adminCookie},body:'{}'},200);
  await status('/api/settings',{method:'POST',headers:{'Content-Length':'270000'},body:'x'.repeat(270000)},413);
  for(let n=0;n<10;n++)await status('/api/admin/session',{method:'POST',body:'{}'},200);

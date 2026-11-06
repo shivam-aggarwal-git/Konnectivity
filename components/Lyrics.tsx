@@ -153,10 +153,10 @@ export default function Lyrics({
           ) : (
             <>
               Lyrics come from{" "}
-              <a href="https://lrclib.net" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-2)] hover:underline">
-                LRCLIB
+              <a href="https://github.com/Wilooper/Lyrica" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-2)] hover:underline">
+                Lyrica
               </a>
-              , a community database. Only Hindi or English script is displayed.
+              , a multi-provider lyrics service. Only Hindi or English script is displayed.
             </>
           )
         }
@@ -178,12 +178,12 @@ export default function Lyrics({
       </div>
       {lines && (
         <a
-          href="https://lrclib.net"
+          href="https://github.com/Wilooper/Lyrica"
           target="_blank"
           rel="noopener noreferrer"
           className="mt-2 self-center text-[10px] uppercase tracking-[0.14em] text-muted/70 hover:text-muted"
         >
-          Lyrics from LRCLIB
+          Lyrics from Lyrica
         </a>
       )}
     </div>

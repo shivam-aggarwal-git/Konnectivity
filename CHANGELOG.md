@@ -1,5 +1,12 @@
 # Changelog
 
+## Lyrica, admission popups and mobile controls
+
+- Replaced LRCLIB lookups with the configurable Lyrica HTTP API; exact provider sequences exclude LRCLIB. Bounded requests, coalescing, cached misses and Hindi/Latin line filtering keep lyrics independent of audio.
+- New join requests automatically open an approval popup. Approval is enabled by default, with a one-time migration and a persistent host toggle.
+- Added a responsive People panel with direct mute and confirmed removal actions; hosts can reconnect after a same-network removal.
+- Narrow headers wrap correctly; phone text fields avoid focus zoom, primary actions use 44px targets, and chat/dialogs follow the keyboard viewport.
+
 ## Playlist import and immersive view
 
 - Labelled local clock with AM/PM and date.

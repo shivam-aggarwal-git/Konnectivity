@@ -112,6 +112,7 @@ function ChatPanel({
       <div ref={node => { scrollRef.current = node; if (node && followRef.current) node.scrollTop = node.scrollHeight; }} role="log" aria-label="Chat messages" aria-live="polite" tabIndex={0} onScroll={() => { const list = scrollRef.current; if (list) followRef.current = list.scrollHeight - list.clientHeight - list.scrollTop < 64; }} className="sw-scroll -mr-2 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-2">
         {!hasConversation && (
           <EmptyState
+            compact={!expanded}
             icon={<MessageSquare className="size-5" />}
             title="Say something"
             hint={
@@ -243,7 +244,7 @@ function ChatPanel({
       </div>
     </div>
   );
-  return expanded ? <Dialog open onOpenChange={setExpanded}><DialogContent className="!flex !h-[85dvh] !max-h-[900px] !w-[calc(100vw-24px)] !max-w-3xl !flex-col !gap-0 !overflow-hidden [&>button]:hidden"><DialogTitle className="sr-only">Room chat</DialogTitle>{content}</DialogContent></Dialog> : content;
+  return expanded ? <Dialog open onOpenChange={setExpanded}><DialogContent className="!flex !h-[85dvh] !max-h-[min(900px,calc(var(--kn-app-height,100dvh)-24px))] !w-[calc(100vw-24px)] !max-w-3xl !flex-col !gap-0 !overflow-hidden [&>button]:hidden"><DialogTitle className="sr-only">Room chat</DialogTitle>{content}</DialogContent></Dialog> : content;
 }
 
 /**
