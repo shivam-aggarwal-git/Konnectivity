@@ -1,5 +1,12 @@
 # Changelog
 
+## Background playback recovery
+
+- Background listeners release buffering holds instead of pausing the room.
+- Debounce transient readiness failures and allow a foreground recovery window.
+- Avoid forced seeks on every tab return and repeated seeks during buffering.
+- Use native desktop audio; recover interrupted iOS audio on return where the browser permits.
+
 ## Konnectivity source snapshot
 
 Based on Syncwave 1.3.0, with the upstream license and required notice retained.

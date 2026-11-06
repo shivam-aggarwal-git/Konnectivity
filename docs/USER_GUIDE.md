@@ -28,6 +28,6 @@ Use Chat to send text or attach JPEG, PNG, GIF or WebP images (up to **8 MB**). 
 
 ## Automatic sync
 
-No manual latency input is required. Devices calibrate against the server, correct drift and recalibrate on reconnect or tab return. The Sound settings dialog shows automatic status and measured latency where available. If a listener buffers, the room waits briefly and schedules a common restart. After about 20 seconds a blocked device no longer holds everyone; it catches up after recovery. A manual pause remains paused.
+No manual latency input is required. Devices calibrate against the server, correct drift and recalibrate on reconnect or tab return. The Sound settings dialog shows automatic status and measured latency where available. Brief seeking and foreground recovery have a grace period to avoid pause loops. A background listener cannot hold the room while its browser is suspended; it catches up when it returns. If a foreground listener continues buffering, the room waits briefly and schedules a common restart. After about 20 seconds a blocked device no longer holds everyone; it catches up after recovery. A manual pause remains paused.
 
 The app cannot remove network outages, YouTube ads or unreported Bluetooth latency. Keep the tab active when possible. See [troubleshooting](TROUBLESHOOTING.md).

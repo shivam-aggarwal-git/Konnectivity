@@ -46,6 +46,7 @@ export default function YouTubePlayer(props:Props) {
  useEffect(()=>{
   const tick=()=>{
    const p=player.current;if(!p||!ready.current)return;
+   if(document.visibilityState!=="visible")return;
    const s=latest.current,state=p.getPlayerState(),now=performance.now(),target=s.getPosition(),running=s.getRunning();
    if(!reported.current&&p.getDuration()>0){reported.current=true;s.onMetadata(p.getDuration(),p.getVideoData().title||'YouTube video');}
    if(state===3&&bufferSince.current&&now-bufferSince.current>650){localReady.current=false;s.onReadyChange(false,s.syncKey);}
@@ -58,7 +59,7 @@ export default function YouTubePlayer(props:Props) {
    const jumped=Boolean(before && Math.abs(target-before.position-(running?(now-before.time)/1000:0))>.6);
    previousTarget.current={position:target,time:now};
    const drift=p.getCurrentTime()-target;
-   if((jumped||!aligned.current||Math.abs(drift)>(running?.35:.15))&&state!==3&&(jumped||now-lastSeek.current>1800)){p.seekTo(target,true);lastSeek.current=now;aligned.current=true;}
+   if((jumped||!aligned.current||Math.abs(drift)>(running?1.25:.15))&&state!==3&&(jumped||now-lastSeek.current>3000)){p.seekTo(target,true);lastSeek.current=now;aligned.current=true;}
    if((running||prime)&&state!==1&&state!==3&&now-attempt.current>1500){attempt.current=now;p.playVideo();}
    if(!running&&!prime&&state!==2&&state!==5)p.pauseVideo();
    if(localReady.current)s.onReadyChange(true,s.syncKey);

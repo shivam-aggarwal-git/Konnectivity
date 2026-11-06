@@ -166,7 +166,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [waitingFor, setWaitingFor] = useState<string[]>([]);
   const [syncKey, setSyncKey] = useState("");
   const [resumeAt, setResumeAt] = useState(0);
-  const lastReadyRef = useRef<{key:string;ready:boolean;at:number}|null>(null);
+  const lastReadyRef = useRef<{key:string;ready:boolean;background:boolean;at:number}|null>(null);
   const playbackRef = useRef({ startedAt: 0, pausedPosition: 0, isPlaying: false, syncHolding: false, resumeAt: 0 });
 
   // Crossfade: a second element to fade into ahead of a natural track end.
@@ -212,14 +212,36 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     []
   );
 
+  const readinessRef = useRef({ key: "", badSince: 0, foregroundAt: 0 });
   const reportReady = useCallback((ready: boolean, key: string) => {
     if (!key) return;
+    const now = performance.now(), background = document.visibilityState !== "visible";
+    const state = readinessRef.current;
+    if (state.key !== key) { state.key = key; state.badSince = 0; state.foregroundAt = now; }
     ready = ready && clockRef.current.calibrated();
+    if (ready || background) state.badSince = 0;
+    else {
+      if (!state.badSince) state.badSince = now;
+      // Seeking and OS gestures are transient, not a reason to stop everyone.
+      if (now - state.badSince < 1500 || now - state.foregroundAt < 2500) return;
+    }
     const previous = lastReadyRef.current;
-    if (previous?.key === key && previous.ready === ready && performance.now()-previous.at < 3000) return;
-    lastReadyRef.current = { key, ready, at: performance.now() };
-    emit(EVENTS.SYNC_MEDIA, { key, ready });
+    if (previous?.key === key && previous.ready === ready && previous.background === background && now-previous.at < 3000) return;
+    lastReadyRef.current = { key, ready, background, at: now };
+    emit(EVENTS.SYNC_MEDIA, { key, ready, background });
   }, [emit]);
+  useEffect(() => {
+    if (!joined || !syncKey) return;
+    const changed = () => {
+      readinessRef.current.foregroundAt = performance.now();
+      readinessRef.current.badSince = 0;
+      lastReadyRef.current = null;
+      emit(EVENTS.SYNC_MEDIA, { key: syncKey, ready: true, background: document.visibilityState !== "visible" });
+    };
+    document.addEventListener("visibilitychange", changed);
+    window.addEventListener("pagehide", changed);
+    return () => { document.removeEventListener("visibilitychange", changed); window.removeEventListener("pagehide", changed); };
+  }, [joined, syncKey, emit]);
   const getMediaRunning = useCallback(() => playbackRunning(playbackRef.current, clockRef.current.now()), []);
   const getMediaPosition = useCallback(() => playbackPosition(playbackRef.current, clockRef.current.now()), []);
   // Presence: what this listener is doing, reported and deduplicated.
@@ -360,7 +382,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       if (result) { setNetworkRtt(result.rtt); socket.emit(EVENTS.SYNC_REPORT, { rtt: result.rtt }); }
     });
     const ping = () => socket.emit(EVENTS.SYNC_PING, { t0: performance.now() });
-    const burst = () => { ping(); for (const ms of [100,250,500,1000]) setTimeout(ping, ms); resyncRef.current = true; };
+    const burst = () => { ping(); for (const ms of [100,250,500,1000]) setTimeout(ping, ms); };
     socket.on("connect", burst);
     const onVisible = () => { if (document.visibilityState === "visible") burst(); };
     document.addEventListener("visibilitychange", onVisible);
@@ -450,6 +472,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       active.addEventListener("loadedmetadata", () => (resyncRef.current = true), { once: true });
     }
 
+    let lastCorrectionSeek = -Infinity;
     const tick = () => {
       const pb = playbackRef.current;
       const expected = playbackPosition(pb, serverNow());
@@ -537,10 +560,13 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       // isn't, and this is what takes sync from "within a second" to
       // "within a few tens of milliseconds".
       const target = expected + (pb.isPlaying ? roomGain.outputLatency || 0 : 0);
-      if (!crossfadingRef.current && Number.isFinite(target) && active.readyState >= 1) {
+      if (document.visibilityState === "visible" && !crossfadingRef.current && !active.seeking && Number.isFinite(target) && active.readyState >= 3) {
         const move = correction(active.currentTime, target, running && !active.paused, resyncRef.current);
+        if (move.seek !== null && (resyncRef.current || performance.now() - lastCorrectionSeek > 2000)) {
+          active.currentTime = Math.min(move.seek, Number.isFinite(active.duration) ? active.duration : move.seek);
+          lastCorrectionSeek = performance.now();
+        }
         resyncRef.current = false;
-        if (move.seek !== null) active.currentTime = Math.min(move.seek, Number.isFinite(active.duration) ? active.duration : move.seek);
         active.playbackRate = move.rate;
       }
       const remaining = Math.max(0, (current.duration || 0) - active.currentTime);

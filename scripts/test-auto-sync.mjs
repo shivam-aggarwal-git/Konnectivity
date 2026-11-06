@@ -32,6 +32,12 @@ try{
  changed=event(a,'playback:update',s=>s.current?.videoId==='abcdefghijk'&&s.isPlaying);a.emit('control:play-now',{track:{videoId:'abcdefghijk',title:'Next',artist:'Artist',duration:120},preferVideo:true});state=await changed;const second=state.syncKey;
  b.emit('sync:media',{key,ready:false});await wait(50);assert.equal(room.syncHolding,false);
  changed=event(a,'playback:update',s=>s.syncHolding);b.emit('sync:media',{key:second,ready:false});await changed;
+ // Background suspension releases an existing hold, and cannot re-hold the room.
+ changed=event(a,'playback:update',s=>!s.syncHolding);b.emit('sync:media',{key:second,ready:false,background:true});await changed;
+ b.emit('sync:media',{key:second,ready:false,background:true});await wait(80);assert.equal(room.syncHolding,false);
+ b.emit('sync:media',{key:second,ready:false});await wait(80);assert.equal(room.syncHolding,false);
+ b.emit('sync:media',{key:second,ready:true,background:false});await wait(80);
+ changed=event(a,'playback:update',s=>s.syncHolding);b.emit('sync:media',{key:second,ready:false});await changed;
  changed=event(a,'playback:update',s=>!s.syncHolding);b.disconnect();await changed;assert.equal(room.syncHolding,false);
  const[c,sc]=await join('Listener reconnected');assert.equal(sc.watchVideo,true);assert.equal(sc.current.videoId,'abcdefghijk');assert.equal(sc.syncKey,second);
  process.env.SYNC_BUFFER_TIMEOUT_MS='120';changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:second,ready:false});await changed;await wait(200);assert.equal(room.syncHolding,false);c.emit('sync:media',{key:second,ready:false});await wait(50);assert.equal(room.syncHolding,false);c.emit('sync:media',{key:second,ready:true});await wait(30);changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:second,ready:false});await changed;delete process.env.SYNC_BUFFER_TIMEOUT_MS;
