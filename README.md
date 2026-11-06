@@ -34,7 +34,7 @@ The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are p
 | Text and image chat | Chat while listening and share JPEG, PNG, GIF or WebP images. |
 | Reactions and presence | React to songs and see who is listening in the room. |
 | Optional AI DJ | Request music in plain English using your configured AI provider; disabled by default. |
-| Mobile and PWA | Use a responsive interface with mobile volume controls, persistent search and an installable web app. |
+| Mobile and PWA | Use a responsive interface with mobile volume controls, persistent search with All / Local library / YouTube filters and a clear button, and an installable web app. |
 | Server administration | Manage password-protected settings, optional downloader cookies and proxy configuration. |
 
 Synchronization is automatic, but network outages, browser autoplay rules, YouTube ads and unreported headphone delay can affect how closely devices stay aligned.

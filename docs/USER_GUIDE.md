@@ -8,7 +8,7 @@ All admitted listeners can use shared playback controls. Play/pause, timeline dr
 
 ## Search, queue and video
 
-Use the always-visible search field or magnifier. Click a search result or **Play now** to start it immediately; **+** adds it to the queue. Online search playback automatically opens the corresponding YouTube embed. A selected upload may show album artwork rather than an official music video. Local library results stay audio.
+Use the always-visible search field or magnifier. Choose **All**, **Local library** or **YouTube** to filter the source. Local library searches uploaded songs without contacting YouTube. Use the **× Clear search** button to delete the query, including while results are loading. Click a search result or **Play now** to start it immediately; **+** adds it to the queue. Online search playback automatically opens the corresponding YouTube embed. A selected upload may show album artwork rather than an official music video. Local library results stay audio.
 
 The watch control can also accept a direct YouTube video link. Spotify links are resolved to matching YouTube tracks; this is not Spotify account playback. YouTube can reject an embed or downloader request. Server cookies do not sign another person into Premium.
 

@@ -94,6 +94,7 @@ function SearchPanel({
   className?: string;
 }) {
   const [q, setQ] = useState("");
+  const [source, setSource] = useState<"all" | "local" | "youtube">("all");
   const [tab, setTab] = useState<SearchType>("songs");
   const [results, setResults] = useState<(Track | AlbumResult | ArtistResult)[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,7 +145,8 @@ function SearchPanel({
   const run = useCallback(
     async (term: string, type: SearchType, { persist = false } = {}) => {
       const clean = term.trim();
-      if (!clean) {
+      if (source === "local" || !clean) {
+        setLoading(false);
         setResults([]);
         return;
       }
@@ -165,7 +167,7 @@ function SearchPanel({
         if (runId.current === id) setLoading(false);
       }
     },
-    [remember]
+    [remember, source]
   );
 
   /**
@@ -204,6 +206,10 @@ function SearchPanel({
   // signal that the query was the one you meant.
   useEffect(() => {
     if (album) return;
+    ++runId.current;
+    setLoading(false);
+    setResults([]);
+    if (source === "local") return;
     setLinkInfo(null);
     setLinkError(null);
     if (looksLikeLink(q)) {
@@ -218,7 +224,7 @@ function SearchPanel({
     }
     const id = setTimeout(() => run(q, tab), DEBOUNCE_MS);
     return () => clearTimeout(id);
-  }, [q, tab, album, run, runLink]);
+  }, [q, tab, album, source, run, runLink]);
 
   // Overlay only: close on outside click.
   useEffect(() => {
@@ -253,29 +259,32 @@ function SearchPanel({
   );
 
   const openAlbum = useCallback(async (a: AlbumResult) => {
+    const id = ++runId.current;
     setLoading(true);
     setCursor(-1);
     try {
       const res = await fetch(`/api/album?id=${encodeURIComponent(a.albumId)}`);
       const data = await res.json();
+      if (runId.current !== id) return;
       // Fall back to what the search result already told us, so a partial
       // response still shows a header rather than an error.
       setAlbum(data.album ?? { ...a, tracks: [] });
     } catch {
-      setAlbum({ ...a, tracks: [] });
+      if (runId.current === id) setAlbum({ ...a, tracks: [] });
     } finally {
-      setLoading(false);
+      if (runId.current === id) setLoading(false);
     }
   }, []);
 
   /** The rows the arrow keys walk, whatever the current tab is showing. */
   const rows = useMemo(() => {
+    if (source === "youtube") return album ? album.tracks : results;
     if (album) return album.tracks;
     if (tab !== "songs" || q.trim().length < 2 || isLink) return results;
     const term = q.trim().toLowerCase();
     const local = library.filter(t => `${t.title} ${t.artist}`.toLowerCase().includes(term)).slice(0, 40);
-    return [...local, ...results];
-  }, [album, results, tab, q, isLink, library]);
+    return source === "local" ? local : [...local, ...results];
+  }, [album, results, tab, q, isLink, library, source]);
 
   const playResult = useCallback((track: Track) => { onPlayNow?.(track); setOpen(false); }, [onPlayNow]);
 
@@ -303,6 +312,7 @@ function SearchPanel({
         return;
       }
       if (isLink) {
+        if (source === "local") return;
         if (!album && !loading) runLink(q);
         return;
       }
@@ -332,7 +342,7 @@ function SearchPanel({
         return next;
       });
     }
-    if (e.key === "Tab" && !e.shiftKey && !album && rows.length === 0) {
+    if (e.key === "Tab" && source !== "local" && !e.shiftKey && !album && rows.length === 0) {
       // Nothing to walk yet — Tab cycles the type instead of leaving the field.
       e.preventDefault();
       setTab((t) => TABS[(TABS.findIndex((x) => x.id === t) + 1) % TABS.length].id);
@@ -411,7 +421,9 @@ function SearchPanel({
         </li>
       )}
 
-      {!album && isLink && linkError && !loading && (
+      {!album && source === "local" && isLink && <li className="py-4 text-sm text-muted">Switch to YouTube or All to open an online link.</li>}
+
+      {!album && source !== "local" && isLink && linkError && !loading && (
         <li className="flex flex-1">
           <EmptyState icon={<Link2 className="size-5" />} title="Couldn't open that link" hint={linkError} />
         </li>
@@ -445,8 +457,8 @@ function SearchPanel({
         <li className="flex flex-1">
           <EmptyState
             icon={<Search className="size-5" />}
-            title="Search YouTube Music"
-            hint="Songs, albums and artists, or paste a YouTube or Spotify link to bring a whole playlist. Anything you add goes straight into the room's queue."
+            title={source === "local" ? "Search your local library" : "Search music"}
+            hint={source === "local" ? "Find uploaded songs by title or artist. Switch to YouTube to search online." : "Search songs, albums and artists, or paste a YouTube or Spotify link."}
           />
         </li>
       )}
@@ -539,13 +551,15 @@ function SearchPanel({
         ref={inputRef}
         value={q}
         onChange={(e) => {
+          ++runId.current;
+          setLoading(false);
           setQ(e.target.value);
           setAlbum(null);
         }}
         onFocus={() => setOpen(true)}
         onKeyDown={onFieldKey}
-        placeholder="Search our songs or YouTube Music…"
-        aria-label="Search YouTube Music"
+        placeholder={source === "local" ? "Search local library…" : source === "youtube" ? "Search YouTube Music…" : "Search local songs or YouTube…"}
+        aria-label="Search music"
         role="combobox"
         aria-expanded={showResults}
         // Only claim to control the list while it's actually in the DOM — the
@@ -564,17 +578,23 @@ function SearchPanel({
       />
       <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
         {loading && <Loader2 className="size-4 animate-spin text-muted" />}
-        {q && !loading && (
+        {q && (
           <button
             type="button"
             onClick={() => {
+              ++runId.current;
+              setLoading(false);
+              setLinkInfo(null);
+              setLinkError(null);
+              setCursor(-1);
               setQ("");
               setResults([]);
               setAlbum(null);
               inputRef.current?.focus();
             }}
             aria-label="Clear search"
-            className="grid size-7 place-items-center rounded-full text-muted transition-colors duration-200 ease-[var(--ease)] hover:bg-white/10 hover:text-ink"
+            title="Clear search"
+            className="grid size-8 place-items-center rounded-full bg-white/5 text-ink transition-colors duration-200 ease-[var(--ease)] hover:bg-white/10 hover:text-ink"
           >
             <X className="size-3.5" />
           </button>
@@ -609,7 +629,14 @@ function SearchPanel({
 
   const body = (
     <div id={listId}>
-      {!isEmptyQuery && !album && !isLink && tabs}
+      <div className="sw-seg mt-2" role="group" aria-label="Search source">
+        {([['all', 'All'], ['local', 'Local library'], ['youtube', 'YouTube']] as const).map(([id, label]) => (
+          <button key={id} type="button" aria-pressed={source === id} data-active={source === id} className="sw-seg-item" onClick={() => {
+            ++runId.current; setLoading(false); setResults([]); setAlbum(null); setLinkInfo(null); setLinkError(null); setCursor(-1); setSource(id); if (id === 'local') setTab('songs');
+          }}>{label}</button>
+        ))}
+      </div>
+      {!isEmptyQuery && !album && !isLink && source !== "local" && tabs}
       <div className={cn(variant === "overlay" ? "mt-2" : "mt-4 flex min-h-0 flex-1 flex-col")}>
         {list}
       </div>
