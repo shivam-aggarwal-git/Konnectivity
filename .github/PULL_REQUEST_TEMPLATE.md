@@ -1,14 +1,24 @@
-## What this changes
+## Problem and resulting behavior
 
-<!-- A sentence or two. Link the issue if there is one: "Fixes #123". -->
+<!-- Explain what triggers the problem and what changes. Link an issue: Fixes #123. -->
 
-## How it was tested
+## Target branch
 
-<!-- e.g. "Two browsers in one room, desktop and phone width." -->
+<!-- Usually main. For 10.01, explain the agreed stable fix and link the original/backport PR. -->
+
+## Validation
+
+<!-- List the meaningful checks run and their outcomes. Note anything not tested. -->
+
+## Screenshots
+
+<!-- For UI changes, include phone/desktop views using synthetic data only. -->
 
 ## Checklist
 
-- [ ] `npm run typecheck` passes
-- [ ] Tested in a real room, with a second listener where it matters
-- [ ] UI changes checked at phone width
-- [ ] `CHANGELOG.md` updated under "Unreleased" for anything users will notice
+- [ ] Focused changes with no personal playlists, media, credentials or runtime data
+- [ ] Relevant tests, build/typecheck and release scan pass
+- [ ] Shared behavior checked with a second listener where relevant
+- [ ] Phone layout and keyboard access checked for UI changes
+- [ ] Documentation/changelog updated for user-visible behavior
+- [ ] Ready for maintainer review; any limitations are described above

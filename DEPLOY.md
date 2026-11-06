@@ -3,7 +3,7 @@
 ## Local server or native VPS install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.01/install.sh | bash
 ```
 
 The installer prepares the app and supported runtime dependencies automatically and opens localhost on a desktop. On a headless VPS, the localhost address is printed instead; use `ssh -L 3000:127.0.0.1:3000 user@your-vps` and claim `/setup` in your own browser. This foreground installer does not configure DNS, firewall rules or a system service; use the Docker option below for managed restarts. See [setup](docs/SETUP.md) for supported platforms and developer commands.

@@ -8,6 +8,27 @@ Start a room, send one link, and everyone hears the same second of the same song
 
 > **License:** This is a modified distribution of [Syncwave](https://github.com/SAKMZ/syncwave), under **PolyForm Noncommercial 1.0.0**. It is source-available, not OSI open source. The inherited noncommercial restriction cannot be removed by renaming the project. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [release guidance](docs/RELEASING.md).
 
+## Stable and development branches
+
+| Branch | Purpose | Who should use it |
+| --- | --- | --- |
+| [`10.01`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.01) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
+| [`main`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/main) | Development branch for new features and improvements. | Contributors and people testing upcoming changes. |
+
+**Recommended: install from `10.01`.** Download links and guided installers below use this stable branch. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
+
+```sh
+git clone --branch 10.01 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
+cd Konnectivity
+bash start.sh --local
+```
+
+To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git switch 10.01`, `git pull --ff-only origin 10.01`, and start it again. Keep runtime data and credentials out of Git.
+
+## Contribute
+
+Contributions normally target `main`; stable fixes target `10.01` only when agreed with the maintainer. See [CONTRIBUTING.md](CONTRIBUTING.md) for fork/clone and sync commands, branch naming, tests, pull requests and the review/merge process. Follow [SECURITY.md](SECURITY.md) for private vulnerability reports.
+
 ## Credits and thanks to Syncwave
 
 **Konnectivity builds on [Syncwave](https://github.com/SAKMZ/syncwave). A heartfelt thank-you to the Syncwave team, its original creators, maintainers and every contributor for building and sharing the project that made this fork possible.**
@@ -48,7 +69,7 @@ No songs, cookies, API keys, passwords, existing rooms or user chat are included
 
 ## One-click start
 
-[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/main.zip)
+[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.01.zip)
 
 Extract the ZIP, then open the launcher for your computer. It installs the required packages and media tools, builds the app, and opens localhost automatically. No personal playlists, songs, images, cookies or settings are included.
 
@@ -63,13 +84,13 @@ Prefer one command, without downloading/extracting manually?
 **macOS / Linux:**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.01/install.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/main/install.ps1)))
+& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.01/install.ps1)))
 ```
 
 These commands install into your user folder’s `Konnectivity` directory and start locally. Re-running starts the existing installation without replacing its data. Node.js 22, npm dependencies, ffmpeg, Deno and a runnable downloader are set up automatically on supported desktop platforms. The standalone downloader avoids requiring a separate Python installation. Internet access is needed on first run; keep the terminal open while listening.
