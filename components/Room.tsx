@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import {Dialog,DialogContent,DialogTitle,DialogDescription} from "./ui/dialog";
 import RoomBackground from "./RoomBackground";
 import RoomLights from "./RoomLights";
 import AppearanceSettings from "./AppearanceSettings";
@@ -13,6 +14,8 @@ import {
   Check,
   History as HistoryIcon,
   Home,
+  ChevronDown,
+  ChevronUp,
   Keyboard,
   ListMusic,
   Heart,
@@ -132,7 +135,9 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [repeat, setRepeat] = useState<Repeat>("off");
   const [dl, setDl] = useState<Record<string, number>>({});
   const [tab, setTab] = useState<Tab>("now");
+  const [playerExpanded,setPlayerExpanded]=useState(false);
   const goHome = useCallback(() => {
+    setPlayerExpanded(true);
     setTab("now");
     setCenter("queue");
     window.dispatchEvent(new Event("konnectivity:home"));
@@ -882,8 +887,47 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     );
   }
 
+  const renderPlayer = () => (
+    <BottomPlayer
+        current={current}
+        isPlaying={isPlaying}
+        position={position}
+        duration={current?.duration ?? 0}
+        isHost={canControl}
+        downloadPct={curDl}
+        buffering={buffering}
+        preparing={preparing}
+        shuffle={shuffle}
+        repeat={repeat}
+        skipVotes={skipVotes}
+        needVotes={needVotes}
+        volume={volume}
+        likes={currentLikes.length}
+        liked={youLikeCurrent}
+        onLike={() => current?.id && likeTrack(current.id)}
+        onVolume={changeVolume}
+        onPlayPause={playPause}
+        onSkip={skip}
+        onSeek={seekTo}
+        onVoteSkip={voteSkip}
+        onShuffle={() => emit(EVENTS.CONTROL_SHUFFLE)}
+        onRepeat={() => emit(EVENTS.CONTROL_REPEAT)}
+        onReact={react}
+        castSupported={casting.supported}
+        castConnected={casting.connected}
+        onCast={casting.prompt}
+      />
+  );
+
   return (
     <div className="sw-couple flex h-[100dvh] flex-col overflow-hidden" data-room-background={appearance.background}>
+      <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
+        <DialogContent className="kn-expanded-player sw-couple" aria-describedby="expanded-player-description">
+          <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing</DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
+          <NowPlaying current={current} isPlaying={isPlaying} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className="kn-expanded-artwork flex-1"/>
+          {renderPlayer()}
+        </DialogContent>
+      </Dialog>
       {/* ambient backdrop that glows with the current album art */}
       <div
         className={`sw-ambient ${current?.thumbnail ? "on" : ""}`}
@@ -939,7 +983,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       {/* z-50 so the search dropdown clears the bottom player (z-40) rather
           than sliding behind it on a short window. */}
       <header className="sw-safe-t sw-safe-x z-50 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 px-4 py-3 backdrop-blur-xl">
-        <button type="button" onClick={goHome} aria-label="Konnectivity home" className="flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
+        <button type="button" onClick={goHome} aria-label="Konnectivity — open player" aria-haspopup="dialog" aria-expanded={playerExpanded} className="flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
           {/* Same mark as the landing page and the favicon, tinted by the
               artwork like everything else in the room. */}
           <Logo size="md" tint="art" animated={isPlaying} />
@@ -954,6 +998,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               A little closer, one song at a time
             </div>
           </div>
+          <ChevronUp size={16} className="shrink-0 text-muted" aria-hidden="true"/>
         </button>
 
         {/* Search floats over the layout rather than taking a column from it —
@@ -1049,7 +1094,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             onMetadata={(duration, title) => emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title })}
             getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} />
         </div>}
-        <RoomBackground mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
+        <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
         <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>
         <div className="sw-love-stars" aria-hidden><i>♡</i><i>✦</i><i>♡</i><i>✧</i><i>♡</i></div>
         {/* The bottom padding on phones is the reaction pill's safe area: it
@@ -1230,35 +1275,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       </div>
 
       {/* ── fixed bottom player ── */}
-      <BottomPlayer
-        current={current}
-        isPlaying={isPlaying}
-        position={position}
-        duration={current?.duration ?? 0}
-        isHost={canControl}
-        downloadPct={curDl}
-        buffering={buffering}
-        preparing={preparing}
-        shuffle={shuffle}
-        repeat={repeat}
-        skipVotes={skipVotes}
-        needVotes={needVotes}
-        volume={volume}
-        likes={currentLikes.length}
-        liked={youLikeCurrent}
-        onLike={() => current?.id && likeTrack(current.id)}
-        onVolume={changeVolume}
-        onPlayPause={playPause}
-        onSkip={skip}
-        onSeek={seekTo}
-        onVoteSkip={voteSkip}
-        onShuffle={() => emit(EVENTS.CONTROL_SHUFFLE)}
-        onRepeat={() => emit(EVENTS.CONTROL_REPEAT)}
-        onReact={react}
-        castSupported={casting.supported}
-        castConnected={casting.connected}
-        onCast={casting.prompt}
-      />
+      {renderPlayer()}
     </div>
   );
 }

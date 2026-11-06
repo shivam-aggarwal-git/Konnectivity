@@ -8,7 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { SectionHeader } from "@/components/ui/panel";
 import { CountButton } from "@/components/ui/track-row";
 import { PresenceAvatar } from "@/components/PresenceCard";
-import TogetherAnimation from "./TogetherAnimation";
+import TrackArtwork from "./TrackArtwork";
 import Lyrics from "@/components/Lyrics";
 
 /**
@@ -191,32 +191,7 @@ export default function NowPlaying({
         )}
       >
         <div className="sw-art size-full">
-          {current?.art || current?.thumbnail ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              // Keyed on the track so React remounts it and the fade actually
-              // runs — otherwise the src swaps in place and the cover pops.
-              key={current.videoId}
-              src={current.art || current.thumbnail}
-              alt={`${current.title} cover art`}
-              // Deliberately NOT crossOrigin: colour sampling uses its own
-              // request (see useArtworkTheme) so that a host which stops
-              // sending CORS headers costs us the tint, not the cover.
-              className="sw-art-in size-full object-cover"
-              // Old rooms persisted before this field existed only have the
-              // small thumbnail; don't leave them with a broken image.
-              onError={(e) => {
-                const img = e.currentTarget;
-                if (current.thumbnail && img.src !== current.thumbnail) {
-                  img.src = current.thumbnail;
-                }
-              }}
-            />
-          ) : (
-            <div className="grid size-full place-items-center bg-white/[0.04]">
-              <TogetherAnimation playing={isPlaying && !loading}/>
-            </div>
-          )}
+          <TrackArtwork track={current} playing={isPlaying && !loading}/>
 
           {loading && (
             <div className="absolute inset-0 grid place-items-center bg-black/60 backdrop-blur-sm">

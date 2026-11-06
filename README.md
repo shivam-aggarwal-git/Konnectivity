@@ -177,3 +177,7 @@ Appearance changes are synchronized within each room: either participant can cha
 Open **Appearance → Room background**. Choose **Upload a photo** to use a picture together (JPEG, PNG, WebP or GIF, up to 8 MB), or select **Song artwork** to follow the current song’s thumbnail automatically. Use **Darken background** to keep text readable. **Theme only** switches the image off; **Our photo** returns to the uploaded photo.
 
 Either participant can change the background and darkness for the room. The choice is saved and synchronized to new and reconnecting listeners. Photos use private room-protected image storage on your own server, share the configured image-storage quota, and are not automatically posted to chat. Switching to Theme only does not delete the stored photo. If a local song has no artwork, the theme remains visible.
+
+### Full player and cover recovery
+
+Click the Konnectivity logo/tagline to open the full player, then the down-chevron to keep listening in the bottom bar. Failed cover URLs fall back to an authenticated YouTube thumbnail or the animated placeholder.

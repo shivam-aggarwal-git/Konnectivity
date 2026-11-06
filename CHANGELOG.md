@@ -1,5 +1,12 @@
 # Changelog
 
+## Cover recovery and expanded player
+
+- Branding and Home open a full player; a down-chevron collapses it without restarting playback.
+- Finite artwork fallbacks replace failed covers with a thumbnail or animated placeholder.
+- Added an authenticated, bounded, fixed-upstream YouTube thumbnail fallback for the player and song-artwork background.
+
+
 ## Shared photo backgrounds
 
 - Upload a private room photo or automatically use the current song artwork as the background.

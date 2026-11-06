@@ -115,7 +115,7 @@ export default function BottomPlayer({
       <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-6 md:px-6 md:py-3">
         {/* ── left: track identity ── */}
         <div className="flex min-w-0 items-center gap-3">
-          <Cover src={current?.thumbnail} size="md" className="sm:size-14">
+          <Cover src={current?.thumbnail} fallbackSrc={current&&/^[\w-]{11}$/.test(current.videoId)?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:undefined} size="md" className="sm:size-14">
             {loading && (
               <div className="absolute inset-0 grid place-items-center bg-black/60">
                 <Loader2 className="size-5 animate-spin text-white" />

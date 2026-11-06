@@ -26,6 +26,7 @@ try{
  assert.equal(equalToken('é','a'),false);
  await status('/audio/local_00000000000000000000000000000000');
  await status('/api/search?q=test');
+ await status('/api/artwork?videoId=M7lc1UVf-VE');
  await status('/api/rooms',{method:'POST',body:'{}'});
  await status('/api/room-invite?code='+room.code);
  await status('/',{headers:{Origin:'https://untrusted.example'}},403);

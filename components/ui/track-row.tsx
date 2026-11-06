@@ -16,19 +16,22 @@ import { Avatar } from "@/components/ui/avatar";
 /** Cover art with a fallback, at the sizes rows ever use. */
 export function Cover({
   src,
+  fallbackSrc,
   alt = "",
   size = "md",
   className,
   children,
 }: {
   src?: string;
+  fallbackSrc?: string;
   alt?: string;
   size?: "sm" | "md" | "lg";
   className?: string;
   /** Overlay content — a play affordance, a caching spinner. */
   children?: React.ReactNode;
 }) {
-  const [failed, setFailed] = React.useState<string | null>(null);
+  const [failed, setFailed] = React.useState<Record<string,boolean>>({});
+  const image = [src,fallbackSrc].find(url=>url&&!failed[url]);
   const box = size === "sm" ? "size-10" : size === "lg" ? "size-14" : "size-12";
   return (
     <div
@@ -38,9 +41,9 @@ export function Cover({
         className
       )}
     >
-      {src && failed !== src ? (
+      {image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} onError={() => setFailed(src)} loading="lazy" className="size-full object-cover" />
+        <img src={image} alt={alt} onError={() => setFailed(previous=>({...previous,[image]:true}))} loading="lazy" className="size-full object-cover" />
       ) : (
         <div className="grid size-full place-items-center">
           <Disc3 className="size-5 text-white/20" />
