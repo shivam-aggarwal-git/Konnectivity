@@ -33,3 +33,11 @@ Captured from an isolated demonstration instance with generated audio, fictional
 ## Automatic synchronization
 
 ![Automatic synchronization](screenshots/automatic-sync.jpg)
+
+## Themes and appearance
+
+![Moonlight, Rosewood and Candlelight](screenshots/appearance.jpg)
+
+## Mobile appearance settings
+
+![Mobile appearance settings](screenshots/appearance-mobile.jpg)

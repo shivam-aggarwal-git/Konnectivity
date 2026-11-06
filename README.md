@@ -36,6 +36,7 @@ The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are p
 | Text and image chat | Chat while listening and share JPEG, PNG, GIF or WebP images. |
 | Reactions and presence | React to songs and see who is listening in the room. |
 | Optional AI DJ | Request music in plain English using your configured AI provider; disabled by default. |
+| Themes and atmosphere | Moonlight, Rosewood and Candlelight themes, locally hosted Lottie artwork, optional ambient visualizers and reduced-motion support. |
 | Mobile and PWA | Use a responsive interface with mobile volume controls, persistent search with All / Local library / YouTube filters and a clear button, and an installable web app. |
 | Server administration | Manage password-protected settings, optional downloader cookies and proxy configuration. |
 
@@ -108,6 +109,9 @@ Screenshots use an isolated demo instance and generated demonstration audio, not
 
 <details>
 <summary>More screenshots: library, uploads, search, image chat and automatic sync</summary>
+
+### Themes and atmosphere
+![Appearance settings](docs/screenshots/appearance.jpg)
 
 ### Saved music library
 ![Music library](docs/screenshots/library.jpg)

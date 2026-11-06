@@ -28,6 +28,7 @@ export function Cover({
   /** Overlay content — a play affordance, a caching spinner. */
   children?: React.ReactNode;
 }) {
+  const [failed, setFailed] = React.useState<string | null>(null);
   const box = size === "sm" ? "size-10" : size === "lg" ? "size-14" : "size-12";
   return (
     <div
@@ -37,9 +38,9 @@ export function Cover({
         className
       )}
     >
-      {src ? (
+      {src && failed !== src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={alt} loading="lazy" className="size-full object-cover" />
+        <img src={src} alt={alt} onError={() => setFailed(src)} loading="lazy" className="size-full object-cover" />
       ) : (
         <div className="grid size-full place-items-center">
           <Disc3 className="size-5 text-white/20" />
@@ -206,7 +207,7 @@ export function TrackRow({
 
       <Cover src={art} size="sm" />
 
-      <div className="min-w-0 flex-1">
+      <div className="kn-track-info min-w-0 flex-1">
         <div className="truncate text-sm font-medium text-ink" title={title}>
           {title}
         </div>
@@ -239,10 +240,10 @@ export function TrackRow({
         </div>
       </div>
 
-      {trailing && <div className="flex shrink-0 items-center gap-1.5">{trailing}</div>}
+      {trailing && <div className="kn-track-trailing flex shrink-0 items-center gap-1.5">{trailing}</div>}
 
       {actions && (
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity duration-200 ease-[var(--ease)] group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
+        <div className="kn-track-actions flex shrink-0 items-center gap-1 opacity-0 transition-opacity duration-200 ease-[var(--ease)] group-focus-within:opacity-100 group-hover:opacity-100 max-md:opacity-100">
           {actions}
         </div>
       )}

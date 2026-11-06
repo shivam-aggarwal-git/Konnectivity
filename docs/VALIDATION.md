@@ -11,3 +11,7 @@ Validated on 6 November 2026 with Node 26 on macOS. This is a local validation r
 - Upstream LICENSE retained byte for byte. No inherited Git history or configured publication remote is included.
 
 The preview was stopped after verification. This is not an independent security audit, a Docker build test or a physical phone/headphone latency certification. A fresh Internet-connected install still depends on package registries, font downloads and any selected media providers.
+
+## Moonlight interface review
+
+Production build and client synchronization checks passed after the interface redesign. All three theme buttons, local preference persistence, motion toggle and visualizer choices were checked in the browser. Lottie SVG output loaded from the local animation JSON. The 390 × 844 layout had no horizontal document overflow, and native audio continued playing during appearance checks. Updated room and appearance screenshots use only demonstration data. The ambient visualizer is decorative, not an audio spectrum measurement. No physical phone performance certification is claimed.

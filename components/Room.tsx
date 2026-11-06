@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import AppearanceSettings from "./AppearanceSettings";
+import {useAppearance} from "@/hooks/useAppearance";
 import { io, type Socket } from "socket.io-client";
 import {
   Activity as ActivityIcon,
@@ -128,6 +130,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [dl, setDl] = useState<Record<string, number>>({});
   const [tab, setTab] = useState<Tab>("now");
   const [center, setCenter] = useState<CenterView>("queue");
+  useAppearance();
   const [pane, setPane] = useState<SidePane>("chat");
   const [unread, setUnread] = useState(0);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -809,10 +812,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       <main className="sw-couple mx-auto flex min-h-[100dvh] w-full flex-col items-center justify-center px-6">
         <Panel className="w-full max-w-md text-center">
           <div className="mb-2 text-[11px] font-semibold tracking-eyebrow text-[var(--accent-2)] uppercase">
-            LISTEN TOGETHER
+            SOMEWHERE ONLY WE KNOW
           </div>
           <h1 className="mb-1 font-display text-2xl font-bold text-ink">Konnectivity</h1>
-          <p className="mb-6 text-sm text-muted">Your friends. Your music. One shared room.</p>
+          <p className="mb-6 text-sm text-muted">Press play. Feel a little closer.</p>
 
           {/* A first look at the avatar this name gets — the same one that will
               sit beside every track you queue and every line you type. */}
@@ -916,7 +919,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
             </div>
             <div className="truncate text-[10px] font-semibold tracking-eyebrow text-[var(--accent-2)] uppercase">
-              Our little listening room
+              A little closer, one song at a time
             </div>
           </div>
         </div>
@@ -964,6 +967,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             />
           )}
 
+          <AppearanceSettings />
           <Button
             className="hidden sm:inline-flex"
             variant="ghost"
@@ -997,7 +1001,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       </header>
 
       <nav className="sw-love-toolbar" aria-label="Room music">
-        <span className="sw-love-caption"><Heart size={12} fill="currentColor" /> A shared soundtrack.</span>
+        <span className="sw-love-caption"><Heart size={12} fill="currentColor" /> Your world. A shared soundtrack.</span>
         <button onClick={() => openLibrary("songs")}><Music2 size={15} />Library <span className="sw-library-count">{library.length}</span></button>
         <button onClick={() => openLibrary("playlists")}><ListMusic size={15} />Playlists</button>
         <button onClick={() => openLibrary("upload")}><Upload size={15} />Upload</button>

@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { SectionHeader } from "@/components/ui/panel";
 import { CountButton } from "@/components/ui/track-row";
 import { PresenceAvatar } from "@/components/PresenceCard";
+import TogetherAnimation from "./TogetherAnimation";
 import Lyrics from "@/components/Lyrics";
 
 /**
@@ -153,14 +154,14 @@ export default function NowPlaying({
     // exactly then, so a crowded room degrades instead of losing the artwork.
     <section
       className={cn(
-        "sw-panel sw-scroll flex min-h-0 flex-col overflow-y-auto p-4 sm:p-6 [justify-content:safe_center]",
+        "kn-now-card sw-panel sw-scroll flex min-h-0 flex-col overflow-y-auto p-4 sm:p-6 [justify-content:safe_center]",
         className
       )}
     >
       {/* No listener count here. The top bar carries the avatar stack at every
           width, and this panel lists everyone in full further down — a third
           copy of the same fact was what made the old panel feel crowded. */}
-      <SectionHeader icon={<Radio className="size-3.5" />} title="Now playing" />
+      <SectionHeader icon={<Radio className="size-3.5" />} title="Your shared soundtrack" />
 
       {/* Lyrics take the artwork's place rather than adding a panel: the room
           is tinted by the cover anyway, so the art is never really gone. */}
@@ -208,7 +209,7 @@ export default function NowPlaying({
             />
           ) : (
             <div className="grid size-full place-items-center bg-white/[0.04]">
-              <Disc3 className="size-16 text-white/15" />
+              <TogetherAnimation playing={isPlaying && !loading}/>
             </div>
           )}
 
@@ -277,45 +278,15 @@ export default function NowPlaying({
           </>
         ) : (
           <>
-            <h2 className="font-display text-xl font-bold text-ink">Nothing playing</h2>
-            <p className="mt-1 text-sm text-muted">Add a song to get the room started.</p>
+            <h2 className="font-display text-xl font-bold text-ink">A moment, just for you.</h2>
+            <p className="mt-1 text-sm text-muted">Find a song you love. Share it with someone you love.</p>
           </>
         )}
       </div>
 
-      {/* The phone's stand-in for the waveform — a sign of life that reads
-          instantly as "audio" and costs one line. */}
-      {current && (
-        <div className="mt-5 flex justify-center md:hidden">
-          <span className={cn("sw-eq", !isPlaying && "paused")} aria-hidden>
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-          </span>
-        </div>
-      )}
+      {current && <div className={`kn-visualizer ${isPlaying && !loading ? 'is-playing' : ''}`} aria-hidden="true">{Array.from({length:28},(_,i)=><span key={i} style={{'--bar-height':`${8+Math.round(Math.sin(i*.65)**2*18)}px`,'--bar-delay':`${-(i%9)*.17}s`} as React.CSSProperties}/>)}</div>}
 
-      {/* Waveform + elapsed. Doubles as the host's scrubber.
-          Desktop only: on a phone this panel and the player's own scrubber are
-          a hundred pixels apart, and the height it costs is the height the
-          artwork needs to stay the focal point. */}
-      {current && (
-        <div className="mt-6 hidden shrink-0 md:block">
-          <Waveform
-            seed={current.videoId}
-            progress={progress}
-            playing={isPlaying && !loading}
-            canSeek={canSeek}
-            onSeek={(ratio) => onSeek(ratio * dur)}
-          />
-          <div className="mt-2 flex items-center justify-between font-mono text-[11px] tabular-nums text-muted">
-            <span>{fmt(position)}</span>
-            <span>{fmt(dur)}</span>
-          </div>
-        </div>
-      )}
+      {current && <div className="kn-track-time"><span>{fmt(position)}</span><span>ONE SONG. TWO WORLDS CLOSER.</span><span>{fmt(dur)}</span></div>}
 
       {/* Who's here. The point of the app is that these people hear the same
           thing at the same moment, so it's worth showing rather than counting.

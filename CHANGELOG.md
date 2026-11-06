@@ -1,5 +1,12 @@
 # Changelog
 
+## Atmosphere and interface
+
+- Moonlight default, Rosewood and Candlelight themes with device-local preferences.
+- Locally hosted Lottie heart artwork, ambient wave visualizer and motion controls.
+- Hidden-page and reduced-motion handling without changing the audio pipeline.
+- Clearer queue rows, simplified player card and responsive appearance controls.
+
 ## Background playback recovery
 
 - Background listeners release buffering holds instead of pausing the room.

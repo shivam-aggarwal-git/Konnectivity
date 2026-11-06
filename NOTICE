@@ -16,3 +16,8 @@ Konnectivity branding, documentation and isolated regression tests.
 This distribution contains no personal music library, session cookies,
 room data or credentials. No affiliation or endorsement by upstream,
 YouTube, Spotify or Cloudflare is implied.
+
+The optional interface animation is rendered by lottie-web (Bodymovin),
+Copyright (c) 2015 Bodymovin, under the MIT License. A copy is retained in
+docs/third-party/lottie-web-LICENSE.md. The Together animation is original
+Konnectivity artwork; it is not a third-party LottieFiles download.

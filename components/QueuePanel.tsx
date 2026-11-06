@@ -115,6 +115,7 @@ function QueuePanel({
 
             return (
               <TrackRow
+                className="kn-queue-row"
                 key={key}
                 index={exiting ? undefined : i + 1}
                 art={t.thumbnail}
