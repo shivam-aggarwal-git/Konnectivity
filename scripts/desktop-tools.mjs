@@ -11,6 +11,10 @@ export function standaloneAsset(platform=process.platform,arch=process.arch,musl
 }
 export function checksumFor(manifest,name){const line=String(manifest).split(/\r?\n/).find(line=>line.trim().split(/\s+/).at(-1)?.replace(/^\*/,'')===name);const sum=line?.trim().split(/\s+/)[0];if(!/^[a-f0-9]{64}$/i.test(sum||''))throw Error('Official download checksum missing');return sum.toLowerCase();}
 export function executableWorks(binary,args=['--version']){return Boolean(binary)&&spawnSync(binary,args,{stdio:'ignore',timeout:30000,windowsHide:true}).status===0;}
+/** Credentials are sent only to GitHub's release metadata API, never asset redirects. */
+export function releaseHeaders(token=process.env.GITHUB_TOKEN||process.env.GH_TOKEN){
+ return {accept:'application/vnd.github+json',...(token?{Authorization:`Bearer ${token}`}:{})};
+}
 export async function ensureDownloader(root,existing){
  if(process.env.YTDLP_BINARY){if(!executableWorks(process.env.YTDLP_BINARY))throw Error('YTDLP_BINARY cannot run');return process.env.YTDLP_BINARY;}
  const target=path.join(root,'.runtime','tools',`yt-dlp${process.platform==='win32'?'.exe':''}`);
@@ -19,7 +23,7 @@ export async function ensureDownloader(root,existing){
  const musl=process.platform==='linux'&&!process.report.getReport().header.glibcVersionRuntime;
  const asset=standaloneAsset(process.platform,process.arch,musl);if(!asset)throw Error('No automatic yt-dlp build for this platform');
  console.log('  Installing a standalone downloader (no separate Python installation needed)…');
- const meta=await fetch('https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest',{headers:{accept:'application/vnd.github+json'},signal:AbortSignal.timeout(30000)});if(!meta.ok)throw Error('Could not read official yt-dlp release');const release=await meta.json();
+ const meta=await fetch('https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest',{headers:releaseHeaders(),signal:AbortSignal.timeout(30000)});if(!meta.ok)throw Error('Could not read official yt-dlp release');const release=await meta.json();
  const base=`https://github.com/yt-dlp/yt-dlp/releases/download/${encodeURIComponent(release.tag_name)}/`;
  const sums=await fetch(base+'SHA2-256SUMS',{signal:AbortSignal.timeout(30000)});if(!sums.ok)throw Error('Could not verify downloader');const expected=checksumFor(await sums.text(),asset);
  const response=await fetch(base+asset,{signal:AbortSignal.timeout(180000)});if(!response.ok)throw Error('Downloader download failed');
