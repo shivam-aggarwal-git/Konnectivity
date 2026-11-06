@@ -54,11 +54,11 @@ function run(cmd, args, extraEnv = {}) {
 
 // ---------------------------------------------------------------- node version
 const major = Number(process.versions.node.split(".")[0]);
-if (major < 20) {
+if (major < 22) {
   // start.bat / start.sh fetch a private Node when the machine has none, so
   // reaching this means launch.mjs was run directly with an old one.
   die(
-    `Konnectivity needs Node 20 or newer — this is Node ${process.versions.node}.\n` +
+    `Konnectivity needs Node 22 or newer — this is Node ${process.versions.node}.\n` +
       `Start it with ${isWin ? "start.bat" : "./start.sh"}, which sorts Node out for you,\n` +
       `or install the current LTS from https://nodejs.org.`
   );
@@ -194,15 +194,15 @@ function lanAddresses() {
 const lan = lanAddresses();
 step("Konnectivity is starting");
 say(`\n  ${C.bold}On this computer${C.reset}   ${C.cyan}http://localhost:${PORT}${C.reset}`);
-if (lan.length) {
+if (lan.length && process.env.BIND_HOST === "0.0.0.0") {
   say(`  ${C.bold}On your network${C.reset}    ${C.cyan}http://${lan[0]}:${PORT}${C.reset}`);
   for (const a of lan.slice(1)) say(`                     ${C.dim}http://${a}:${PORT}${C.reset}`);
 } else {
-  say(`  ${C.dim}No network address found — only this computer can reach it.${C.reset}`);
+  say(`  ${C.dim}Loopback only; set BIND_HOST=0.0.0.0 deliberately to allow LAN access.${C.reset}`);
 }
 if (!share) {
   say(
-    `\n  ${C.dim}Local only — these addresses work on your own network.${C.reset}\n` +
+    `\n  ${C.dim}Local mode — no public tunnel is running.${C.reset}\n` +
       `  ${C.dim}Drop --local to get a public link you can send to anyone.${C.reset}`
   );
 }
@@ -288,7 +288,7 @@ let tunnel;
 if (share) {
   step("Opening a public link");
   say(
-    `  ${C.yellow}Anyone with this link will be able to reach your Konnectivity.${C.reset}\n` +
+    `  ${C.yellow}Guests need a complete room invitation from the Share button.${C.reset}\n` +
       `  ${C.dim}The URL is random and disappears when you stop the server.${C.reset}\n` +
       `  ${C.dim}Use --local to stay on your own network instead.${C.reset}\n`
   );

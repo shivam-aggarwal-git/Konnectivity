@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Use Node.js 20+ and npm, plus Python 3 for yt-dlp. `npm ci` installs locked dependencies; optional packages provide ffmpeg, Deno and cloudflared where supported. `npm run launch` reports missing tools. Python 3 must be available to the downloader. A build needs Internet access to fetch the Sora font.
+Use Node.js 22+ and npm, plus Python 3 for yt-dlp. `npm ci` installs locked dependencies; optional packages provide ffmpeg, Deno and cloudflared where supported. `npm run launch` reports missing tools. Python 3 must be available to the downloader. A build needs Internet access to fetch the Sora font.
 
 Examples for missing system tools:
 
@@ -10,13 +10,13 @@ Examples for missing system tools:
 # macOS with Homebrew
 brew install node python ffmpeg deno
 
-# Debian/Ubuntu (install a supported Node 20+ release separately)
+# Debian/Ubuntu (install a supported Node 22+ release separately)
 sudo apt-get update
 sudo apt-get install python3 ffmpeg ca-certificates
 # Install Deno through its official distribution if the npm optional package failed.
 ```
 
-On Windows, install Node 20+ and Python 3, then run `npm ci` in PowerShell. Optional fallback: `winget install Gyan.FFmpeg` for ffmpeg. The supplied `start.bat` and `start.sh` are convenience launchers that can bootstrap Node; review scripts before running them.
+On Windows, install Node 22+ and Python 3, then run `npm ci` in PowerShell. Optional fallback: `winget install Gyan.FFmpeg` for ffmpeg. The supplied `start.bat` and `start.sh` are convenience launchers that can bootstrap Node; review scripts before running them.
 
 ## Install from source
 

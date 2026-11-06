@@ -61,7 +61,7 @@ pause
 exit /b 1
 
 rem ---------------------------------------------------------------------------
-rem Sets NODE_OK when `node` on the current PATH is version 20 or newer. Probing
+rem Sets NODE_OK when `node` on the current PATH is version 22 or newer. Probing
 rem by name rather than by path keeps this free of quoting problems, and the
 rem caller controls which Node that is by ordering PATH.
 :probe
@@ -72,5 +72,5 @@ if not defined _v exit /b 0
 set "_v=%_v:v=%"
 for /f "tokens=1 delims=." %%m in ("%_v%") do set "_m=%%m"
 if not defined _m exit /b 0
-if %_m% GEQ 20 set "NODE_OK=1"
+if %_m% GEQ 22 set "NODE_OK=1"
 exit /b 0

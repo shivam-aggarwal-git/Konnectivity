@@ -1,3 +1,4 @@
+import { limitedJson } from "@/lib/request-body";
 import { NextRequest, NextResponse } from "next/server";
 import { getPublicSettings, updateSettings } from "@/lib/settings.mjs";
 import { publicPersonas } from "@/lib/personas.mjs";
@@ -19,7 +20,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const denied = await requireAdmin();
   if (denied) return denied;
-  const patch = await req.json();
+  let patch;
+  try { patch = await limitedJson(req); if(!patch || typeof patch !== "object" || Array.isArray(patch)) throw new Error(); } catch { return NextResponse.json({error:"bad_request"},{status:400}); }
   const settings = await updateSettings(patch);
   // Whatever the pool learned was about the old credentials, and a fresh key
   // should be tried immediately rather than after the cache expires.

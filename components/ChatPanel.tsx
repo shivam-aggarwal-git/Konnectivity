@@ -59,6 +59,7 @@ function ChatPanel({
   const [uploadError, setUploadError] = useState("");
   const photoInput = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
+  const emojiPanel=useRef<HTMLDivElement>(null),emojiButton=useRef<HTMLButtonElement>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -70,6 +71,7 @@ function ChatPanel({
     if (list && followRef.current) list.scrollTo({ top: list.scrollHeight, behavior: "auto" });
   }, [chat, expanded]);
 
+  useEffect(()=>{if(!pickerOpen)return;const outside=(e:PointerEvent)=>{if(!emojiPanel.current?.contains(e.target as Node)&&!emojiButton.current?.contains(e.target as Node))setPickerOpen(false);};document.addEventListener('pointerdown',outside,true);return()=>document.removeEventListener('pointerdown',outside,true);},[pickerOpen]);
   const send = () => {
     const clean = text.trim();
     if ((!clean && !image) || uploading) return;
@@ -173,7 +175,7 @@ function ChatPanel({
         )}
 
         {pickerOpen && (
-          <div className="sw-fade-in mb-2 flex flex-wrap gap-1 rounded-md border border-white/8 bg-white/[0.03] p-2">
+          <div ref={emojiPanel} className="sw-fade-in mb-2 flex flex-wrap gap-1 rounded-md border border-white/8 bg-white/[0.03] p-2">
             {QUICK_EMOJI.map((e) => (
               <button
                 key={e}
@@ -217,6 +219,7 @@ function ChatPanel({
             <button
               type="button"
               onClick={() => setPickerOpen((v) => !v)}
+              ref={emojiButton}
               aria-label="Emoji"
               aria-expanded={pickerOpen}
               className="grid size-8 shrink-0 place-items-center rounded-full text-muted transition-colors duration-200 ease-[var(--ease)] hover:bg-white/8 hover:text-ink"

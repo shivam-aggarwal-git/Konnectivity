@@ -1,5 +1,15 @@
 # Changelog
 
+## Private access, search and atmosphere
+
+- Protected room creation, token invitations and approved-member access to music and search.
+- Fixed pending guest chat leakage, malformed socket crashes and unrestricted cross-origin connections.
+- Added login/event limits, private credential permissions, upload quotas and non-root Docker defaults.
+- Updated runtime dependencies to patched versions; Node 22 or newer is required.
+- Outside-click popup dismissal, removable search recents and suggested songs.
+- Audio default with an explicit same-song video switch, and gentle synchronized timeline lights.
+
+
 ## Atmosphere and interface
 
 - Moonlight default, Rosewood and Candlelight themes with device-local preferences.

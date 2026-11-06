@@ -1,9 +1,9 @@
 "use client";
 import {useEffect,useState} from 'react';
-export type Appearance={theme:'moonlight'|'rosewood'|'candlelight';motion:boolean;visualizer:'orbit'|'wave'|'off'};
-const DEFAULT:Appearance={theme:'moonlight',motion:true,visualizer:'orbit'};
+export type Appearance={theme:'moonlight'|'rosewood'|'candlelight';motion:boolean;visualizer:'orbit'|'wave'|'off';lights:'off'|'glow'|'breathe'};
+const DEFAULT:Appearance={theme:'moonlight',motion:true,visualizer:'orbit',lights:'glow'};
 const KEY='konnectivity_appearance';
-function read():Appearance{try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return{theme:['moonlight','rosewood','candlelight'].includes(v.theme)?v.theme:DEFAULT.theme,motion:typeof v.motion==='boolean'?v.motion:true,visualizer:['orbit','wave','off'].includes(v.visualizer)?v.visualizer:'orbit'};}catch{return DEFAULT;}}
+function read():Appearance{try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return{theme:['moonlight','rosewood','candlelight'].includes(v.theme)?v.theme:DEFAULT.theme,motion:typeof v.motion==='boolean'?v.motion:true,visualizer:['orbit','wave','off'].includes(v.visualizer)?v.visualizer:'orbit',lights:['off','glow','breathe'].includes(v.lights)?v.lights:'glow'};}catch{return DEFAULT;}}
 function apply(v:Appearance){const root=document.documentElement;root.dataset.roomTheme=v.theme;root.dataset.roomMotion=v.motion?'on':'off';root.dataset.roomVisualizer=v.visualizer;}
 export function useAppearance(){
  const[value,setValue]=useState<Appearance>(DEFAULT);

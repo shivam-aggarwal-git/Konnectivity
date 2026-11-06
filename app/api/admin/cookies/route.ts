@@ -1,3 +1,4 @@
+import { limitedText } from "@/lib/request-body";
 import { NextRequest, NextResponse } from "next/server";
 import { cookiesStatus, saveCookies, clearCookies } from "@/lib/ytcookies.mjs";
 import { requireAdmin } from "@/lib/guard";
@@ -16,8 +17,8 @@ export async function POST(req: NextRequest) {
 
   // Sent as raw text — a cookies.txt is tab-delimited and does not survive a
   // trip through JSON cleanly enough to be worth the encoding.
-  const text = await req.text();
   try {
+    const text = await limitedText(req,262144);
     const status = await saveCookies(text);
     return NextResponse.json({ cookies: status });
   } catch (e) {

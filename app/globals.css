@@ -1175,3 +1175,6 @@ html { scroll-behavior: smooth; }
 @media(max-width:767px) { .sw-couple .sw-reaction-dock { top:42%; bottom:auto; right:4px; } }
 
 :root[data-room-visibility="hidden"] .kn-visualizer span { animation-play-state:paused!important; }
+
+.kn-room-lights { position:absolute; inset:0; pointer-events:none; z-index:0; background:radial-gradient(ellipse at 0% 10%,var(--accent) 0%,transparent 48%),radial-gradient(ellipse at 100% 85%,var(--accent-3) 0%,transparent 50%); transition:opacity .35s linear; }
+:root[data-room-visibility="hidden"] .kn-room-lights { display:none; }

@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (err) {
     return NextResponse.json(
-      { error: "lyrics_failed", detail: String((err as Error)?.message || err) },
+      { error: "lyrics_failed" },
       { status: 502 }
     );
   }

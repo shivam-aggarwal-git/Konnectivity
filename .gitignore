@@ -19,6 +19,7 @@ next-env.d.ts
 *cookie*
 !components/CookiesPanel.tsx
 !lib/cookies.mjs
+!lib/ytcookies.mjs
 !app/api/admin/cookies/
 *.pem
 *.key

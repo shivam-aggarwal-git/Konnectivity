@@ -1,5 +1,5 @@
 # Konnectivity — single-container build (Next.js + Socket.io + yt-dlp)
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 # Runtime deps: ffmpeg (m4a extraction) + python3 (youtube-dl-exec installs the
 # Python build of yt-dlp, whose shebang is `#!/usr/bin/env python3`).
@@ -43,6 +43,9 @@ RUN YOUTUBE_DL_SKIP_PYTHON_CHECK=1 npm install \
 COPY . .
 RUN npm run build
 
+RUN mkdir -p /app/data /app/cache && chown -R node:node /app
+USER node
+ENV BIND_HOST=0.0.0.0
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV CACHE_DIR=/app/cache

@@ -18,7 +18,7 @@ const event = (s, e, check = () => true) => new Promise((resolve, reject) => {
   s.on(e, handler);
 });
 const http = createServer((req,res) => req.url.startsWith('/audio/') ? handleAudioRequest(req,res) : handleUpload(req,res,getRoom));
-const io = new Server(http); registerRoomHandlers(io);
+const io = new Server(http); registerRoomHandlers(io,{authorizeJoin:()=>true});
 await new Promise(r => http.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${http.address().port}`;
 const room = createRoom('Test together', false), sockets = [];
@@ -35,7 +35,7 @@ try {
   assert.equal(sb.participants[0].uploadToken, undefined);
   async function both(eventName, payload, predicate) {
     const states = [event(a,'playback:update',predicate), event(b,'playback:update',predicate)];
-    b.emit(eventName,payload); const result = await Promise.all(states);
+    if(payload===undefined)b.emit(eventName);else b.emit(eventName,payload); const result = await Promise.all(states);
     assert.deepEqual(result[0],result[1]); return result[0];
   }
   await both('control:volume',{ volume: .35 },s=>s.volume===.35);

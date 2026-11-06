@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ results, type });
   } catch (err) {
     return NextResponse.json(
-      { error: "search_failed", detail: String((err as Error)?.message || err) },
+      { error: "search_failed" },
       { status: 502 }
     );
   }

@@ -1,6 +1,6 @@
 # Fetches a private copy of Node into .runtime\node, for Windows machines that
 # don't have one. start.bat calls this only after failing to find an installed
-# Node 20+; nothing here touches the system, the registry, or PATH beyond the
+# Node 22+; nothing here touches the system, the registry, or PATH beyond the
 # launcher's own process, and deleting .runtime undoes all of it.
 #
 # Deliberately built on .NET types rather than the obvious cmdlets (Get-FileHash,

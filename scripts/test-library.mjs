@@ -11,7 +11,7 @@ import { ffmpegPath } from '../lib/ffmpeg.mjs';
 if (!process.env.DATA_DIR || !process.env.CACHE_DIR) throw Error('Use isolated test directories');
 const run=promisify(execFile), room=createRoom('Library integration',false), sockets=[];
 const http=createServer((req,res)=>handleUpload(req,res,getRoom,(r,t)=>registerUpload(io,r,t)));
-const io=new Server(http);registerRoomHandlers(io);await new Promise(r=>http.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${http.address().port}`;
+const io=new Server(http);registerRoomHandlers(io,{authorizeJoin:()=>true});await new Promise(r=>http.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${http.address().port}`;
 function event(socket,name,predicate=()=>true){return new Promise((resolve,reject)=>{const timeout=setTimeout(()=>{socket.off(name,listener);reject(Error(`Timeout ${name}`));},5000);function listener(data){if(predicate(data)){clearTimeout(timeout);socket.off(name,listener);resolve(data);}}socket.on(name,listener);});}
 async function join(nick, code = room.code){const s=connect(url,{transports:['websocket']});sockets.push(s);const state=event(s,'room:state');s.on('connect',()=>s.emit('join',{code,nick}));return[s,await state];}
 function ack(s,name,data){return new Promise((resolve,reject)=>s.timeout(5000).emit(name,data,(err,result)=>err?reject(err):resolve(result)));}

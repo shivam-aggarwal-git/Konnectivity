@@ -40,3 +40,13 @@ The app cannot remove network outages, YouTube ads or unreported Bluetooth laten
 Open **Appearance** (palette icon on a phone) to switch between **Moonlight**, **Rosewood** and **Candlelight**. Moonlight is the default. Choices are saved on your device across rooms. Each listener can choose their own look.
 
 Choose **Heart orbit**, **Soft waves** or **Off** for the ambient visualizer. These are decorative animations, not an audio spectrum analyzer. They do not process or change playback. **Gentle motion** disables continuous decorative movement, and system reduced-motion preferences are respected. The local Lottie artwork pauses when music is paused or the tab is hidden.
+
+## Private invitations and search
+
+Use **Share** to copy the full invitation. A room code alone does not unlock a private server. Hosts sign in at `/admin/login` to create rooms. Enable approval to admit each guest explicitly. The music library is shared with approved friends on this instance.
+
+Open Search to see suggestions and recent queries. Use the small **×** beside a recent query to remove it from this device. The larger **×** clears the current input. Filter with **Local library**, **YouTube**, or **All**.
+
+## Audio, video and room lights
+
+Rooms start in Audio mode. **Switch to Video** uses the current YouTube song and position; **Switch to Audio** returns to audio. A local file has no automatic YouTube video. In Appearance, choose **Room lights → Off / Soft glow / Song pulse**. Song pulse follows the shared playback timeline rather than claiming beat detection. Gentle motion and reduced-motion preferences are respected. Popups dismiss on outside click or Escape.

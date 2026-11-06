@@ -1,3 +1,4 @@
+import { limitedJson } from "@/lib/request-body";
 import { NextRequest, NextResponse } from "next/server";
 import { createRoom, getRoom } from "@/lib/rooms.mjs";
 import { clientIp, rateLimit } from "@/lib/ratelimit.mjs";
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
   let name: string | undefined;
   let inviteOnly: boolean | undefined;
   try {
-    const body = await req.json();
+    const body = await limitedJson(req);
     name = body?.name;
     inviteOnly = Boolean(body?.inviteOnly);
   } catch {

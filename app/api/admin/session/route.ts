@@ -1,3 +1,4 @@
+import { limitedJson } from "@/lib/request-body";
 import { NextRequest, NextResponse } from "next/server";
 import {
   isSetupComplete,
@@ -26,7 +27,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   let body: { action?: string; password?: string };
   try {
-    body = await req.json();
+    body = await limitedJson(req);
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
     const res = NextResponse.json({ ok: true });
     res.cookies.set(SESSION_COOKIE, createSession(), {
       ...sessionCookieOptions,
-      secure: req.nextUrl.protocol === "https:",
+      secure: req.nextUrl.protocol === "https:" || req.headers.get("x-konnectivity-secure") === "1",
     });
     return res;
   }
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
     const res = NextResponse.json({ ok: true });
     res.cookies.set(SESSION_COOKIE, createSession(), {
       ...sessionCookieOptions,
-      secure: req.nextUrl.protocol === "https:",
+      secure: req.nextUrl.protocol === "https:" || req.headers.get("x-konnectivity-secure") === "1",
     });
     return res;
   }

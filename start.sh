@@ -16,7 +16,7 @@ cd "$(dirname "$0")"
 RUNTIME="$PWD/.runtime/node"
 CHANNEL="https://nodejs.org/dist/latest-v22.x"
 
-# True when `node` on the current PATH is version 20 or newer. Probing by name
+# True when `node` on the current PATH is version 22 or newer. Probing by name
 # lets the caller choose which Node that is by ordering PATH.
 node_ok() {
   local v
@@ -24,7 +24,7 @@ node_ok() {
   v="${v#v}"
   v="${v%%.*}"
   case "$v" in '' | *[!0-9]*) return 1 ;; esac
-  [ "$v" -ge 20 ]
+  [ "$v" -ge 22 ]
 }
 
 fetch() { # url -> stdout

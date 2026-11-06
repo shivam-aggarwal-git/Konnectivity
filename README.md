@@ -46,7 +46,7 @@ No songs, cookies, API keys, passwords, existing rooms or user chat are included
 
 ## Quick start
 
-Requires **Node.js 20 or newer**, npm and Python 3. The optional packages supply ffmpeg, Deno and Cloudflare tunnel support on supported platforms. If unavailable, install ffmpeg and Deno separately; see [setup](docs/SETUP.md).
+Requires **Node.js 22 or newer**, npm and Python 3. The optional packages supply ffmpeg, Deno and Cloudflare tunnel support on supported platforms. If unavailable, install ffmpeg and Deno separately; see [setup](docs/SETUP.md).
 
 ```sh
 git clone https://github.com/shivam-aggarwal-git/Konnectivity.git
@@ -55,7 +55,7 @@ npm ci
 npm run launch -- --local
 ```
 
-Open **http://localhost:3000/setup**, set an admin password, then create a room. `--local` avoids a public tunnel. It still permits access from your network; firewall rules control exposure.
+Open **http://localhost:3000/setup**, set an admin password, then create a room. `--local` avoids a public tunnel. It binds to loopback by default. For LAN access set `BIND_HOST=0.0.0.0` and restrict access with your firewall.
 
 Already using port 3000? On macOS/Linux:
 
@@ -69,7 +69,7 @@ For a public invitation, finish local admin setup, stop the local launcher, then
 npm run launch
 ```
 
-The launcher starts an HTTPS Cloudflare quick tunnel after setup. Anyone with the link can reach the server. Its address changes on restart. Use the room’s **Share** button for the current invitation. Keep the host running while listening.
+The launcher starts an HTTPS Cloudflare quick tunnel after setup. Guests need a complete invitation from **Share**, including its private token. Only the signed-in host can create rooms. Its address changes on restart. Use the room’s **Share** button for the current invitation. Keep the host running while listening.
 
 ## Development and checks
 
@@ -155,3 +155,11 @@ Streaming audio from YouTube with unofficial tools may violate [YouTube’s Term
 Konnectivity and its upstream project, Syncwave, are not affiliated with, endorsed by or sponsored by Spotify or YouTube. Product names and trademarks belong to their respective owners.
 
 Konnectivity retains Syncwave’s **PolyForm Noncommercial 1.0.0** license and required copyright notice. See [LICENSE](LICENSE) for the full terms and warranty disclaimer, and [NOTICE](NOTICE) for upstream attribution. The software license does not grant rights to third-party music or videos.
+
+## Private rooms and atmosphere
+
+![Room lighting controls](docs/screenshots/room-lights.png)
+
+Search remembers recent queries on your device, with an **×** to remove each one, and offers song suggestions. Playback starts in **Audio** mode; **Switch to Video** uses the same YouTube song at its current position, without another link. Local uploads remain audio-only. Appearance includes soft glow and a slow song-timeline pulse, with reduced-motion support.
+
+This is a private, trusted-friends instance: complete invitation links grant room access, and approved participants share the server music library. In approval rooms, waiting guests cannot receive chat or media. Old bare room codes do not grant access; send a fresh link from **Share** after upgrading. See [security](SECURITY.md) and [VPS deployment](DEPLOY.md).

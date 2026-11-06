@@ -14,12 +14,14 @@ Claim `/setup`, create a room, then choose how friends connect. LAN links only w
 ```sh
 cp .env.example .env
 # Set PUBLIC_URL=https://your-domain.example and review optional settings.
+mkdir -p data cache
+sudo chown -R 1000:1000 data cache
 docker compose up -d --build
 docker compose logs -f
 docker compose ps
 ```
 
-Docker exposes port 3000 and persists `./data` and `./cache`. Set up the admin password before public exposure. Use a reverse proxy with HTTPS and WebSocket upgrades for a stable domain; route `/socket.io/`, `/audio/`, `/upload` and `/chat-media` to the same custom server. Allow at least 100 MB request bodies for music uploads. Do not buffer long uploads unnecessarily. Configure firewall/VPN access to suit your audience.
+Docker runs as a non-root user and publishes port 3000 on loopback only and persists `./data` and `./cache`. Complete admin setup locally before public exposure. For a remote VPS use `ssh -L 3000:127.0.0.1:3000 user@your-vps`, then open `http://localhost:3000/setup`. Use a reverse proxy with HTTPS and WebSocket upgrades for a stable domain; route `/socket.io/`, `/audio/`, `/upload` and `/chat-media` to the same custom server. Configure a 100 MB request-body limit for music uploads. Do not buffer long uploads unnecessarily. Configure firewall/VPN access to suit your audience.
 
 The current persistence design expects one process and a writable local filesystem. Do not run multiple independent replicas against the same JSON store.
 

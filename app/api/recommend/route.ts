@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ results, source: "artist", seedArtist: artist, mood });
   } catch (err) {
     return NextResponse.json(
-      { error: "recommend_failed", detail: String((err as Error)?.message || err) },
+      { error: "recommend_failed" },
       { status: 502 }
     );
   }

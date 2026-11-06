@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ album: await albumTracks(id) });
   } catch (err) {
     return NextResponse.json(
-      { error: "album_failed", detail: String((err as Error)?.message || err) },
+      { error: "album_failed" },
       { status: 502 }
     );
   }

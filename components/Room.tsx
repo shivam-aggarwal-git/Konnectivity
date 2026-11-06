@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
+import RoomLights from "./RoomLights";
 import AppearanceSettings from "./AppearanceSettings";
 import {useAppearance} from "@/hooks/useAppearance";
 import { io, type Socket } from "socket.io-client";
@@ -149,6 +150,17 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [videoLink, setVideoLink] = useState("");
   const [watchVideo, setWatchVideo] = useState(false);
   const [reactionDockOpen, setReactionDockOpen] = useState(false);
+  const reactionDockRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!reactionDockOpen) return;
+    const outside = (event: PointerEvent) => {
+      if (!reactionDockRef.current?.contains(event.target as Node)) setReactionDockOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") setReactionDockOpen(false); };
+    document.addEventListener("pointerdown", outside, true);
+    document.addEventListener("keydown", escape);
+    return () => { document.removeEventListener("pointerdown", outside, true); document.removeEventListener("keydown", escape); };
+  }, [reactionDockOpen]);
   const videoActive = watchVideo && Boolean(current && !current.videoId.startsWith("local_"));
   const mainRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -208,8 +220,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
   const emit = useCallback(
     (ev: string, payload?: unknown, ack?: (result: any) => void) => {
-      if (ack) return socketRef.current?.emit(ev, payload, ack);
-      return socketRef.current?.emit(ev, payload);
+      if (ack) return socketRef.current?.emit(ev, payload ?? {}, ack);
+      return socketRef.current?.emit(ev, payload ?? {});
     },
     []
   );
@@ -315,9 +327,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     if (!nick.trim()) return;
     localStorage.setItem("sw_nick", nick.trim());
     const ownerToken =
-      asHost && typeof window !== "undefined" ? localStorage.getItem(`sw_owner_${code}`) : null;
+      typeof window !== "undefined" ? localStorage.getItem(`sw_owner_${code}`) : null;
 
-    const socket = io({ path: "/socket.io" });
+    const socket = io({ path: "/socket.io", auth: { code, ownerToken } });
+    socket.on("connect_error", (e: Error) => setError(e.message));
     socketRef.current = socket;
 
     socket.on("connect", () => socket.emit(EVENTS.JOIN, { code, nick: nick.trim(), ownerToken }));
@@ -331,7 +344,9 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     socket.on(EVENTS.PENDING_UPDATE, (s: { pending: PendingRequest[] }) =>
       setPendingRequests(s.pending || [])
     );
-    socket.on(EVENTS.ROOM_STATE, (s: any) => {
+    socket.on(EVENTS.ROOM_STATE, async (s: any) => {
+      const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
+      if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
       setYou(s.you);
       setUploadToken(s.uploadToken || "");
       setPlaylists(s.playlists || []);
@@ -436,7 +451,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       audioRef.current?.pause(); nextAudioRef.current?.pause(); setBuffering(false); return;
     }
     if (!active || !current || preparing) return;
-    const wantSrc = `/audio/${current.videoId}`;
+    const wantSrc = `/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
 
     if (!active.src.endsWith(wantSrc)) {
       if (inactive && inactive.src.endsWith(wantSrc) && !inactive.paused) {
@@ -523,7 +538,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         if (next && inactive && next.status?.state === "cached") {
           crossfadeStartedRef.current = true;
           crossfadingRef.current = true;
-          inactive.src = `/audio/${next.videoId}`;
+          inactive.src = `/audio/${next.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
           inactive.currentTime = 0;
           inactive.playbackRate = 1;
           inactive.volume = 0;
@@ -582,7 +597,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     const id = setInterval(tick, 100);
     return () => { clearInterval(id); for (const name of events) active.removeEventListener(name, tick); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.videoId, isPlaying, preparing, activeSlot, shuffle, repeat, videoActive, syncKey, syncHolding, resumeAt, roomGain.outputLatency, roomGain.suspended, needsGesture]);
+  }, [current?.videoId, isPlaying, preparing, activeSlot, shuffle, repeat, videoActive, syncKey, syncHolding, resumeAt, roomGain.outputLatency, roomGain.suspended, needsGesture, code, uploadToken]);
 
   const resumeAudio = () => {
     roomGain.resume();
@@ -651,9 +666,9 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   useEffect(() => { if (!notice) return; const timer = setTimeout(() => setNotice(""), 4500); return () => clearTimeout(timer); }, [notice]);
   const createPlaylistFor = useCallback((track?: Track) => openLibrary("playlists", track), [openLibrary]);
   const playFromSearch = useCallback((track: Track) => {
-    emit(EVENTS.CONTROL_PLAY_NOW, { track, preferVideo: !track.videoId.startsWith("local_") }); setTab("now");
+    emit(EVENTS.CONTROL_PLAY_NOW, { track, preferVideo: false }); setTab("now");
   }, [emit]);
-  const queueFromSearch = useCallback((track: Track) => emit(EVENTS.QUEUE_ADD, { track, preferVideo: !track.videoId.startsWith("local_") }), [emit]);
+  const queueFromSearch = useCallback((track: Track) => emit(EVENTS.QUEUE_ADD, { track, preferVideo: false }), [emit]);
   const playNow = useCallback((track: Track) => emit(EVENTS.CONTROL_PLAY_NOW, { track }), [emit]);
   const playQueueNow = useCallback((id: string) => emit(EVENTS.CONTROL_PLAY_NOW, { id }), [emit]);
   const seekTo = useCallback((pos: number) => emit(EVENTS.CONTROL_SEEK, { position: pos }), [emit]);
@@ -688,9 +703,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   }, [code, uploadToken]);
   const mediaQuery = `?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
   const setVideoMode = useCallback((enabled: boolean) => {
+    if(enabled && current?.videoId.startsWith("local_")){setNotice("Local files are audio-only. Choose a YouTube song for video.");return;}
     emit(EVENTS.CONTROL_VIDEO, { enabled }, (result: any) => { if (result.error) setNotice(result.error); });
-    if (enabled) { setTab("now"); setNotice("Watch together is on. Search or paste a YouTube link, then choose Play now."); }
-  }, [emit]);
+    if (enabled) { setTab("now"); setNotice("Video is playing the same song. Switch back to Audio anytime."); }
+  }, [emit, current?.videoId]);
   const react = useCallback((emoji: string) => emit(EVENTS.REACTION, { emoji }), [emit]);
   const onTyping = useCallback(() => signal("typing"), [signal]);
   const likeCurrent = useCallback(() => {
@@ -1005,12 +1021,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         <button onClick={() => openLibrary("songs")}><Music2 size={15} />Library <span className="sw-library-count">{library.length}</span></button>
         <button onClick={() => openLibrary("playlists")}><ListMusic size={15} />Playlists</button>
         <button onClick={() => openLibrary("upload")}><Upload size={15} />Upload</button>
-        <button aria-pressed={watchVideo} onClick={() => setVideoMode(!watchVideo)}><Video size={15} />{watchVideo ? "Audio" : "Watch"}</button>
+        <button aria-pressed={watchVideo} onClick={() => setVideoMode(!watchVideo)}><Video size={15} />{watchVideo ? "Switch to Audio" : "Switch to Video"}</button>
       </nav>
-      {watchVideo && <form className="sw-video-link-form" onSubmit={e => { e.preventDefault(); emit(EVENTS.CONTROL_VIDEO_PLAY, { url: videoLink }, (result: any) => { if (result.error) setNotice(result.error); else { setVideoLink(""); setTab("now"); } }); }}>
-        <input type="url" required aria-label="YouTube video link" placeholder="Paste a YouTube video link…" value={videoLink} onChange={e => setVideoLink(e.target.value)}/>
-        <button type="submit"><Play size={14}/>Play video</button>
-      </form>}
       {syncHolding && <div className="sw-sync-message" role="status">♡ Keeping you together{waitingFor.length ? ` — waiting for ${waitingFor.join(" & ")}` : ""}. Playback resumes automatically.</div>}
       {/* ── body ── */}
       <main ref={mainRef} className={cn("relative flex min-h-0 flex-1 flex-col", videoActive && "sw-watching", reactionDockOpen && "sw-reactions-open")} data-view={tab} {...swipe}>
@@ -1020,6 +1032,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             onMetadata={(duration, title) => emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title })}
             getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} />
         </div>}
+        <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>
         <div className="sw-love-stars" aria-hidden><i>♡</i><i>✦</i><i>♡</i><i>✧</i><i>♡</i></div>
         {/* The bottom padding on phones is the reaction pill's safe area: it
             floats over this region, and without the gap it sits on top of
@@ -1189,7 +1202,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
           way to react at all, the player's own bar not starting until lg.
           Zero-height and absolutely positioned so it overlays whatever is
           above it rather than taking a row of the height a phone hasn't got. */}
-      <aside className="sw-reaction-dock lg:hidden" aria-label="Room reactions">
+      <aside ref={reactionDockRef} className="sw-reaction-dock lg:hidden" aria-label="Room reactions">
         {reactionDockOpen && <ReactionBar onReact={(emoji) => { react(emoji); setReactionDockOpen(false); }} className="sw-side-reactions" />}
         <button className="sw-reaction-dock-toggle" aria-label="Reactions" aria-expanded={reactionDockOpen} onClick={() => setReactionDockOpen(v => !v)}><Smile size={18}/></button>
       </aside>

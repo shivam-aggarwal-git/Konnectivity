@@ -15,3 +15,13 @@ The preview was stopped after verification. This is not an independent security 
 ## Moonlight interface review
 
 Production build and client synchronization checks passed after the interface redesign. All three theme buttons, local preference persistence, motion toggle and visualizer choices were checked in the browser. Lottie SVG output loaded from the local animation JSON. The 390 × 844 layout had no horizontal document overflow, and native audio continued playing during appearance checks. Updated room and appearance screenshots use only demonstration data. The ambient visualizer is decorative, not an audio spectrum measurement. No physical phone performance certification is claimed.
+
+## Security and interaction update — 7 November 2026
+
+- Next.js 16.4.5 production build and TypeScript validation passed in an isolated staging copy.
+- `npm audit --omit=dev` reported zero known vulnerabilities for the resolved dependency tree at validation time.
+- The security regression suite passed: invitation access, origin rejection, protected media/search/room creation, waiting-guest chat isolation, malformed messages, request-body limits, login rate limits and filesystem permissions.
+- All synchronization, media, library and shared-control suites passed, including a five-second buffering stall and generated WAV/MP3/FLAC uploads.
+- Real production routes passed login, room creation and authenticated YouTube search checks. Songs, albums, album tracks and artists were smoke-tested against the current search service after the dependency migration.
+- Browser checks confirmed Share and Search outside-click dismissal, removable recents, suggested songs, audio default and persistent lighting settings.
+- Docker configuration was hardened but no Docker image build or independent penetration test was performed. Optional paid AI-provider calls were not exercised.

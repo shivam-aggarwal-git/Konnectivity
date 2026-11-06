@@ -2,7 +2,7 @@
   "name": "konnectivity",
   "version": "1.3.0",
   "private": true,
-  "description": "Konnectivity — self-hosted listening rooms with synchronized audio, YouTube video, shared playlists and image chat.",
+  "description": "Konnectivity \u2014 self-hosted listening rooms with synchronized audio, YouTube video, shared playlists and image chat.",
   "keywords": [
     "spotify-jam-alternative",
     "listen-together",
@@ -18,11 +18,11 @@
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=development node server.mjs",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "cross-env NODE_ENV=production node server.mjs",
     "typecheck": "tsc --noEmit",
     "launch": "node scripts/launch.mjs",
@@ -31,9 +31,9 @@
     "check:release": "node scripts/check-release.mjs"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.0.0",
-    "@ai-sdk/google": "^1.2.22",
-    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/anthropic": "^4.0.97",
+    "@ai-sdk/google": "^4.0.112",
+    "@ai-sdk/openai": "^4.0.109",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-collapsible": "^1.1.16",
@@ -51,7 +51,7 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.12",
     "@use-gesture/react": "^10.3.1",
-    "ai": "^4.0.0",
+    "ai": "^7.0.163",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -59,15 +59,17 @@
     "lucide-react": "^0.469.0",
     "motion": "^12.40.0",
     "nanoid": "^5.0.9",
-    "next": "^15.1.6",
+    "next": "^16.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
+    "sharp": "^0.35.5",
+    "socket.io": "^4.8.4",
+    "socket.io-client": "^4.8.4",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
     "youtube-dl-exec": "^3.0.10",
-    "ytmusic-api": "^5.2.2"
+    "ytmusic-api": "^5.3.1",
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
@@ -91,5 +93,13 @@
   },
   "bugs": {
     "url": "https://github.com/shivam-aggarwal-git/Konnectivity/issues"
+  },
+  "overrides": {
+    "axios": "^1.20.0",
+    "engine.io": "^6.6.10",
+    "follow-redirects": "^1.16.2",
+    "source-map-js": "^1.2.2",
+    "nanoid@^3": "^3.3.18",
+    "zod": "$zod"
   }
 }

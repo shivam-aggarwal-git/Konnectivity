@@ -91,6 +91,8 @@ export function Popover({
     return () => document.removeEventListener("keydown", onKey, true);
   }, [open, close]);
 
+  React.useEffect(()=>{if(!open)return;const outside=(e:PointerEvent)=>{const target=e.target as Node;if(!panelRef.current?.contains(target)&&!triggerRef.current?.contains(target)){setOpen(false);setDragY(0);}};document.addEventListener('pointerdown',outside,true);return()=>document.removeEventListener('pointerdown',outside,true);},[open]);
+
   // Move focus into the panel when it opens, so the content is reachable by
   // keyboard and announced by a screen reader as a dialog.
   React.useEffect(() => {

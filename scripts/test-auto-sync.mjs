@@ -5,13 +5,14 @@ import {io as connect} from 'socket.io-client';
 import {createRoom,registerRoomHandlers} from '../lib/rooms.mjs';
 import {playbackPosition,playbackRunning} from '../lib/client-sync.mjs';
 if(!process.env.DATA_DIR||!process.env.CACHE_DIR)throw Error('Use isolated test data');
-const http=createServer(),io=new Server(http);registerRoomHandlers(io);await new Promise(r=>http.listen(0,'127.0.0.1',r));
+const http=createServer(),io=new Server(http);registerRoomHandlers(io,{authorizeJoin:()=>true});await new Promise(r=>http.listen(0,'127.0.0.1',r));
 const room=createRoom('Auto sync test',false),url=`http://127.0.0.1:${http.address().port}`,sockets=[];
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const event=(s,name,predicate=()=>true)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>{s.off(name,fn);reject(Error(`Timeout ${name}`));},6000);function fn(data){if(predicate(data)){clearTimeout(timer);s.off(name,fn);resolve(data);}}s.on(name,fn);});
 async function join(nick){const s=connect(url,{transports:['websocket']});sockets.push(s);const ready=event(s,'room:state');s.on('connect',()=>s.emit('join',{code:room.code,nick}));return[s,await ready];}
 try{
  const[a]=await join('Host'),[b]=await join('Listener');
+ assert.equal(room.watchVideo,false);b.emit('control:video',{enabled:true});await wait(50);
  let changed=event(a,'playback:update',s=>s.isPlaying&&s.current?.videoId==='M7lc1UVf-VE');
  b.emit('control:play-now',{track:{videoId:'M7lc1UVf-VE',title:'Search song',artist:'Artist',duration:300},preferVideo:true});
  let state=await changed;assert.equal(state.watchVideo,true);assert.equal(state.preparing,false);const key=state.syncKey;
@@ -41,5 +42,5 @@ try{
  changed=event(a,'playback:update',s=>!s.syncHolding);b.disconnect();await changed;assert.equal(room.syncHolding,false);
  const[c,sc]=await join('Listener reconnected');assert.equal(sc.watchVideo,true);assert.equal(sc.current.videoId,'abcdefghijk');assert.equal(sc.syncKey,second);
  process.env.SYNC_BUFFER_TIMEOUT_MS='120';changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:second,ready:false});await changed;await wait(200);assert.equal(room.syncHolding,false);c.emit('sync:media',{key:second,ready:false});await wait(50);assert.equal(room.syncHolding,false);c.emit('sync:media',{key:second,ready:true});await wait(30);changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:second,ready:false});await changed;delete process.env.SYNC_BUFFER_TIMEOUT_MS;
- console.log('PASS: search starts video atomically, both listeners wait through a 5-second stall, RTT-based shared resume, manual pause respected, stale reports rejected, disconnect recovery and late join');
+ console.log('PASS: audio default, explicit video switch, both listeners wait through a 5-second stall, RTT-based shared resume, manual pause respected, stale reports rejected, disconnect recovery and late join');
 }finally{for(const s of sockets)s.disconnect();io.close();http.close();}process.exit(0);

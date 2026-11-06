@@ -2,6 +2,8 @@
 // & chat) + a raw /audio route (range-served, yt-dlp-backed) on one HTTP server,
 // so the whole app is a single process / single container.
 
+import { guardRequest, allowedOrigin, mayJoin, requestIp } from "./lib/access.mjs";
+import { rateLimit } from "./lib/ratelimit.mjs";
 import { createServer } from "http";
 import next from "next";
 import { handleChatMedia } from "./lib/chat-media.mjs";
@@ -23,7 +25,8 @@ const handle = app.getRequestHandler();
 
 await app.prepare();
 
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
+  try { if (await guardRequest(req,res,getRoom)) return; } catch { res.writeHead(400); res.end("Invalid request"); return; }
   if (req.url?.startsWith("/chat-media")) { handleChatMedia(req, res, getRoom); return; }
   if (req.url?.split("?")[0] === "/upload") { handleUpload(req, res, getRoom, (room, track) => registerUpload(io, room, track)); return; }
   if (req.url && req.url.startsWith("/audio/")) {
@@ -33,14 +36,17 @@ const server = createServer((req, res) => {
   handle(req, res);
 });
 
-// Unset means "reflect the requesting origin", which is what you want on a LAN
-// where the host is reached by IP, hostname, and tailnet name interchangeably.
+// Accept only configured instance origins, with room authorization per connection.
 const publicUrl = process.env.PUBLIC_URL || "";
 
 const io = new IOServer(server, {
-  cors: { origin: publicUrl || true },
+  maxHttpBufferSize: 512 * 1024,
+  cors: { origin: publicUrl || false },
+  allowRequest: (req, done) => done(null, allowedOrigin(req) && rateLimit(`socket:${requestIp(req)}`,60,60000).ok),
 });
-registerRoomHandlers(io);
+io.use((socket,next) => { const a=socket.handshake.auth||{}; if(mayJoin(socket.request,getRoom(String(a.code||"")),a.ownerToken)) next(); else next(new Error("Open a complete invitation link, or sign in as host.")); });
+registerRoomHandlers(io, { authorizeJoin: (socket,room,owner) => mayJoin(socket.request,room,owner) });
+server.requestTimeout=30000; server.headersTimeout=15000;
 
 // Any tunnel from a previous run died with it. Drop the address now so nobody
 // is handed a dead link if that process was killed before it could clean up;
@@ -54,7 +60,7 @@ setInterval(sweepCache, 60 * 60 * 1000);
 // An outdated yt-dlp fails every track with a 403. Keep it current.
 startYtdlpUpdates();
 
-server.listen(port, () => {
+server.listen(port, process.env.BIND_HOST || "127.0.0.1", () => {
   console.log(`> Konnectivity ready on http://localhost:${port} (${dev ? "dev" : "prod"})`);
   if (ffmpegMissing()) {
     console.warn(

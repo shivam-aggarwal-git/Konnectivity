@@ -28,6 +28,7 @@ export default function CreateRoom() {
       // A refusal still returns JSON, and without this check the missing code
       // was pushed to the router as the string "undefined".
       if (!res.ok || !body?.code) {
+        if (res.status === 401) { router.push("/admin/login"); return; }
         setError(body?.error || "Could not create a room. Is the server still running?");
         setLoading(false);
         return;
@@ -51,7 +52,7 @@ export default function CreateRoom() {
     try {
       const res = await fetch(`/api/rooms?code=${encodeURIComponent(c)}`);
       if (!res.ok) {
-        setError(`No room called ${c}. Check the code and try again.`);
+        setError(res.status === 401 ? "Open the complete invitation link from your host to join this private instance." : `No room called ${c}. Check the code and try again.`);
         setJoining(false);
         return;
       }
