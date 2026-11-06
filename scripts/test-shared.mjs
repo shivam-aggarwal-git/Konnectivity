@@ -43,7 +43,7 @@ try {
     const file = `${process.env.DATA_DIR}/fixture.${ext}`;
     await run(ffmpegPath() || 'ffmpeg',['-hide_banner','-f','lavfi','-i','sine=frequency=440:duration=35','-y',file]);
     const response = await fetch(url+'/upload',{method:'POST', body:await fs.readFile(file), headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':`test.${ext}`}});
-    assert.equal(response.status,201); const {track} = await response.json(); assert.ok(track.duration>=35);
+    assert.equal(response.status,201); const {track} = await response.json(); assert.ok(Math.abs(track.duration-35)<.25, `Encoded fixture duration ${track.duration} should be within 250 ms of 35 seconds`);
     const states = [event(a,'playback:update',s=>s.current?.videoId===track.videoId&&s.isPlaying),event(b,'playback:update',s=>s.current?.videoId===track.videoId&&s.isPlaying)];
     b.emit('control:play-now',{track}); await Promise.all(states);
     const paused = await both('control:playpause',undefined,s=>!s.isPlaying&&!s.preparing); assert.ok(paused.pausedPosition>=0);

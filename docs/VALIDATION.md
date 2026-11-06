@@ -20,6 +20,7 @@ Production build and client synchronization checks passed after the interface re
 
 - Next.js 16.4.5 production build and TypeScript validation passed in an isolated staging copy.
 - `npm audit --omit=dev` reported zero known vulnerabilities for the resolved dependency tree at validation time.
+- First-time setup rejects remote and forwarded requests even with a forged localhost Host header.
 - The security regression suite passed: invitation access, origin rejection, protected media/search/room creation, waiting-guest chat isolation, malformed messages, request-body limits, login rate limits and filesystem permissions.
 - All synchronization, media, library and shared-control suites passed, including a five-second buffering stall and generated WAV/MP3/FLAC uploads.
 - Real production routes passed login, room creation and authenticated YouTube search checks. Songs, albums, album tracks and artists were smoke-tested against the current search service after the dependency migration.
