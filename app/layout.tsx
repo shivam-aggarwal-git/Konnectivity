@@ -46,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "JQBX alternative",
       "Turntable.fm alternative",
     ],
-    icons: { icon: "/icon.svg", apple: "/icon.svg" },
+    icons: { icon: [{ url: "/favicon-32.png", sizes: "32x32", type: "image/png" }, { url: "/konnectivity-icon.png", sizes: "512x512", type: "image/png" }], apple: "/apple-touch-icon.png" },
     manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, title: "Konnectivity", statusBarStyle: "black-translucent" },
     openGraph: {
@@ -54,13 +54,13 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: "Konnectivity",
       title: TITLE,
       description: DESCRIPTION,
-      images: [{ url: "/og.svg", width: 1200, height: 630, alt: "A Konnectivity listening room" }],
+      images: [{ url: "/konnectivity-brand.png", width: 1774, height: 887, alt: "A Konnectivity listening room" }],
     },
     twitter: {
       card: "summary_large_image",
       title: TITLE,
       description: DESCRIPTION,
-      images: ["/og.svg"],
+      images: ["/konnectivity-brand.png"],
     },
   };
 }

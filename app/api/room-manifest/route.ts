@@ -20,8 +20,8 @@ export function GET(req: NextRequest) {
       background_color: "#08080e",
       theme_color: "#08080e",
       icons: [
-        { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
-        { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "maskable" },
+        { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: "/konnectivity-icon.png", sizes: "512x512", type: "image/png", purpose: "any" },
       ],
     },
     { headers: { "content-type": "application/manifest+json" } }

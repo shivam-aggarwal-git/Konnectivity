@@ -65,7 +65,6 @@ import Recommendations from "@/components/Recommendations";
 import ActivityFeed from "@/components/ActivityFeed";
 import ChatPanel from "@/components/ChatPanel";
 import Reactions, { type IncomingReaction } from "@/components/Reactions";
-import MoodBadge from "@/components/MoodBadge";
 import Logo from "@/components/Logo";
 
 /**
@@ -914,9 +913,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               <h1 className="truncate font-display text-base font-bold leading-tight text-ink sm:text-lg">
                 Konnectivity
               </h1>
-              <span className="hidden sm:block">
-                <MoodBadge mood={mood} />
-              </span>
+
             </div>
             <div className="truncate text-[10px] font-semibold tracking-eyebrow text-[var(--accent-2)] uppercase">
               Our little listening room

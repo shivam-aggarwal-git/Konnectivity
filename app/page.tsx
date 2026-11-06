@@ -156,7 +156,7 @@ export default function Home() {
                   WebP rather than 440 kB of PNG. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/preview.svg"
+                src="/konnectivity-brand.png"
                 width={1600}
                 height={808}
                 alt='A shared listening room. A listener has typed "/dj add 10 romantic songs" and the AI DJ has queued ten tracks and introduced the first one. The shared queue shows each track with who added it, beside DJ recommendations, a live activity feed and a bottom player with reactions'
@@ -305,7 +305,7 @@ function SiteHeader() {
           <Logo size="sm" className="transition-shadow duration-200 ease-[var(--ease)] group-hover:shadow-[var(--glow-accent)]" />
           <span className="flex items-baseline gap-2">
             <span className="font-display text-sm font-extrabold tracking-[0.24em]">
-              KONNECTIVITY
+              Konnectivity
             </span>
             <span className="rounded-full border border-white/10 px-1.5 py-px font-mono text-[10px] text-muted max-sm:hidden">
               v{pkg.version}

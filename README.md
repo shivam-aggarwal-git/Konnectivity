@@ -1,5 +1,7 @@
 # Konnectivity
 
+![Konnectivity — Shared Audio](public/konnectivity-brand.png)
+
 **Your friends. Your music. One shared room.**
 
 Start a room, send one link, and everyone hears the same second of the same song. There's a shared queue anyone can add to, live chat, reactions, and an optional AI DJ that takes requests in plain English. It runs on a computer you already own, and your friends connect to it.
