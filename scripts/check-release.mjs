@@ -10,7 +10,7 @@ function walk(dir){for(const e of readdirSync(dir,{withFileTypes:true})){
  if(skip.has(e.name)||e.name==='check-release.mjs')continue;const p=path.join(dir,e.name),rel=path.relative(root,p);
  if(lstatSync(p).isSymbolicLink()){problems.push(`Remove symlink: ${rel}`);continue;}
  if(e.isDirectory()){walk(p);continue;}
- if(/\.(mp3|flac|wav|m4a|aac|ogg|opus|aiff|alac|wma|pem|key|p12|pfx|zip|gz)$/i.test(e.name))problems.push(`Private or unexpected binary: ${rel}`);
+ if(/\.(mp3|flac|wav|m4a|aac|ogg|opus|aiff|alac|wma|pem|key|p12|pfx|heic|heif|zip|gz)$/i.test(e.name))problems.push(`Private or unexpected binary: ${rel}`);
  if(/cookie.*\.(txt|json)$/i.test(e.name)||(/^\.env/.test(e.name)&&e.name!=='.env.example'))problems.push(`Private config: ${rel}`);
  if(/\.(png|jpg|jpeg|webp|ico|woff2?)$/i.test(e.name))continue;
  const text=readFileSync(p,'utf8');

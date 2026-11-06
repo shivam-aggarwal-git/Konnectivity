@@ -181,3 +181,7 @@ Either participant can change the background and darkness for the room. The choi
 ### Full player and cover recovery
 
 Click the Konnectivity logo/tagline to open the full player, then the down-chevron to keep listening in the bottom bar. Failed cover URLs fall back to an authenticated YouTube thumbnail or the animated placeholder.
+
+### iPhone media and player controls
+
+HEIC/HEIF uploads convert privately to JPEG, while GIF backgrounds retain animation. The visible bottom-bar chevron and mobile swipe gestures expand/collapse the player. A device-local clock appears in the header/player. Lyrics use Hindi/English scripts only when a suitable version is available; no automatic translation is claimed.

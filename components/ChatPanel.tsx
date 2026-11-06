@@ -150,7 +150,7 @@ function ChatPanel({
       <div className="mt-4 shrink-0">
         {image && <div className="sw-chat-photo-preview"><img src={image.url + mediaQuery} alt="Photo ready to send"/><span>Add a caption below, or send your photo ♡</span><button onClick={() => setImage(undefined)} aria-label="Remove attached photo"><X size={16}/></button></div>}
         {uploadError && <p role="alert" className="mb-2 text-xs text-pink-200">{uploadError}</p>}
-        <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="sr-only" aria-label="Choose chat image" onChange={e => { void attachImage(e.target.files?.[0]); e.target.value=""; }} />
+        <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif" className="sr-only" aria-label="Choose chat image" onChange={e => { void attachImage(e.target.files?.[0]); e.target.value=""; }} />
         {/* The DJ takes requests, and a command nobody can see is a command
             nobody uses. Only shown when there is actually a DJ listening —
             advertising `/dj` on an instance with the DJ switched off just

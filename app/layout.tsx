@@ -12,7 +12,7 @@ const sora = Sora({
   display: "swap",
 });
 
-const TITLE = "Konnectivity — listen to music together, in sync";
+const TITLE = "Konnectivity : A Little Closer";
 const DESCRIPTION =
   "A self-hosted Spotify Jam alternative. Start a room, share one link, and everyone " +
   "hears the same second of the same song — shared queue, chat, reactions and an optional AI DJ.";

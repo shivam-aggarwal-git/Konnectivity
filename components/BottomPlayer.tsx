@@ -1,9 +1,12 @@
 "use client";
 
+import {usePlayerSwipe} from "@/hooks/usePlayerSwipe";
 import SeekSlider from "./SeekSlider";
 import { useState } from "react";
 import {
   Cast,
+  ChevronUp,
+  ChevronDown,
   Heart,
   Loader2,
   Pause,
@@ -56,7 +59,11 @@ export default function BottomPlayer({
   castSupported,
   castConnected,
   onCast,
+  expanded = false,
+  onToggleExpanded,
 }: {
+  expanded?: boolean;
+  onToggleExpanded: () => void;
   current: Track | null;
   isPlaying: boolean;
   position: number;
@@ -86,6 +93,7 @@ export default function BottomPlayer({
   castConnected?: boolean;
   onCast?: () => void;
 }) {
+  const swipe=usePlayerSwipe({onUp:()=>{if(!expanded)onToggleExpanded();},onDown:()=>{if(expanded)onToggleExpanded();}});
   const dur = duration || current?.duration || 0;
   const cachePct = downloadPct ?? 0;
   const playPct = dur ? Math.min(100, (position / dur) * 100) : 0;
@@ -101,7 +109,8 @@ export default function BottomPlayer({
       : current?.artist;
 
   return (
-    <footer className="sw-safe-b sw-safe-x relative z-40 shrink-0 border-t border-white/8 bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] backdrop-blur-2xl">
+    <footer {...swipe} className="kn-player-bar sw-safe-b sw-safe-x relative z-40 shrink-0 border-t border-white/8 bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] backdrop-blur-2xl">
+      <button type="button" className="kn-player-handle" aria-label={expanded?"Collapse player to bottom bar":"Expand media player"} onClick={onToggleExpanded}>{expanded?<ChevronDown size={20}/>:<ChevronUp size={20}/>}</button>
       {/* A hairline of the current track's colour across the whole bar — the
           quietest possible way to tie the player to what is playing. */}
       <div

@@ -70,3 +70,13 @@ Either participant can change the background and darkness for the room. The choi
 Click the **Konnectivity logo or tagline** (or Home) to open the full player. Use the **down-chevron** at the top left to collapse back to the room and keep music playing in the bottom bar. Opening and closing this view never replaces the audio elements.
 
 If the high-resolution cover or thumbnail fails, the player tries a fixed YouTube thumbnail through the authenticated server. If no image is available, the animated placeholder replaces it. Local songs without artwork use the placeholder. The thumbnail endpoint only contacts YouTube’s fixed image host, accepts valid video IDs and does not forward your YouTube cookies.
+
+## iPhone photos, GIFs and mobile player gestures
+
+- **HEIC/HEIF:** upload directly in chat or Room background. The server converts the primary still image to a browser-friendly JPEG. Uploads remain limited to 8 MB; exceptionally large or unsupported photos show a conversion error. Conversion runs separately from the playback process.
+- **Animated GIFs:** choose Upload photo or GIF in Appearance. GIF bytes are preserved so animation stays intact. Both listeners share the selected background.
+- **Mobile player:** tap the visible chevron above the bottom media controls, or swipe up on the bottom bar to expand. Swipe down on the artwork/header, or tap either down-chevron, to collapse. Timeline and volume sliders retain their normal gestures.
+- **Clock:** the header and full player show the current time in your device’s local timezone.
+- **Lyrics:** display is restricted to Latin/English and Hindi/Devanagari scripts. The app looks for a supported alternative rather than displaying Urdu or another script. It does not automatically translate lyrics; when no suitable version exists, it shows an availability message.
+
+HEIC conversion uses [heic-decode](https://github.com/catdad-experiments/heic-decode) and the existing Sharp image library. The local validation used the [libheif public example](https://github.com/strukturag/libheif/tree/master/examples), not a personal photo; that fixture is not included in this source release.

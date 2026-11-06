@@ -1,5 +1,14 @@
 # Changelog
 
+## Mobile player and iPhone images
+
+- Correct tab title: Konnectivity : A Little Closer.
+- Dedicated fullscreen layout without centred-dialog transforms; visible media-bar chevrons and mobile swipe gestures.
+- Device-local clock in the header and expanded player.
+- Private HEIC/HEIF-to-JPEG conversion in a bounded child process; animated GIFs remain unchanged.
+- Lyrics restricted to Hindi/English scripts, with supported-result fallback and clear unavailable state.
+
+
 ## Cover recovery and expanded player
 
 - Branding and Home open a full player; a down-chevron collapses it without restarting playback.

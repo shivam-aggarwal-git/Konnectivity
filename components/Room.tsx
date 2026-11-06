@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from "./ui/dialog";
+import RoomClock from "./RoomClock";
+import {usePlayerSwipe} from "@/hooks/usePlayerSwipe";
 import RoomBackground from "./RoomBackground";
 import RoomLights from "./RoomLights";
 import AppearanceSettings from "./AppearanceSettings";
@@ -142,6 +144,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     setCenter("queue");
     window.dispatchEvent(new Event("konnectivity:home"));
   }, []);
+  const playerSwipe=usePlayerSwipe({onUp:()=>{},onDown:()=>setPlayerExpanded(false),zone:".kn-expanded-heading,.sw-art-glow"});
   const [center, setCenter] = useState<CenterView>("queue");
   const appearance = useAppearance();
   const [pane, setPane] = useState<SidePane>("chat");
@@ -887,8 +890,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     );
   }
 
-  const renderPlayer = () => (
+  const renderPlayer = (expanded=false) => (
     <BottomPlayer
+        expanded={expanded}
+        onToggleExpanded={()=>expanded?setPlayerExpanded(false):goHome()}
         current={current}
         isPlaying={isPlaying}
         position={position}
@@ -922,10 +927,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   return (
     <div className="sw-couple flex h-[100dvh] flex-col overflow-hidden" data-room-background={appearance.background}>
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
-        <DialogContent className="kn-expanded-player sw-couple" aria-describedby="expanded-player-description">
-          <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing</DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
+        <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" aria-describedby="expanded-player-description">
+          <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
           <NowPlaying current={current} isPlaying={isPlaying} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className="kn-expanded-artwork flex-1"/>
-          {renderPlayer()}
+          {renderPlayer(true)}
         </DialogContent>
       </Dialog>
       {/* ambient backdrop that glows with the current album art */}
@@ -983,7 +988,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       {/* z-50 so the search dropdown clears the bottom player (z-40) rather
           than sliding behind it on a short window. */}
       <header className="sw-safe-t sw-safe-x z-50 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 px-4 py-3 backdrop-blur-xl">
-        <button type="button" onClick={goHome} aria-label="Konnectivity — open player" aria-haspopup="dialog" aria-expanded={playerExpanded} className="flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
+        <button type="button" onClick={goHome} aria-label="Konnectivity — open player" aria-haspopup="dialog" aria-expanded={playerExpanded} className="kn-brand-button flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
           {/* Same mark as the landing page and the favicon, tinted by the
               artwork like everything else in the room. */}
           <Logo size="md" tint="art" animated={isPlaying} />
@@ -1044,6 +1049,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             />
           )}
 
+          <RoomClock/>
           <AppearanceSettings onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
           <Button
             className="hidden sm:inline-flex"

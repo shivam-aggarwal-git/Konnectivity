@@ -146,7 +146,7 @@ export default function Lyrics({
   } else {
     body = (
       <Empty
-        title={failed ? "Couldn't load lyrics" : "No lyrics for this one yet"}
+        title={failed ? "Couldn't load lyrics" : "Hindi or English lyrics unavailable"}
         hint={
           failed ? (
             "The lyrics service didn't answer. Try again on the next track."
@@ -156,7 +156,7 @@ export default function Lyrics({
               <a href="https://lrclib.net" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-2)] hover:underline">
                 LRCLIB
               </a>
-              , a free community database. Anyone can add them.
+              , a community database. Only Hindi or English script is displayed.
             </>
           )
         }

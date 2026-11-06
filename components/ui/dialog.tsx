@@ -31,8 +31,8 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { fullscreen?: boolean }
+>(({ className, children, fullscreen = false, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
@@ -41,7 +41,7 @@ const DialogContent = React.forwardRef<
         // One dialog shape for the whole app: the raised glass material, the
         // panel radius, the panel padding. Anything that needs to look
         // different should differ inside this box, not become another box.
-        "sw-glass-strong sw-modal-pop fixed top-1/2 left-1/2 z-50 grid max-h-[85dvh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto p-6",
+        fullscreen ? "sw-glass-strong fixed inset-0 z-[70] flex h-[100dvh] w-full flex-col overflow-hidden" : "sw-glass-strong sw-modal-pop fixed top-1/2 left-1/2 z-50 grid max-h-[85dvh] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto p-6",
         className
       )}
       {...props}
