@@ -265,6 +265,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   // itself is only good to a few tens of ms); above it, playback speed is
   // nudged by at most MAX_NUDGE until it closes.
   const resyncRef = useRef(false);
+  useEffect(()=>{resyncRef.current=true;},[syncKey]);
   const [soundOpen, setSoundOpen] = useState(false);
 
   const casting = useCasting(
