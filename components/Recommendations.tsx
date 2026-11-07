@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
-import { Plus, RefreshCw, Sparkles } from "lucide-react";
+import { Play, Plus, RefreshCw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { Mood, Track } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ function Recommendations({
   seed,
   mood,
   excludeIds,
-  onAdd,
+  onAdd, onPlayNow,
   limit = 5,
   className,
 }: {
@@ -34,6 +34,7 @@ function Recommendations({
   /** videoIds already playing or queued; never suggest those back. */
   excludeIds: Set<string>;
   onAdd: (t: Track) => void;
+  onPlayNow: (t: Track) => void;
   limit?: number;
   className?: string;
 }) {
@@ -99,7 +100,7 @@ function Recommendations({
         : null;
 
   return (
-    <div className={cn("flex min-h-0 flex-col", className)}>
+    <div className={cn("kn-recommendations flex min-h-0 flex-col", className)}>
       <SectionHeader
         icon={<Sparkles className="size-3.5" />}
         title={source === "dj" ? "The DJ suggests" : "More like this"}
@@ -141,7 +142,8 @@ function Recommendations({
             art={t.thumbnail}
             title={t.title}
             artist={t.artist}
-            actions={
+            actions={<>
+              <RowAction label={`Play ${t.title} now`} onClick={()=>onPlayNow(t)}><Play className="size-4"/></RowAction>
               <RowAction
                 label={added[t.videoId] ? `${t.title} added` : `Add ${t.title}`}
                 tone="accent"
@@ -156,7 +158,7 @@ function Recommendations({
                     added[t.videoId] && "rotate-45"
                   )}
                 />
-              </RowAction>
+              </RowAction></>
             }
           />
         ))}

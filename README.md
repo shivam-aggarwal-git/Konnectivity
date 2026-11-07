@@ -1,10 +1,23 @@
-# Konnectivity · 10.02
+# Konnectivity · 10.03-working
 
 ![Konnectivity](public/konnectivity-logo-light.png)
 
 **One Beat. Two Hearts**
 
 Create a private room for shared music, YouTube and uploaded MP4 videos, encrypted room calls, chat, plans and polls. Pearl is the default theme; either participant can preview and save a shared appearance. The host manages admission and cannot be removed by guests. When the host leaves, the room and its invitation expire.
+
+### 10.03-working changes
+
+- Direct Audio / Video calling with ringing while the browser requests device permission; no separate preview step.
+- Host hangup or detected host disconnect ends the room call for all participants.
+- Shared microphone, camera and screen-sharing status with visible mute labels.
+- Remote track mute/unmute refresh and queued early signaling for mobile call receivers.
+- Atomic shared replay with a new playback epoch; stale end events cannot skip the replay.
+- Host listener permissions, protected platform settings, cookie import, Cloudflare diagnostics and a reported 750 GB cutoff.
+- Bounded upload synchronization, silent-video detection, mobile video sizing, floating player and device-enable actions.
+- Personal configuration, credentials, uploads, media and runtime/container state are excluded. Docker definitions and empty configuration templates are included.
+
+This is a working branch. Actual device behavior still depends on browser permissions, codec support and network conditions.
 
 ### Current interface
 
@@ -25,15 +38,15 @@ Create a private room for shared music, YouTube and uploaded MP4 videos, encrypt
 | [`10.02`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.02) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
 | [`main`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/main) | Development branch for new features and improvements. | Contributors and people testing upcoming changes. |
 
-The previous `10.01` branch is retained for older installations. **Recommended: install from `10.02`.** Download links and guided installers below use this stable branch. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
+The previous `10.01` branch is retained for older installations. **This checkout is `10.03-working`.** Download links and guided installers below install this working branch. Use `10.02` for the previous stable version. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
 
 ```sh
-git clone --branch 10.02 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
+git clone --branch 10.03-working --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
 cd Konnectivity
 bash start.sh --local
 ```
 
-To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git switch 10.02`, `git pull --ff-only origin 10.02`, and start it again. Keep runtime data and credentials out of Git.
+To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git switch 10.03-working`, `git pull --ff-only origin 10.03-working`, and start it again. Keep runtime data and credentials out of Git.
 
 ## Contribute
 
@@ -79,7 +92,7 @@ No songs, cookies, API keys, passwords, existing rooms or user chat are included
 
 ## One-click start
 
-[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.02.zip)
+[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.03-working.zip)
 
 Extract the ZIP, then open the launcher for your computer. It installs the required packages and media tools, builds the app, and opens localhost automatically. No personal playlists, songs, images, cookies or settings are included.
 
@@ -94,13 +107,13 @@ Prefer one command, without downloading/extracting manually?
 **macOS / Linux:**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.02/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.03-working/install.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.02/install.ps1)))
+& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.03-working/install.ps1)))
 ```
 
 These commands install into your user folder’s `Konnectivity` directory and start locally. Re-running starts the existing installation without replacing its data. Node.js 22, npm dependencies, ffmpeg, Deno and a runnable downloader are set up automatically on supported desktop platforms. The standalone downloader avoids requiring a separate Python installation. Internet access is needed on first run; keep the terminal open while listening.
@@ -147,7 +160,7 @@ docker compose down
 
 Complete `/setup` locally before exposing the server. Docker does not create a public tunnel. `data/` and `cache/` are persistent bind mounts. Never commit them.
 
-## Screenshots · 10.02
+## Screenshots · interface overview
 
 These screenshots use a separate demo instance, fictional participants and generated media. They contain no private photos, credentials, TURN settings or public invitation URLs.
 
@@ -197,3 +210,9 @@ Konnectivity retains Syncwave’s **PolyForm Noncommercial 1.0.0** license and r
 - Cloudflare TURN supports a 750 decimal GB monthly cutoff based on provider-reported account egress. Reporting can lag; this is not an instantaneous billing hard cap. The guard fails closed if required analytics are unavailable.
 - Casting is offered only where the browser exposes a compatible remote-playback API and requires a compatible receiver.
 - Local notification recordings are optional; this code-only release includes generated fallback tones, not personal recordings.
+
+### Room calls in 10.03-working
+
+The image below uses synthetic test devices, not personal cameras or photos.
+
+<img src="docs/screenshots/mobile-call-10.03.png" width="360" alt="Mobile room call with remote video, local picture-in-picture and shared mute status">

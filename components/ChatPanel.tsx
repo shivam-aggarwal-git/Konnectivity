@@ -31,13 +31,14 @@ function ChatPanel({
   aiDj,
   djTyping,
   onUploadImage, onUploadVideo, mediaQuery, onExpandedChange,
-  onSend,
+  onSend, mobileOpen, onMobileClose,
   onTyping,
   statuses,
   muted,
   className,
 }: {
   chat: ChatMsg[];
+  mobileOpen?:boolean; onMobileClose?:()=>void;
   onExpandedChange?: (expanded:boolean)=>void;
   /** nick → presence, so a name in the thread says whether they're still here. */
   statuses?: Record<string, PresenceStatus>;
@@ -111,13 +112,14 @@ function ChatPanel({
     .filter(([nick, status]) => status === "typing" && nick !== you)
     .map(([nick]) => nick);
 
+  useEffect(()=>{if(mobileOpen)setHidden(false);},[mobileOpen]);
   if(hidden&&!expanded)return <button className="kn-background-upload" onClick={()=>setHidden(false)}><MessageSquare size={15}/>Open chat</button>;
   const content = (
-    <div data-room-chat className={cn("flex min-h-0 flex-col overflow-hidden", expanded ? "h-full w-full" : className)}>
+    <div data-room-chat data-mobile-open={mobileOpen} className={cn("flex min-h-0 flex-col overflow-hidden", expanded ? "h-full w-full" : className)}>
       <SectionHeader
         icon={<MessageSquare className="size-3.5" />}
         title="Chat"
-        trailing={<><button className="kn-chat-close" aria-label="Close chat" title="Close chat" onClick={()=>expanded?setExpanded(false):setHidden(true)}><X size={16}/></button>{aiDj && <span className="text-[11px] text-muted">🎧 {aiDj} is in here</span>}<button type="button" onClick={() => { followRef.current = true; setExpanded(v => !v); }} aria-label={expanded ? "Collapse chat" : "Expand chat"} title={expanded ? "Collapse chat" : "Expand chat"} className="flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1.5 text-xs text-ink hover:bg-white/10">{expanded ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}<span>{expanded ? "Collapse" : "Expand"}</span></button></>}
+        trailing={<><button className="kn-chat-close" aria-label="Close chat" title="Close chat" onClick={()=>expanded?setExpanded(false):mobileOpen&&matchMedia("(max-width:767px)").matches?onMobileClose?.():setHidden(true)}><X size={16}/></button>{aiDj && <span className="text-[11px] text-muted">🎧 {aiDj} is in here</span>}<button type="button" onClick={() => { followRef.current = true; setExpanded(v => !v); }} aria-label={expanded ? "Collapse chat" : "Expand chat"} title={expanded ? "Collapse chat" : "Expand chat"} className="flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1.5 text-xs text-ink hover:bg-white/10">{expanded ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}<span>{expanded ? "Collapse" : "Expand"}</span></button></>}
       />
 
       <div ref={node => { scrollRef.current = node; if (node && followRef.current) node.scrollTop = node.scrollHeight; }} role="log" aria-label="Chat messages" aria-live="polite" tabIndex={0} onScroll={() => { const list = scrollRef.current; if (list) followRef.current = list.scrollHeight - list.clientHeight - list.scrollTop < 64; }} className="sw-scroll -mr-2 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-2">
@@ -217,7 +219,7 @@ function ChatPanel({
             The host has muted your chat.
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-full border border-input bg-field pl-4 pr-1.5 py-1.5 transition-[border-color,box-shadow] duration-200 ease-[var(--ease)] focus-within:border-[color:color-mix(in_oklab,var(--accent)_55%,transparent)] focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_18%,transparent)]">
+          <div className="kn-chat-composer flex items-center gap-2 rounded-full border border-input bg-field pl-4 pr-1.5 py-1.5 transition-[border-color,box-shadow] duration-200 ease-[var(--ease)] focus-within:border-[color:color-mix(in_oklab,var(--accent)_55%,transparent)] focus-within:shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_18%,transparent)]">
             <input
               ref={inputRef}
               className="min-w-0 flex-1 bg-transparent text-[13px] text-ink outline-none placeholder:text-muted"

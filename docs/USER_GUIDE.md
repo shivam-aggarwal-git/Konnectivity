@@ -135,3 +135,14 @@ Keep the server’s `data/` directory when updating or moving the app. A rotatin
 
 ![Save playlist references across rooms](screenshots/persistent-playlist-mobile.png)
 ![Retain personal appearance](screenshots/persistent-appearance-mobile.png)
+
+
+### Host permissions and platform settings
+
+Settings → Listener permissions lets the host allow or restrict all current and future listeners together. Controls include text, photos, chat video, location, comments, reactions, player messages, voting, polls, plans, uploads, queue, playlists, shared playback, appearance and calls. The host is exempt. Changes are enforced by the server, saved with the room, and sent to connected listeners. Disabling calls disconnects listener call sessions. Disabling synchronization removes listener clock correction and buffering barriers; shared track changes still apply.
+
+Platform administration in Settings requires a separate authenticated platform-admin session. It includes YouTube Netscape cookie import, proxy access, AI provider settings and TURN/Cloudflare relay configuration. No YouTube password is requested. Saved relay secrets remain in the server data directory; only configured/not-configured indicators return to the browser. Rejoin calls after changing relay configuration.
+
+### Mobile chat and video
+
+Chat opens a full-height, keyboard-aware panel with a full-width message field, attachment actions and a close button. Video has replay, fullscreen, hide/show controls, picture-in-picture and an in-app floating overlay. System PiP depends on browser support; unsupported sources use the floating overlay inside Konnectivity. MP4/H.264/AAC offers broad mobile compatibility. New tracks start in Audio mode unless Video is selected explicitly.

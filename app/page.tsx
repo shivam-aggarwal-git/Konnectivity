@@ -18,7 +18,7 @@ import SiteFooter from "@/components/SiteFooter";
 import Logo from "@/components/Logo";
 import { isSetupComplete } from "@/lib/auth.mjs";
 import { REPO_URL } from "@/lib/brand";
-const DOCUMENTATION_VERSION = "10.02";
+const DOCUMENTATION_VERSION = "10.03-working";
 
 export const dynamic = "force-dynamic";
 

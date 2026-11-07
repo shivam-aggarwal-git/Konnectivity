@@ -121,9 +121,9 @@ export default function BottomPlayer({
 
       {/* Tighter on a phone: the bar is two rows there, and every pixel it
           takes comes out of the panel above it. */}
-      <div className="mx-auto grid max-w-[1600px] grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-6 md:px-6 md:py-3">
+      <div className="kn-player-grid mx-auto grid max-w-[1600px] grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1 px-4 py-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-6 md:px-6 md:py-3">
         {/* ── left: track identity ── */}
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="kn-player-identity flex min-w-0 items-center gap-3">
           <Cover src={current?.thumbnail} fallbackSrc={current&&/^[\w-]{11}$/.test(current.videoId)?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:undefined} size="md" className="sm:size-14">
             {loading && (
               <div className="absolute inset-0 grid place-items-center bg-black/60">
@@ -167,7 +167,7 @@ export default function BottomPlayer({
         </div>
 
         {/* ── centre: transport + scrubber ── */}
-        <div className="order-3 col-span-2 flex flex-col items-center gap-1 md:order-none md:col-span-1 md:w-[min(46vw,560px)] md:gap-2">
+        <div className="kn-player-transport order-3 col-span-2 flex flex-col items-center gap-1 md:order-none md:col-span-1 md:w-[min(46vw,560px)] md:gap-2">
           <div className="flex items-center gap-2 sm:gap-3">
             <IconToggle active={shuffle} disabled={!isHost} onClick={onShuffle} label="Shuffle">
               <Shuffle className="size-4" />
@@ -254,7 +254,7 @@ export default function BottomPlayer({
         </div>
 
         {/* ── right: reactions, cast and volume ── */}
-        <div className="flex items-center justify-end gap-2">
+        <div className="kn-player-options flex items-center justify-end gap-2">
           <ReactionBar onReact={onReact} className="hidden lg:flex" />
           <span className="hidden h-6 w-px bg-white/8 lg:block" aria-hidden />
           {castSupported && (

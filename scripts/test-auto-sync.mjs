@@ -42,5 +42,14 @@ try{
  changed=event(a,'playback:update',s=>!s.syncHolding);b.disconnect();await changed;assert.equal(room.syncHolding,false);
  const[c,sc]=await join('Listener reconnected');assert.equal(sc.watchVideo,true);assert.equal(sc.current.videoId,'abcdefghijk');assert.equal(sc.syncKey,second);
  process.env.SYNC_BUFFER_TIMEOUT_MS='120';changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:second,ready:false});await changed;await wait(200);assert.equal(room.syncHolding,false);c.emit('sync:media',{key:second,ready:false});await wait(50);assert.equal(room.syncHolding,false);c.emit('sync:media',{key:second,ready:true});await wait(30);changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:second,ready:false});await changed;delete process.env.SYNC_BUFFER_TIMEOUT_MS;
+ // Replay resets the authoritative clock and rejects an old end notification.
+ a.emit('control:seek',{position:90});await wait(30);const oldKey=room.syncKey;changed=event(a,'playback:update',s=>s.syncKey!==oldKey&&s.pausedPosition===0&&s.isPlaying);a.emit('control:replay',{});const replay=await changed;assert.notEqual(replay.syncKey,oldKey);assert.equal(replay.pausedPosition,0);const replayTrack=room.current.videoId;a.emit('track:ended',{videoId:replayTrack,syncKey:oldKey});await wait(30);assert.equal(room.current.videoId,replayTrack);
+ // Uploaded files also have a bounded wait, and autoplay-blocked devices
+ // must not hold every other listener indefinitely.
+ process.env.SYNC_BUFFER_TIMEOUT_MS='120';
+ room.current.videoId='local_readiness_fixture';room.playToken++;room.isPlaying=true;
+ changed=event(a,'playback:update',s=>s.current?.videoId==='local_readiness_fixture'&&s.syncHolding);a.emit('control:seek',{position:0});state=await changed;const localKey=state.syncKey;
+ a.emit('sync:media',{key:localKey,ready:true});changed=event(a,'playback:update',s=>!s.syncHolding);c.emit('sync:media',{key:localKey,ready:false,blocked:true});await changed;
+ c.emit('sync:media',{key:localKey,ready:true});await wait(20);changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:localKey,ready:false});await changed;await wait(180);assert.equal(room.syncHolding,false);delete process.env.SYNC_BUFFER_TIMEOUT_MS;
  console.log('PASS: audio default, explicit video switch, both listeners wait through a 5-second stall, RTT-based shared resume, manual pause respected, stale reports rejected, disconnect recovery and late join');
 }finally{for(const s of sockets)s.disconnect();io.close();http.close();}process.exit(0);

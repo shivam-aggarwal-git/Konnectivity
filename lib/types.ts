@@ -7,6 +7,7 @@ export type Status = { state: "cached" | "downloading" | "pending"; percent: num
 
 export type Track = {
   mediaType?:"audio"|"video";
+  hasAudio?:boolean;
   sourceName?:string;nameKey?:string;
   id?: string;
   videoId: string;
@@ -148,5 +149,5 @@ export type AlbumDetail = AlbumResult & { tracks: Track[] };
 export type RoomPlan={id:string;creatorId:string;canClose:boolean;by:string;title:string;venue:string;when:string;budget:number;closed:boolean;myResponse:string|null;responses:{nick:string;choice:string}[];suggestions:{id:string;nick:string;text:string}[]};
 export type RoomPoll={id:string;creatorId:string;canClose:boolean;by:string;question:string;options:string[];counts:number[];total:number;myVote:number|null;closed:boolean};
 export type CallInvitation={id:string;from:string;nick:string;video:boolean;expiresAt:number};
-export type CallMember={id:string;nick:string};
+export type CallMember={id:string;nick:string;mic?:boolean;camera?:boolean;sharing?:boolean;isHost?:boolean};
 export type SocialState={plans:RoomPlan[];polls:RoomPoll[];call:{members:CallMember[];max:number;invitation?:CallInvitation|null}};

@@ -67,7 +67,12 @@ try {
   const movie=`${process.env.DATA_DIR}/fixture.mp4`;
   await run(ffmpegPath()||'ffmpeg',['-hide_banner','-f','lavfi','-i','color=c=blue:s=160x90:d=3','-f','lavfi','-i','sine=frequency=440:duration=3','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-shortest','-y',movie]);
   const movieResponse=await fetch(url+'/upload',{method:'POST',body:await fs.readFile(movie),headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':'movie.mp4'}});
-  const movieData=await movieResponse.json();assert.equal(movieResponse.status,201,JSON.stringify(movieData));assert.equal(movieData.track.mediaType,'video');
+  const movieData=await movieResponse.json();assert.equal(movieResponse.status,201,JSON.stringify(movieData));assert.equal(movieData.track.mediaType,'video');assert.equal(movieData.track.hasAudio,true);
+  const silent=`${process.env.DATA_DIR}/silent.mp4`;
+  await run(ffmpegPath()||'ffmpeg',['-hide_banner','-i',movie,'-an','-c:v','copy','-y',silent]);
+  const silentResponse=await fetch(url+'/upload',{method:'POST',body:await fs.readFile(silent),headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':'silent.mp4'}});const silentTrack=(await silentResponse.json()).track;assert.equal(silentTrack.hasAudio,false);
+  const silentState=await both('control:play-now',{track:silentTrack},s=>s.current?.videoId===silentTrack.videoId&&!s.preparing);assert.equal(silentState.isPlaying,false);assert.equal(silentState.watchVideo,false);
+  const silentVideo=await both('control:video',{enabled:true},s=>s.watchVideo===true);assert.equal(silentVideo.isPlaying,true);
   const movieRange=await fetch(`${url}/audio/${movieData.track.videoId}`,{headers:{Range:'bytes=0-99'}});assert.equal(movieRange.status,206);assert.equal(movieRange.headers.get('content-type'),'video/mp4');assert.equal((await movieRange.arrayBuffer()).byteLength,100);
   const duplicateName=await fetch(url+'/upload',{method:'POST',body:Buffer.from('different bytes'),headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':' MOVIE.MP4 '}});assert.equal(duplicateName.status,200);assert.equal((await duplicateName.json()).duplicate,true); // headers normalize surrounding whitespace
   const duplicateCase=await fetch(url+'/upload',{method:'POST',body:Buffer.from('different bytes'),headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':'MOVIE.mp4'}});assert.equal(duplicateCase.status,200);const duplicateData=await duplicateCase.json();assert.equal(duplicateData.duplicate,true);assert.equal(duplicateData.reason,'name');assert.equal(duplicateData.track.videoId,movieData.track.videoId);

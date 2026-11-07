@@ -24,6 +24,13 @@ try{
  assert.match((await request(pending.s,'social:get')).error,/approved/);assert.match((await request(pending.s,'call:join')).error,/approved/);
  const ready=event(pending.s,'room:state');host.s.emit('host:approve',{id:pending.s.id});const guestState=await ready,guest=pending.s;
  const cross=await client(other,'Other host',true);
+ assert.ok((await request(guest,'permissions:set',{chat:false})).error);
+ assert.ok((await request(host.s,'permissions:set',{unknown:false})).error);
+ const {PERMISSIONS}=await import('../lib/permissions.mjs');
+ assert.equal((await request(host.s,'permissions:set',Object.fromEntries(Object.keys(PERMISSIONS).map(k=>[k,false])))).ok,true);
+ for(const [eventName,payload] of [['chat:send',{text:'blocked'}],['chat:send',{imageId:'blocked'}],['poll:vote',{id:'x',option:0}],['poll:create',{question:'blocked',options:['A','B']}],['plan:create',{title:'blocked'}],['call:join',{}],['appearance:set',{}],['comment:add',{text:'blocked'}],['player:message',{text:'blocked'}]])assert.match((await request(guest,eventName,payload)).error,/disabled/);
+ assert.equal((await request(host.s,'permissions:set',Object.fromEntries(Object.keys(PERMISSIONS).map(k=>[k,true])))).ok,true);
+
  assert.equal((await request(host.s,'plan:create',{title:'Party',venue:'Metro gate 2',when:'2026-12-01T18:00:00+05:30',budget:350})).ok,true);
  let state=await request(guest,'social:get'),plan=state.plans[0];assert.equal(plan.budget,350);assert.equal((await request(cross.s,'social:get')).plans.length,0);
  await request(guest,'plan:rsvp',{id:plan.id,choice:'in'});await request(guest,'plan:rsvp',{id:plan.id,choice:'maybe'});state=await request(guest,'social:get');assert.equal(state.plans[0].responses.length,1);assert.equal(state.plans[0].myResponse,'maybe');
@@ -35,8 +42,14 @@ try{
  await request(host.s,'poll:close',{id:poll.id});assert.ok((await request(guest,'poll:vote',{id:poll.id,option:0})).error);assert.ok((await request(guest,'poll:delete',{id:poll.id})).error);assert.equal((await request(host.s,'poll:delete',{id:poll.id})).ok,true);assert.equal((await request(guest,'social:get')).polls.length,0);
  // Call admission, explicit consent, cross-room signaling, departures and removal.
  assert.ok((await request(host.s,'call:signal',{to:guest.id,signal:{description:{type:'offer',sdp:'x'}}})).error);
+ const incomingBeforeCapture=event(guest,'call:state');assert.equal((await request(host.s,'call:ring',{video:true})).ok,true);assert.equal((await incomingBeforeCapture).invitation.video,true);
  const hc=await request(host.s,'call:join',{video:true});assert.equal(hc.ok,true);assert.equal(hc.invitation.video,true);assert.equal(hc.invitation.nick,'Host');const decline=event(host.s,'call:declined');await request(guest,'call:decline',{id:hc.invitation.id});assert.equal((await decline).nick,'Guest');assert.equal(hc.members.length,1);assert.equal(hc.iceServers[0].urls.startsWith('stun:'),true);
  await request(guest,'call:join');await request(cross.s,'call:join');
+ let mediaStatus=event(host.s,'call:state',v=>v.members.some(m=>m.id===guest.id&&m.mic===false));assert.equal((await request(guest,'call:media',{mic:false,camera:true,sharing:false})).ok,true);assert.equal((await mediaStatus).members.find(m=>m.id===guest.id).mic,false);
+ assert.ok((await request(guest,'call:media',{mic:'false',camera:true,sharing:false})).error);
+ const endedByHost=event(guest,'call:ended');await request(host.s,'call:leave');assert.match((await endedByHost).message,/host disconnected/);assert.equal((await request(guest,'social:get')).call.members.length,0);assert.ok(getRoom(room.code));
+ await request(host.s,'call:join',{video:true});await request(guest,'call:join');
+
  const crossRequest=io.sockets.sockets.get(cross.s.id).request;crossRequest.headers['x-forwarded-for']='203.0.113.99';await request(cross.s,'call:leave');assert.match((await request(cross.s,'call:join')).error,/HTTPS/);delete crossRequest.headers['x-forwarded-for'];await request(cross.s,'call:join');
  const extra=[];for(let n=0;n<5;n++){const c=await client(other,'Caller '+n);extra.push(c.s);assert.equal((await request(c.s,'call:join')).ok,true);}const overflow=await client(other,'Overflow');assert.match((await request(overflow.s,'call:join')).error,/full/);for(const s of extra)await request(s,'call:leave');
  

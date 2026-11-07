@@ -69,3 +69,8 @@ On failure, stop the new version, restore the previous code/build and restart wi
 Stop the app and back up your private data directory outside Git. For a Git installation, use `git fetch origin`, `git switch --track origin/10.02` (or `git switch 10.02` if present), then `git pull --ff-only origin 10.02`. Start with `bash start.sh --local` or `Start-Konnectivity.bat`. The launcher rebuilds changed sources. Keep your existing ignored data, cache and environment files; never commit them. Archive installations should extract 10.02 into a new folder, then privately transfer their data/cache/configuration before starting. The guided installer launches an existing installation without overwriting its private files.
 
 Audio is the default for all media. MP4, MOV, MKV and WebM uploads are limited to 100 MB and converted locally; movie-length large files are outside this release’s upload limit. Switch to Video in the room to watch.
+
+
+### Testing 10.03-working
+
+Clone with `git clone --branch 10.03-working https://github.com/shivam-aggarwal-git/Konnectivity.git`. This branch includes only application code, reviewed branding, sanitized documentation and deployment templates. Configure your own credentials after installation. Never reuse or publish a running instance's data directory.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 10.03-working
+
+Direct room calling, host hangup teardown, shared mute/camera status, mobile remote-track refresh, early signaling queue, atomic replay, admin permission controls, protected call configuration and mobile playback recovery. Personal runtime data and credentials are excluded.
+
 ## 10.02 — 2026-11-07
 
 - Pearl default with adaptive light/dark logos and updated documentation screenshots.

@@ -26,3 +26,10 @@ Production build and client synchronization checks passed after the interface re
 - Real production routes passed login, room creation and authenticated YouTube search checks. Songs, albums, album tracks and artists were smoke-tested against the current search service after the dependency migration.
 - Browser checks confirmed Share and Search outside-click dismissal, removable recents, suggested songs, audio default and persistent lighting settings.
 - Docker configuration was hardened but no Docker image build or independent penetration test was performed. Optional paid AI-provider calls were not exercised.
+
+
+## 10.03-working call verification
+
+Two browser clients used the production call hook with generated audio and canvas video tracks in a temporary test harness. Cloudflare TURN was required with relay-only ICE transport. Both clients received playing remote audio and video (readyState 4 with advancing media time). Voice-only calls also delivered remote audio in both directions. Remote microphone mute status appeared on the other client. Host hangup immediately ended the receiver call and removed all remote media elements.
+
+The temporary harness, generated media, provider tokens and private server configuration are not included in this branch. This verifies application negotiation and relay transport; physical iOS/Android hardware and permission behavior require device testing. Automated tests also cover host call teardown, pre-capture ringing, shared media-status validation, replay clock reset, stale ended-event rejection and the existing 750 GB reported-usage guard.

@@ -12,6 +12,8 @@ import RoomBackground from "./RoomBackground";
 import AmbientVisualizer from "./AmbientVisualizer";
 import RoomLights from "./RoomLights";
 import AppearanceSettings from "./AppearanceSettings";
+import AdminRoomSettings from "./AdminRoomSettings";
+import PermissionManager from "./PermissionManager";
 import {useAppearance,receiveRoomAppearance} from "@/hooks/useAppearance";
 import { io, type Socket } from "socket.io-client";
 import {
@@ -122,6 +124,9 @@ type SidePane = "chat" | "activity";
 export default function Room({ code, asHost }: { code: string; asHost: boolean }) {
   const [nick, setNick] = useState("");
   const [flushOnHostLeave,setFlushOnHostLeave]=useState(false),[roomEnded,setRoomEnded]=useState(""),[playerMessage,setPlayerMessage]=useState<PlayerMessage|null>(null),[soundsOn,setSoundsOn]=useState(true);
+  const [permissions,setPermissions]=useState<Record<string,boolean>>({});
+  const syncPolicy=useRef(true);
+  const hostSocketRef=useRef<string|undefined>(undefined);
   const [joined, setJoined] = useState(false);
   const [kicked, setKicked] = useState(false);
   const [awaitingApproval, setAwaitingApproval] = useState(false);
@@ -218,7 +223,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const videoActive = Boolean(current && watchVideo && (localVideo || !current.videoId.startsWith("local_")));
   const localVideoRef=useRef<HTMLVideoElement|null>(null);
   const setLocalVideo=useCallback((element:HTMLVideoElement|null)=>{localVideoRef.current=element;},[]);
-  useEffect(()=>{setVideoControlsHidden(false);if(videoActive&&current)setLastVideo(current);},[current?.videoId,videoActive]);
+  useEffect(()=>{setVideoControlsHidden(false);if(current&&(videoActive||current.mediaType==="video"))setLastVideo(current);},[current?.videoId,videoActive]);
   const mainRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!videoActive) return;
@@ -295,9 +300,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   },[joined,emit]);
 
   const readinessRef = useRef({ key: "", badSince: 0, foregroundAt: 0 });
-  const reportReady = useCallback((ready: boolean, key: string) => {
+  const reportReady = useCallback((ready: boolean, key: string, blocked=false) => {
     if (!key) return;
     if(!uploadReady.current)ready=false;
+    if(blocked){emit(EVENTS.SYNC_MEDIA,{key,ready:false,blocked:true});return;}
     const now = performance.now(), background = uploadReady.current&&document.visibilityState !== "visible";
     const state = readinessRef.current;
     if (state.key !== key) { state.key = key; state.badSince = 0; state.foregroundAt = now; }
@@ -326,7 +332,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     return () => { document.removeEventListener("visibilitychange", changed); window.removeEventListener("pagehide", changed); };
   }, [joined, syncKey, emit]);
   const getMediaRunning = useCallback(() => playbackRunning(playbackRef.current, clockRef.current.now()), []);
-  const getMediaPosition = useCallback(() => playbackPosition(playbackRef.current, clockRef.current.now()), []);
+  const getMediaPosition = useCallback(() => syncPolicy.current?playbackPosition(playbackRef.current, clockRef.current.now()):(localVideoRef.current?.currentTime??audioRef.current?.currentTime??0), []);
   // Presence: what this listener is doing, reported and deduplicated.
   const signal = usePresence(
     useCallback((status: PresenceStatus) => emit(EVENTS.PRESENCE_SET, { status }), [emit]),
@@ -373,7 +379,11 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     emit(EVENTS.CONTROL_VOLUME, { volume: v });
   }, [emit]);
 
+  const playbackTrack=useRef<string|null>(null);
   function applyPlayback(s: any) {
+    if(!syncPolicy.current&&s.current?.videoId===playbackTrack.current&&s.current)return;
+    playbackTrack.current=s.current?.videoId||null;
+    if(!syncPolicy.current)s={...s,syncHolding:false,resumeAt:0};
     playbackRef.current = {
       startedAt: s.startedAt,
       pausedPosition: s.pausedPosition,
@@ -420,7 +430,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     );
     socket.on(EVENTS.PERSONAL_SPACE_UPDATE,(s:{enabled:boolean})=>setPersistentSpace(s.enabled));
     socket.on(EVENTS.ROOM_ACCESS_UPDATE, (s: {inviteOnly:boolean})=>setInviteOnly(s.inviteOnly));
+    socket.on('permissions:update',(p:Record<string,boolean>)=>{setPermissions(p);syncPolicy.current=p.sync!==false||Boolean(socket.id===hostSocketRef.current);});
     socket.on(EVENTS.ROOM_STATE, async (s: any) => {
+      hostSocketRef.current=s.participants?.find((p:any)=>p.isHost)?.id;
+      setPermissions(s.permissions||{});syncPolicy.current=s.permissions?.sync!==false||Boolean(s.participants?.find((p:any)=>p.id===s.you)?.isHost);
       if(s.appearance)receiveRoomAppearance(s.appearance);
       const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
       if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
@@ -544,6 +557,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       stopMediaSlots(audioRef.current,nextAudioRef.current);setBuffering(false);return;
     }
     if(!active)return;
+    if(current.mediaType==="video"&&current.hasAudio===false){stopMediaSlots(active,inactive);setBuffering(false);reportReady(true,syncKey);return;}
     const localUpload=current.videoId.startsWith('local_');
     if(localUpload&&!uploadedBuffer.url){active.pause();inactive?.pause();setBuffering(true);reportReady(false,syncKey);return;}
     const wantSrc = localUpload?uploadedBuffer.url:`/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
@@ -587,7 +601,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     let lastCorrectionSeek = -Infinity;
     const tick = () => {
       const pb = playbackRef.current;
-      const expected = playbackPosition(pb, serverNow());
+      const expected = syncPolicy.current?playbackPosition(pb, serverNow()):active.currentTime;
       const running = playbackRunning(pb, serverNow());
       const dur = current.duration || 0;
 
@@ -653,7 +667,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
           .play()
           .then(() => setNeedsGesture(false))
           .catch((err) => {
-            if (err?.name === "NotAllowedError") { setNeedsGesture(true); reportReady(false, syncKey); }
+            if (err?.name === "NotAllowedError") { setNeedsGesture(true); reportReady(false, syncKey,true); }
           });
       }
       if (!running && !active.paused) active.pause();
@@ -682,7 +696,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         active.playbackRate = move.rate;
       }
       const remaining = Math.max(0, (current.duration || 0) - active.currentTime);
-      const ready = active.readyState >= 3 && !active.seeking && !roomGain.suspended && !needsGesture;
+      const ready = active.readyState >= (localUpload?2:3) && !active.seeking && !roomGain.suspended && !needsGesture;
       reportReady(ready || (current.duration > 0 && remaining < .15), syncKey);
       setBuffering(pb.isPlaying && !ready);
     };
@@ -702,7 +716,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   };
 
   const onEnded = () => {
-    if (canControl && current) emit(EVENTS.TRACK_ENDED, { videoId: current.videoId });
+    if (canControl && current) emit(EVENTS.TRACK_ENDED, { videoId: current.videoId,syncKey });
   };
   const onAudioError = () => {
     // Wired to whichever <audio> tag is currently active (see the JSX below),
@@ -1009,7 +1023,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   );
 
   return (
-    <div className="sw-couple flex h-[var(--kn-app-height,100dvh)] flex-col overflow-hidden" data-room-background={appearance.background}>
+    <div className="sw-couple flex h-[var(--kn-app-height,100dvh)] flex-col overflow-hidden" data-video-active={videoActive} data-room-background={appearance.background}>
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
         <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" data-room-background={appearance.background} aria-describedby="expanded-player-description">
           <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
@@ -1017,7 +1031,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
           <button type="button" className="kn-artwork-toggle" title={sceneOnly?"Show song details":"Hide song details"} aria-label={sceneOnly?"Show song details":"Hide song details"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(v=>!v)}>{sceneOnly?<PanelsTopLeft size={17}/>:<PanelTopClose size={17}/>}</button>
           {renderChatNotice()}
           <div className="kn-expanded-scene">
-            {!current&&lastVideo&&watchVideo&&<section className="kn-video-finished"><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
+            {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
             <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
           <NowPlaying current={current} isPlaying={isPlaying} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className={cn("kn-expanded-artwork flex-1",sceneOnly&&"!hidden")}/>
@@ -1071,10 +1085,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       </p>
 
       {/* autoplay blocked (mobile) — a tap satisfies the gesture requirement */}
-      {!videoActive && (needsGesture || roomGain.suspended) && current && !preparing && (
+      {!videoActive && (needsGesture || roomGain.suspended || (syncHolding&&waitingFor.includes(nick.trim()))) && current && !preparing && (
         <button
           onClick={resumeAudio}
-          className="fixed inset-x-0 bottom-24 z-[60] mx-auto flex w-max items-center gap-2 rounded-full bg-[image:var(--accent-gradient)] px-5 py-3 text-sm font-semibold text-white shadow-[var(--glow-accent)] animate-pulse"
+          className="kn-enable-audio fixed inset-x-0 bottom-24 z-[60] mx-auto flex w-max items-center gap-2 rounded-full bg-[image:var(--accent-gradient)] px-5 py-3 text-sm font-semibold text-white shadow-[var(--glow-accent)] animate-pulse"
         >
           <Play className="size-4" /> Tap to start audio
         </button>
@@ -1095,6 +1109,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
 
 
+          {isHost&&<details className="kn-permissions-disclosure"><summary>Manage listener permissions</summary><PermissionManager key={JSON.stringify(permissions)} value={permissions} onSave={patch=>new Promise((resolve,reject)=>socketRef.current?.timeout(5000).emit('permissions:set',patch,(err:any,r:any)=>{if(err||r?.error)reject(Error(r?.error||'Could not save permissions.'));else{setToolsOpen(false);setNotice('Listener permissions saved.');resolve();}}))}/></details>}
+          {isHost&&<AdminRoomSettings/>}
           <RoomClock/>
           <AppearanceSettings onSaved={()=>{setToolsOpen(false);setNotice("Appearance saved for everyone.");}} onSave={patch=>new Promise((resolve,reject)=>{socketRef.current?.timeout(5000).emit(EVENTS.APPEARANCE_SET,patch,(err:any,result:any)=>err||result?.error?reject(Error(result?.error||"Could not save. Try again.")):resolve());})} playerMessageControls={done=><PlayerMessageComposer disabled={Boolean(participants.find(p=>p.id===you)?.muted)} onClear={()=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{clear:true},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))} onSent={()=>{done();setToolsOpen(false);}} onSend={(text,emoji,duration,animation)=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{text,emoji,duration,animation},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))}/>} persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.videoId&&!current.videoId.startsWith("local_")?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:current?.art||current?.thumbnail} />
           <Button
@@ -1129,7 +1145,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
         </div><button className="kn-settings-call" onClick={()=>{setToolsOpen(false);openActivities("call");}}><Phone size={17}/>Plans, polls &amp; encrypted calls</button></DialogContent></Dialog>
       <header className="kn-room-header sw-safe-t sw-safe-x z-50 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 px-4 py-3 backdrop-blur-xl">
-        <nav className="kn-page-navigation" aria-label="Page navigation"><button aria-label="Back" title="Back" onClick={()=>navigateView(-1)}><ArrowLeft size={18}/></button><button aria-label="Home" title="Home" onClick={homeView}><Home size={18}/></button><button className="kn-forward-control" aria-label="Forward" title="Forward" disabled={viewIndex.current>=viewHistory.current.length-1} onClick={()=>navigateView(1)}><ArrowRight size={18}/></button></nav>
+        <nav className="kn-page-navigation" aria-label="Page navigation"><button aria-label="Home" title="Home" onClick={homeView}><Home size={18}/></button><button className="kn-forward-control" aria-label="Forward" title="Forward" disabled={viewIndex.current>=viewHistory.current.length-1} onClick={()=>navigateView(1)}><ArrowRight size={18}/></button></nav>
         <button type="button" onClick={()=>{setSceneOnly(false);goHome();}} aria-label="Konnectivity — open player" aria-haspopup="dialog" aria-expanded={playerExpanded} className="kn-brand-button flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
           {/* Same mark as the landing page and the favicon, tinted by the
               artwork like everything else in the room. */}
@@ -1180,17 +1196,19 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       </nav>
       {playbackError&&<div className="kn-playback-error" role="alert"><div><strong>Playback paused</strong><span>{playbackError}</span></div><Button onClick={()=>emit(EVENTS.CONTROL_RETRY)}>Retry track</Button><Button variant="ghost" onClick={()=>emit(EVENTS.CONTROL_SKIP)}>Skip track</Button></div>}
       {uploadedBuffer.loading&&current?.videoId.startsWith('local_')&&<div className="kn-upload-buffer" role="status"><span>Buffering uploaded audio on this device · {uploadedBuffer.percent}%</span><progress max="100" value={uploadedBuffer.percent}/>{uploadedBuffer.error&&<><span>{uploadedBuffer.error}</span><button onClick={uploadedBuffer.retry}>Retry download</button></>}</div>}
+      {current?.mediaType==="video"&&current.hasAudio===false&&!watchVideo&&<p className="kn-cast-notice" role="status">This video has no audio track. Select Watch video to view it.</p>}
       {casting.error&&<p className="kn-cast-notice" role="status">{casting.error}</p>}
-      {syncHolding && <div className="sw-sync-message" role="status">♡ Keeping you together{waitingFor.length ? ` — waiting for ${waitingFor.join(" & ")}` : ""}. Playback resumes automatically.</div>}
+      {syncHolding && <div className="sw-sync-message" role="status">Synchronizing playback{waitingFor.length ? ` — waiting for ${waitingFor.join(" & ")}` : ""}. Buffering or device permission may be required; enable playback on that device if prompted.</div>}
       {/* ── body ── */}
       <main ref={mainRef} className={cn("relative flex min-h-0 flex-1 flex-col", videoActive && "sw-watching", reactionDockOpen && "sw-reactions-open")} data-view={tab} {...swipe}>
+        {current&&(!current.videoId.startsWith('local_')||current.mediaType==='video')&&<nav className="kn-media-mode" aria-label="Media playback mode"><div><button aria-pressed={!watchVideo} onClick={()=>setVideoMode(false)}><Music2 size={17}/>Audio</button><button aria-pressed={watchVideo} onClick={()=>setVideoMode(true)}><Video size={17}/>{watchVideo?'Video':'Watch video'}</button></div><button aria-label="Replay current media" title="Replay from the beginning" onClick={()=>{emit(EVENTS.CONTROL_REPLAY,{});}}><RotateCcw size={18}/><span>Replay</span></button></nav>}
         {videoActive && current && <div className="sw-video-stage">
-          <VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={()=>{emit(EVENTS.CONTROL_SEEK,{position:0});emit(EVENTS.CONTROL_PLAY_STATE,{playing:true});}}><>{localVideo?<UploadedVideo src={uploadedBuffer.url||`/audio/${current.videoId}${mediaQuery}`} title={current.title} volume={volume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo}/>:<YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={volume} title={current.title}
+          <VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={()=>{emit(EVENTS.CONTROL_REPLAY,{});}}><>{localVideo?<UploadedVideo src={uploadedBuffer.url||`/audio/${current.videoId}${mediaQuery}`} title={current.title} volume={volume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo}/>:<YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={volume} title={current.title}
             onPlaying={(playing) => emit(EVENTS.CONTROL_PLAY_STATE, { playing })} onEnded={onEnded}
             onMetadata={(duration, title) => emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title })}
             getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} />}</></VideoStage>
         </div>}
-        {!current&&lastVideo&&watchVideo&&<section className="kn-video-finished"><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
+        {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
         <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
         <div className="sw-love-stars" aria-hidden><i>♡</i><i>✦</i><i>♡</i><i>✧</i><i>♡</i></div>
@@ -1281,6 +1299,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
                 mood={mood}
                 excludeIds={roomIds}
                 onAdd={addTrack}
+                onPlayNow={playFromSearch}
                 className="min-h-0 flex-1"
               />
             </Panel>
@@ -1337,6 +1356,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               onUploadImage={uploadChatImage}
               onUploadVideo={uploadChatVideo}
               mediaQuery={mediaQuery}
+              mobileOpen={tab==="chat"}
+              onMobileClose={()=>setTab("now")}
               onExpandedChange={setChatExpanded}
               onTyping={onTyping}
               statuses={statuses}

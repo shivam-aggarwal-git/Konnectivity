@@ -76,6 +76,32 @@ export default function CookiesPanel({ compact = false }: { compact?: boolean })
 
   return (
     <div className="grid gap-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".txt,text/plain"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) upload(f);
+          }}
+        />
+        <Button
+          variant="accent"
+          disabled={busy || fromEnv}
+          onClick={() => fileRef.current?.click()}
+          className="gap-1.5"
+        >
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+          {status?.present ? "Replace YouTube cookies" : "Import cookies.txt"}
+        </Button>
+        {status?.present && !fromEnv && (
+          <Button variant="outline" disabled={busy} onClick={remove} className="gap-1.5">
+            <Trash2 className="size-4" /> Remove
+          </Button>
+        )}
+      </div>
       {/* Why this exists */}
       <div className="rounded-sm border border-[color-mix(in_oklab,var(--accent)_35%,transparent)] bg-accent-soft p-4">
         <div className="flex items-start gap-3">
@@ -173,32 +199,7 @@ export default function CookiesPanel({ compact = false }: { compact?: boolean })
       )}
       {note && !error && <p className="text-sm text-accent-2">{note}</p>}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".txt,text/plain"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) upload(f);
-          }}
-        />
-        <Button
-          variant="accent"
-          disabled={busy || fromEnv}
-          onClick={() => fileRef.current?.click()}
-          className="gap-1.5"
-        >
-          {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-          {status?.present ? "Replace cookies.txt" : "Upload cookies.txt"}
-        </Button>
-        {status?.present && !fromEnv && (
-          <Button variant="outline" disabled={busy} onClick={remove} className="gap-1.5">
-            <Trash2 className="size-4" /> Remove
-          </Button>
-        )}
-      </div>
+
 
       {fromEnv && (
         <p className="text-xs text-muted">

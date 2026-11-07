@@ -55,7 +55,7 @@ server.requestTimeout=30000; server.headersTimeout=15000;
 // Any tunnel from a previous run died with it. Drop the address now so nobody
 // is handed a dead link if that process was killed before it could clean up;
 // the launcher writes a fresh one once its tunnel is actually serving.
-clearPublicUrl();
+// The tunnel owns its URL lifecycle; app-only restarts must retain a live tunnel address.
 
 // Evict cache files not played within 72h — sweep at boot and hourly.
 sweepCache();

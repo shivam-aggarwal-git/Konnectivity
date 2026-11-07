@@ -1,5 +1,6 @@
 "use client";
 
+import CallSettings from "./CallSettings";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Settings, ArrowLeft, LogOut, Cookie, Network, HardDrive } from "lucide-react";
@@ -44,6 +45,7 @@ export default function AdminConsole() {
         <span className="text-ink"> settings</span>
       </h1>
 
+      <section className="sw-glass mb-6 p-6"><CallSettings/></section>
       <section className="sw-glass mb-6 p-6">
         <div className="mb-4 flex items-center gap-2">
           <Cookie className="size-4 text-accent-2" />
