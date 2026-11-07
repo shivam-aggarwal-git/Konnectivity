@@ -1,3 +1,4 @@
+import {handleChatVideo} from "./lib/chat-video.mjs";
 // Custom Konnectivity server: Next.js (UI + API routes) + Socket.io (realtime sync
 // & chat) + a raw /audio route (range-served, yt-dlp-backed) on one HTTP server,
 // so the whole app is a single process / single container.
@@ -17,6 +18,8 @@ import { jsRuntimeMissing } from "./lib/jsruntime.mjs";
 import { clearPublicUrl } from "./lib/publicurl.mjs";
 import { startYtdlpUpdates } from "./lib/ytdlp.mjs";
 
+try{process.loadEnvFile?.('.env.local');}catch(error){if(error.code!=='ENOENT')console.warn('Could not load local server configuration.');}
+
 const dev = process.env.NODE_ENV !== "production";
 const port = parseInt(process.env.PORT || "3000", 10);
 
@@ -27,6 +30,7 @@ await app.prepare();
 
 const server = createServer(async (req, res) => {
   try { if (await guardRequest(req,res,getRoom)) return; } catch { res.writeHead(400); res.end("Invalid request"); return; }
+  if(req.url?.startsWith("/chat-video")){await handleChatVideo(req,res,getRoom);return;}
   if (req.url?.startsWith("/chat-media")) { handleChatMedia(req, res, getRoom); return; }
   if (req.url?.split("?")[0] === "/upload") { handleUpload(req, res, getRoom, (room, track) => registerUpload(io, room, track)); return; }
   if (req.url && req.url.startsWith("/audio/")) {

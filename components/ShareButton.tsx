@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Link2, Check, Globe, Wifi, Copy, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {Dialog,DialogContent,DialogTitle,DialogDescription} from "./ui/dialog";
 import { cn } from "@/lib/cn";
 
 /**
@@ -39,7 +40,7 @@ export default function ShareButton({ code }: { code: string }) {
   }, []);
 
   useEffect(()=>{if(!open)return;let alive=true;fetch(`/api/room-invite?code=${encodeURIComponent(code)}`).then(r=>r.ok?r.json():null).then(d=>{if(alive&&d?.invite)setInvite(d.invite);}).catch(()=>{});return()=>{alive=false;};},[open,code]);
-  useEffect(()=>{if(!open)return;const outside=(e:PointerEvent)=>{if(!wrapRef.current?.contains(e.target as Node))setOpen(false);};const escape=(e:KeyboardEvent)=>{if(e.key==='Escape')setOpen(false);};document.addEventListener('pointerdown',outside,true);document.addEventListener('keydown',escape,true);return()=>{document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',escape,true);};},[open]);
+
   const isLocal = /^https?:\/\/(localhost|127\.|\[?::1)/i.test(origin);
   const base = publicUrl || origin;
   const link = base && invite ? `${base}/r/${code}?invite=${encodeURIComponent(invite)}` : "";
@@ -74,9 +75,7 @@ export default function ShareButton({ code }: { code: string }) {
       </Button>
 
       {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="sw-fade-in absolute right-0 top-11 z-50 w-[min(22rem,calc(100vw-1.5rem))] rounded-md border border-white/10 bg-[var(--popover)] p-4 shadow-xl">
+        <Dialog open={open} onOpenChange={setOpen}><DialogContent className="kn-share-dialog"><DialogTitle>Share your room</DialogTitle><DialogDescription>Invite someone to listen, watch and connect.</DialogDescription>
             <div className="sw-label mb-3">
               {reachable ? <Globe className="size-3.5" /> : <Wifi className="size-3.5" />}
               {reachable ? "Private room invitation" : "Local network only"}
@@ -116,11 +115,10 @@ export default function ShareButton({ code }: { code: string }) {
             {reachable && publicUrl && (
               <p className="mt-2 flex items-start gap-1.5 text-[11px] text-muted">
                 <QrCode className="mt-0.5 size-3 shrink-0" />
-                The address changes each time you restart Konnectivity.
+                This room link expires when the host leaves. New rooms have a new invitation.
               </p>
             )}
-          </div>
-        </>
+          </DialogContent></Dialog>
       )}
     </div>
   );

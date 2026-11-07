@@ -12,7 +12,7 @@ const sora = Sora({
   display: "swap",
 });
 
-const TITLE = "Konnectivity : A Little Closer";
+const TITLE = "Konnectivity — One Beat. Two Hearts";
 const DESCRIPTION =
   "A self-hosted Spotify Jam alternative. Start a room, share one link, and everyone " +
   "hears the same second of the same song — shared queue, chat, reactions and an optional AI DJ.";
@@ -46,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "JQBX alternative",
       "Turntable.fm alternative",
     ],
-    icons: { icon: [{ url: "/favicon-32.png", sizes: "32x32", type: "image/png" }, { url: "/konnectivity-icon.png", sizes: "512x512", type: "image/png" }], apple: "/apple-touch-icon.png" },
+    icons: { icon: [{ url: "/konnectivity-favicon-light.png?v=1", sizes: "32x32", type: "image/png" }, { url: "/konnectivity-logo-light.png?v=1", sizes: "512x512", type: "image/png" }], apple: "/apple-touch-icon-light.png?v=1" },
     manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, title: "Konnectivity", statusBarStyle: "black-translucent" },
     openGraph: {
@@ -66,7 +66,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#08090f",
+  themeColor: "#eeeae3",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -75,7 +75,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={sora.variable}>
+    <html lang="en" data-room-theme="pearl" className={sora.variable}>
       <body>
         <div className="sw-aurora" aria-hidden />
         <div className="sw-grain" aria-hidden />

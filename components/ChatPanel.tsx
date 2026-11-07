@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useEffect, useRef, useState } from "react";
-import { ImagePlus, X, Loader2, MessageSquare, Send, Smile, Maximize2, Minimize2 } from "lucide-react";
+import { ImagePlus, Video, MapPin, X, Loader2, MessageSquare, Send, Smile, Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { ChatMsg, PresenceStatus } from "@/lib/types";
 import { Avatar, nickColor } from "@/components/ui/avatar";
@@ -30,7 +30,7 @@ function ChatPanel({
   you,
   aiDj,
   djTyping,
-  onUploadImage, mediaQuery, onExpandedChange,
+  onUploadImage, onUploadVideo, mediaQuery, onExpandedChange,
   onSend,
   onTyping,
   statuses,
@@ -47,14 +47,19 @@ function ChatPanel({
   /** The DJ is composing. It has no seat, so the server reports this for it. */
   djTyping?: boolean;
   onUploadImage: (file: File) => Promise<NonNullable<ChatMsg["image"]>>;
+  onUploadVideo: (file:File)=>Promise<NonNullable<ChatMsg["video"]>>;
   mediaQuery: string;
-  onSend: (text: string, imageId?: string) => void;
+  onSend: (text: string, imageId?: string,videoId?:string,location?:ChatMsg["location"]) => void;
   /** Fires as you write, so the room can show you're mid-sentence. */
   onTyping?: () => void;
   /** The host has muted your chat — the room still shows, you just can't post. */
   muted?: boolean;
   className?: string;
 }) {
+  const [video,setVideo]=useState<ChatMsg["video"]>();
+  const [location,setLocation]=useState<ChatMsg["location"]>();
+  const [locationOpen,setLocationOpen]=useState(false),[lat,setLat]=useState(""),[lng,setLng]=useState(""),[locationLabel,setLocationLabel]=useState("");
+  const videoInput=useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<ChatMsg["image"]>();
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
@@ -62,6 +67,7 @@ function ChatPanel({
   const [text, setText] = useState("");
   const emojiPanel=useRef<HTMLDivElement>(null),emojiButton=useRef<HTMLButtonElement>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [hidden,setHidden]=useState(false);
   const [expanded, setExpanded] = useState(false);
   useEffect(()=>{onExpandedChange?.(expanded);},[expanded,onExpandedChange]);
   useEffect(()=>{const open=()=>setExpanded(true);window.addEventListener('konnectivity:open-chat',open);return()=>window.removeEventListener('konnectivity:open-chat',open);},[]);
@@ -77,9 +83,10 @@ function ChatPanel({
   useEffect(()=>{if(!pickerOpen)return;const outside=(e:PointerEvent)=>{if(!emojiPanel.current?.contains(e.target as Node)&&!emojiButton.current?.contains(e.target as Node))setPickerOpen(false);};document.addEventListener('pointerdown',outside,true);return()=>document.removeEventListener('pointerdown',outside,true);},[pickerOpen]);
   const send = () => {
     const clean = text.trim();
-    if ((!clean && !image) || uploading) return;
+    if ((!clean && !image && !video && !location) || uploading) return;
     followRef.current = true;
-    onSend(clean, image?.id);
+    onSend(clean, image?.id, video?.id,location);
+    setVideo(undefined);setLocation(undefined);
     setImage(undefined);
     setText("");
     setPickerOpen(false);
@@ -91,6 +98,9 @@ function ChatPanel({
     finally { setUploading(false); }
   };
 
+  const attachVideo=async(file?:File)=>{if(!file||uploading)return;setUploading(true);setUploadError('');try{setVideo(await onUploadVideo(file));}catch(e){setUploadError(e instanceof Error?e.message:'Video upload failed');}finally{setUploading(false);}};
+  const pin=()=>{const a=Number(lat),b=Number(lng);if(!lat.trim()||!lng.trim()||!Number.isFinite(a)||!Number.isFinite(b)||Math.abs(a)>90||Math.abs(b)>180){setUploadError('Enter a valid latitude (−90 to 90) and longitude (−180 to 180).');return;}setLocation({lat:a,lng:b,label:locationLabel.trim()||'Meeting point'});setLocationOpen(false);setUploadError('');};
+  const locate=()=>{if(!navigator.geolocation){setUploadError('Location is unavailable. Enter a meeting point manually.');return;}navigator.geolocation.getCurrentPosition(p=>{setLat(String(Number(p.coords.latitude.toFixed(5))));setLng(String(Number(p.coords.longitude.toFixed(5))));setUploadError('');},()=>setUploadError('Location permission was denied or unavailable. Enter coordinates instead.'),{enableHighAccuracy:false,timeout:10000,maximumAge:60000});};
   // Everything the room did — joins, queues, skips, track changes — belongs to
   // the activity feed. What's left is people talking.
   const thread = chat.filter((m) => !m.system);
@@ -101,12 +111,13 @@ function ChatPanel({
     .filter(([nick, status]) => status === "typing" && nick !== you)
     .map(([nick]) => nick);
 
+  if(hidden&&!expanded)return <button className="kn-background-upload" onClick={()=>setHidden(false)}><MessageSquare size={15}/>Open chat</button>;
   const content = (
     <div data-room-chat className={cn("flex min-h-0 flex-col overflow-hidden", expanded ? "h-full w-full" : className)}>
       <SectionHeader
         icon={<MessageSquare className="size-3.5" />}
         title="Chat"
-        trailing={<>{aiDj && <span className="text-[11px] text-muted">🎧 {aiDj} is in here</span>}<button type="button" onClick={() => { followRef.current = true; setExpanded(v => !v); }} aria-label={expanded ? "Collapse chat" : "Expand chat"} title={expanded ? "Collapse chat" : "Expand chat"} className="flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1.5 text-xs text-ink hover:bg-white/10">{expanded ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}<span>{expanded ? "Collapse" : "Expand"}</span></button></>}
+        trailing={<><button className="kn-chat-close" aria-label="Close chat" title="Close chat" onClick={()=>expanded?setExpanded(false):setHidden(true)}><X size={16}/></button>{aiDj && <span className="text-[11px] text-muted">🎧 {aiDj} is in here</span>}<button type="button" onClick={() => { followRef.current = true; setExpanded(v => !v); }} aria-label={expanded ? "Collapse chat" : "Expand chat"} title={expanded ? "Collapse chat" : "Expand chat"} className="flex items-center gap-1.5 rounded-full border border-white/10 px-2.5 py-1.5 text-xs text-ink hover:bg-white/10">{expanded ? <Minimize2 size={14}/> : <Maximize2 size={14}/>}<span>{expanded ? "Collapse" : "Expand"}</span></button></>}
       />
 
       <div ref={node => { scrollRef.current = node; if (node && followRef.current) node.scrollTop = node.scrollHeight; }} role="log" aria-label="Chat messages" aria-live="polite" tabIndex={0} onScroll={() => { const list = scrollRef.current; if (list) followRef.current = list.scrollHeight - list.clientHeight - list.scrollTop < 64; }} className="sw-scroll -mr-2 min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain pr-2">
@@ -152,6 +163,10 @@ function ChatPanel({
 
       {/* Composer */}
       <div className="mt-4 shrink-0">
+        {video&&<div className="kn-attachment-preview"><Video size={16}/><span>{video.name}</span><button onClick={()=>setVideo(undefined)} aria-label="Remove video"><X size={15}/></button></div>}
+        {location&&<div className="kn-attachment-preview"><MapPin size={16}/><span>{location.label} · {location.lat.toFixed(4)}, {location.lng.toFixed(4)}</span><button onClick={()=>setLocation(undefined)} aria-label="Remove location"><X size={15}/></button></div>}
+        {locationOpen&&!muted&&<div className="kn-location-composer"><b>Share a one-time location</b><p>Only send a place you want everyone in this room to see. There is no live tracking.</p><input aria-label="Location label" placeholder="Meeting point / landmark" maxLength={120} value={locationLabel} onChange={e=>setLocationLabel(e.target.value)}/><div><input aria-label="Latitude" type="number" min="-90" max="90" step="any" placeholder="Latitude" value={lat} onChange={e=>setLat(e.target.value)}/><input aria-label="Longitude" type="number" min="-180" max="180" step="any" placeholder="Longitude" value={lng} onChange={e=>setLng(e.target.value)}/></div><div><button onClick={locate}>Use my location</button><button onClick={pin}>Attach pin</button><button onClick={()=>setLocationOpen(false)}>Cancel</button></div></div>}
+        <input ref={videoInput} type="file" accept="video/mp4,video/webm" className="sr-only" aria-label="Choose chat video" onChange={e=>{void attachVideo(e.target.files?.[0]);e.target.value='';}}/>
         {image && <div className="sw-chat-photo-preview"><img src={image.url + mediaQuery} alt="Photo ready to send"/><span>Add a caption below, or send your photo ♡</span><button onClick={() => setImage(undefined)} aria-label="Remove attached photo"><X size={16}/></button></div>}
         {uploadError && <p role="alert" className="mb-2 text-xs text-pink-200">{uploadError}</p>}
         <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif" className="sr-only" aria-label="Choose chat image" onChange={e => { void attachImage(e.target.files?.[0]); e.target.value=""; }} />
@@ -220,6 +235,8 @@ function ChatPanel({
               aria-label="Chat message"
             />
             <button type="button" disabled={uploading} onClick={() => photoInput.current?.click()} aria-label="Attach image" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/8 hover:text-ink disabled:opacity-40">{uploading ? <Loader2 className="size-4 animate-spin"/> : <ImagePlus className="size-4"/>}</button>
+            <button type="button" disabled={uploading} onClick={()=>videoInput.current?.click()} aria-label="Attach video (up to 50 MB)" title="Video · up to 50 MB" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/8 hover:text-ink disabled:opacity-40"><Video className="size-4"/></button>
+            <button type="button" onClick={()=>setLocationOpen(v=>!v)} aria-label="Share location" title="Share a location pin" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/8 hover:text-ink"><MapPin className="size-4"/></button>
             <button
               type="button"
               onClick={() => setPickerOpen((v) => !v)}
@@ -233,7 +250,7 @@ function ChatPanel({
             <button
               type="button"
               onClick={send}
-              disabled={(!text.trim() && !image) || uploading}
+              disabled={(!text.trim() && !image && !video && !location) || uploading}
               aria-label="Send"
               className="grid size-8 shrink-0 place-items-center rounded-full bg-[image:var(--accent-gradient)] text-white transition-[transform,box-shadow,opacity] duration-200 ease-[var(--ease)] hover:scale-105 hover:shadow-[var(--glow-accent)] active:scale-95 disabled:opacity-30 disabled:hover:scale-100 disabled:hover:shadow-none"
             >
@@ -344,6 +361,8 @@ function Bubble({ mediaQuery, onMediaLoad,
         )}
         <div className={cn("sw-bubble", own && "sw-bubble-own", msg.dj && "sw-bubble-dj")}>
           {msg.image && <a href={msg.image.url + mediaQuery} target="_blank" rel="noreferrer" className="mb-1 block"><img src={msg.image.url + mediaQuery} alt={msg.image.name || "Shared photo"} className="sw-chat-image" loading="lazy" onLoad={onMediaLoad} /></a>}
+          {msg.video&&<div className="kn-chat-video"><video src={msg.video.url+mediaQuery} controls playsInline preload="metadata" onLoadedMetadata={onMediaLoad}/><span>{msg.video.name} · playback is local to you</span></div>}
+          {msg.location&&<a className="kn-location-card" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(msg.location.lat+','+msg.location.lng)}`} target="_blank" rel="noreferrer"><MapPin size={23}/><span><b>{msg.location.label}</b><small>{msg.location.lat.toFixed(4)}, {msg.location.lng.toFixed(4)} · Open map ↗</small></span></a>}
           {msg.text}
         </div>
       </div>

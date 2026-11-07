@@ -18,7 +18,7 @@ import SiteFooter from "@/components/SiteFooter";
 import Logo from "@/components/Logo";
 import { isSetupComplete } from "@/lib/auth.mjs";
 import { REPO_URL } from "@/lib/brand";
-import pkg from "@/package.json";
+const DOCUMENTATION_VERSION = "10.02";
 
 export const dynamic = "force-dynamic";
 
@@ -36,42 +36,18 @@ export const dynamic = "force-dynamic";
  */
 
 const FEATURES = [
-  {
-    icon: Radio,
-    title: "Locked to the same second",
-    body: "The server owns the clock and every listener renders their position from it, on a timebase that only moves forward. Nobody drifts, and nobody has to be told to press play.",
-  },
-  {
-    icon: ListMusic,
-    title: "A queue a room can run",
-    body: "Anyone adds. Upvotes move a track one place up, once per person, so ten people beat one enthusiast. Drag to reorder works on touch, and the server confirms every move.",
-  },
-  {
-    icon: Users,
-    title: "You can tell who’s there",
-    body: "Typing, queueing, voting, away. Drop off wifi and your seat is held for twelve seconds rather than announcing that you left.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Chat, and a feed that isn’t chat",
-    body: "Conversation stays conversation. Joins, queues and skips go to a separate activity feed instead of burying what people are saying.",
-  },
-  {
-    icon: Bot,
-    title: "An AI DJ, if you want one",
-    body: "Six personas that introduce tracks in character and take requests. Bring your own provider — a local Ollama, Gemini on its free tier, OpenAI or Anthropic. Off by default, and everything works without it.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Yours, on your hardware",
-    body: "One process, no database, no accounts, and no third party sitting between the room and the music. Rooms and settings are JSON files on a disk you own.",
-  },
+ {icon:Radio,title:"Music, perfectly together",body:"Search YouTube, upload your own songs, build a shared queue and keep playback in sync."},
+ {icon:Activity,title:"Your shared screen",body:"Watch YouTube and uploaded videos together, with shared playback controls."},
+ {icon:Users,title:"A call inside your room",body:"Voice, video and screen sharing for approved room members. Call media is encrypted using WebRTC."},
+ {icon:MessageSquare,title:"More than a message",body:"Chat, share a location or video, and send floating messages with hearts and custom animations."},
+ {icon:ListMusic,title:"Make plans. Decide together.",body:"Plan a celebration, suggest a venue, set a budget in rupees and vote in room polls."},
+ {icon:Sparkles,title:"A space you both shape",body:"Explore eleven themes, personal backgrounds, ambient lights and visualizers. Save your appearance for everyone."},
 ];
 
 const STEPS = [
   { n: "01", title: "Start a room", body: "One click. No account, no sign-up, nothing to install for anyone joining." },
   { n: "02", title: "Share the link", body: "Or the six-character code. Guests open it and they’re in — phone, laptop, anything with a browser." },
-  { n: "03", title: "Press play once", body: "Everyone hears the same second of the same song, and the queue is open to the whole room." },
+  { n: "03", title: "Press play once", body: "Listen, watch and connect. Everyone can shape the room; the host manages admission." },
 ];
 
 export default function Home() {
@@ -109,20 +85,18 @@ export default function Home() {
               <span />
             </span>
             <span className="text-xs font-semibold tracking-[0.28em] text-ink/80">
-              SELF-HOSTED LISTENING ROOMS
+              YOUR PRIVATE SHARED SPACE
             </span>
           </div>
 
           <h1 className="font-display text-5xl leading-[0.95] font-extrabold tracking-tight sm:text-7xl">
-            Listen together,
+            One Beat.
             <br />
-            <span className="sw-gradient-text">perfectly in sync.</span>
+            <span className="sw-gradient-text">Two Hearts.</span>
           </h1>
 
           <p className="mt-6 max-w-xl text-base text-ink/60 sm:text-lg">
-            Spin up a room, share one link, and hear the same song at the same moment —
-            shared queue, live chat, reactions and an optional AI DJ. No accounts, no
-            subscription, running on your own machine.
+            Listen, watch, talk and plan together. One private room for your favourite people, with shared music, videos, encrypted calls and a little atmosphere.
           </p>
 
           <div className="mt-9 w-full max-w-md">
@@ -134,43 +108,11 @@ export default function Home() {
             <li aria-hidden>·</li>
             <li>No Premium requirement</li>
             <li aria-hidden>·</li>
-            <li>Nobody&rsquo;s servers but yours</li>
+            <li>Invite-only rooms</li>
           </ul>
         </section>
 
-        {/* --------------------------------------------------------- product */}
-        <section className="px-6 pb-24" aria-label="What a room looks like">
-          <figure className="mx-auto max-w-5xl">
-            <div className="sw-panel sw-glow-art overflow-hidden p-2">
-              {/* A window frame, so the shot reads as an application and not as
-                  decoration dropped onto the page. */}
-              <div className="flex items-center gap-2 px-3 py-2">
-                <span className="size-2.5 rounded-full bg-white/15" aria-hidden />
-                <span className="size-2.5 rounded-full bg-white/15" aria-hidden />
-                <span className="size-2.5 rounded-full bg-white/15" aria-hidden />
-                <span className="ml-3 truncate rounded-full bg-white/[0.04] px-3 py-1 font-mono text-[10px] text-muted">
-                  /r/XNB8MW
-                </span>
-              </div>
-              {/* Plain <img>: the file is a fixed asset shipped with the app, so
-                  there is nothing for the image optimiser to decide. 83 kB of
-                  WebP rather than 440 kB of PNG. */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/konnectivity-brand.png"
-                width={1600}
-                height={808}
-                alt='A shared listening room. A listener has typed "/dj add 10 romantic songs" and the AI DJ has queued ten tracks and introduced the first one. The shared queue shows each track with who added it, beside DJ recommendations, a live activity feed and a bottom player with reactions'
-                className="w-full rounded-md"
-              />
-            </div>
-            <figcaption className="mt-4 text-center text-xs text-muted">
-              Share songs, playlists and chat — the room takes its colour from whatever
-              is playing.
-            </figcaption>
-          </figure>
-        </section>
-
+        <section className="kn-home-moments" aria-label="Together in one room"><div><Heart/><strong>One room. Your people.</strong><p>A playlist for the evening. A film with friends. A plan everyone agrees on.</p></div><div className="kn-home-orbit"><Logo size="lg" className="kn-home-brand-logo"/><span>♫</span><span>♡</span><span>✦</span></div><div><ShieldCheck/><strong>Private from the first invite</strong><p>You approve who joins. When the host leaves, the room and its invitation end.</p></div></section>
         {/* -------------------------------------------------------- features */}
         <section className="border-t border-white/6 px-6 py-24" aria-labelledby="features">
           <div className="mx-auto max-w-6xl">
@@ -179,8 +121,8 @@ export default function Home() {
               What you get
             </h2>
             <p className="mt-4 max-w-2xl font-display text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
-              Everything a room of people needs to run{" "}
-              <span className="sw-gradient-text">one queue together.</span>
+              Everything you need to spend{" "}
+              <span className="sw-gradient-text">time together.</span>
             </p>
 
             <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -309,7 +251,7 @@ function SiteHeader() {
               Konnectivity
             </span>
             <span className="rounded-full border border-white/10 px-1.5 py-px font-mono text-[10px] text-muted max-sm:hidden">
-              v{pkg.version}
+              v{DOCUMENTATION_VERSION}
             </span>
           </span>
         </Link>

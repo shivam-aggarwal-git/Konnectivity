@@ -55,11 +55,9 @@ try{
  let denial=event(denied,'join:denied');host.emit('host:deny',{id:denied.id});await denial;assert.equal(room.pending.size,0);assert.equal(room.participants.has(denied.id),false);
  let kicked=event(guest,'kicked');host.emit('host:kick',{id:guest.id});await kicked;await wait(50);assert.equal(room.participants.has(state.you),false);
  await status('/api/search?q=test',{headers:{Cookie:memberCookie}});
- host.disconnect();await wait(50);
- const returning=socket({},{code:room.code,ownerToken:room.ownerToken});await event(returning,'connect');ready=event(returning,'room:state');returning.emit('join',{code:room.code,nick:'Returning host',ownerToken:room.ownerToken});await ready;
- const blockedGuest=socket({Cookie:cookie});await event(blockedGuest,'connect');const removal=event(blockedGuest,'sw:error');blockedGuest.emit('join',{code:room.code,nick:'Removed guest'});
- // The protocol error is checked below using its declared event name.
- await removal;
+ host.disconnect();await wait(50);assert.equal(getRoom(room.code),undefined);
+ const returning=socket({},{code:room.code,ownerToken:room.ownerToken});assert.match((await event(returning,'connect_error')).message,/unauthorized/);
+ await status(`/r/${room.code}?invite=${room.inviteToken}`,{redirect:'manual'},403);
  const adminCookie=`${SESSION_COOKIE}=${createSession()}`;await status('/api/rooms',{method:'POST',headers:{Cookie:adminCookie},body:'{}'},200);
  await status('/api/settings',{method:'POST',headers:{'Content-Length':'270000'},body:'x'.repeat(270000)},413);
  for(let n=0;n<10;n++)await status('/api/admin/session',{method:'POST',body:'{}'},200);

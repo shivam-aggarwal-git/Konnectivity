@@ -17,8 +17,11 @@ import { useEffect, useState } from "react";
  * leave this watching an element the room has already retired, reporting a
  * cast session that ended (or missing one that started).
  */
-export function useCasting(getElement: () => HTMLAudioElement | null) {
+export function useCasting(getElement: () => HTMLMediaElement | null, mediaPath?:string) {
   const [supported, setSupported] = useState(false);
+  const [publicOrigin,setPublicOrigin]=useState("");
+  useEffect(()=>{let live=true;fetch("/api/share").then(r=>r.json()).then(d=>{if(live)setPublicOrigin(d.publicUrl||window.location.origin);}).catch(()=>{});return()=>{live=false;};},[]);
+  const [error,setError]=useState("");
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
@@ -44,8 +47,17 @@ export function useCasting(getElement: () => HTMLAudioElement | null) {
   }, [supported, getElement]);
 
   const prompt = () => {
-    getElement()?.remote?.prompt().catch(() => {});
+    setError("");const element=getElement();
+    if(!element){setError("Start a song or uploaded video before casting.");return;}
+    if(!element.remote){setError("Casting is unavailable in this browser. Use a compatible browser and receiver on the same network.");return;}
+    if(element.src.startsWith('blob:')){
+      if(!mediaPath||!publicOrigin||/localhost|127\.0\.0\.1/.test(publicOrigin)){setError("Open this room through its public HTTPS link before casting uploaded media.");return;}
+      const time=element.currentTime;const paused=element.paused;
+      element.src=new URL(mediaPath,publicOrigin).href;
+      element.addEventListener('loadedmetadata',()=>{element.currentTime=time;if(!paused)void element.play().catch(()=>{});},{once:true});
+    }
+    element.remote.prompt().catch((e:Error)=>{if(e.name!=="NotAllowedError")setError("No compatible receiver was available. Check that both devices use the same Wi-Fi network.");});
   };
 
-  return { supported, connected, prompt };
+  return { supported, connected, prompt, error };
 }

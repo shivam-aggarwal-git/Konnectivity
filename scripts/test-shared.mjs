@@ -42,10 +42,14 @@ try {
   for (const ext of ['wav','mp3','flac']) {
     const file = `${process.env.DATA_DIR}/fixture.${ext}`;
     await run(ffmpegPath() || 'ffmpeg',['-hide_banner','-f','lavfi','-i','sine=frequency=440:duration=35','-y',file]);
-    const response = await fetch(url+'/upload',{method:'POST', body:await fs.readFile(file), headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':`test.${ext}`}});
+    const response = await fetch(url+'/upload',{method:'POST', body:await fs.readFile(file), headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':`test-${ext}.${ext}`}});
     assert.equal(response.status,201); const {track} = await response.json(); assert.ok(Math.abs(track.duration-35)<.25, `Encoded fixture duration ${track.duration} should be within 250 ms of 35 seconds`);
     const states = [event(a,'playback:update',s=>s.current?.videoId===track.videoId&&s.isPlaying),event(b,'playback:update',s=>s.current?.videoId===track.videoId&&s.isPlaying)];
-    b.emit('control:play-now',{track}); await Promise.all(states);
+    b.emit('control:play-now',{track}); const initial=(await Promise.all(states))[0];assert.equal(initial.syncHolding,true);assert.equal(initial.waitingFor.length,2);
+    if(ext==='wav'){process.env.SYNC_BUFFER_TIMEOUT_MS='50';await wait(100);assert.equal(room.syncHolding,true);delete process.env.SYNC_BUFFER_TIMEOUT_MS;}
+    a.emit('sync:media',{key:initial.syncKey,ready:true});await wait(30);assert.equal(room.syncHolding,true);
+    await both('sync:media',{key:initial.syncKey,ready:true},s=>!s.syncHolding);
+
     const paused = await both('control:playpause',undefined,s=>!s.isPlaying&&!s.preparing); assert.ok(paused.pausedPosition>=0);
     await both('control:seek',{position:10},s=>s.pausedPosition===10);
     await both('control:seek',{position:0},s=>s.pausedPosition===0);
@@ -60,6 +64,15 @@ try {
     const list = data.playlists.at(-1); updated = event(a,'library:update'); b.emit('playlist:rename',{id:list.id,name:`Renamed ${ext}`}); data = await updated; assert.equal(data.playlists.at(-1).name,`Renamed ${ext}`);
     const queue = event(a,'queue:update',s=>s.queue.some(t=>t.videoId===track.videoId)); b.emit('queue:add-many',{tracks:list.tracks}); await queue;
   }
+  const movie=`${process.env.DATA_DIR}/fixture.mp4`;
+  await run(ffmpegPath()||'ffmpeg',['-hide_banner','-f','lavfi','-i','color=c=blue:s=160x90:d=3','-f','lavfi','-i','sine=frequency=440:duration=3','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-shortest','-y',movie]);
+  const movieResponse=await fetch(url+'/upload',{method:'POST',body:await fs.readFile(movie),headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':'movie.mp4'}});
+  const movieData=await movieResponse.json();assert.equal(movieResponse.status,201,JSON.stringify(movieData));assert.equal(movieData.track.mediaType,'video');
+  const movieRange=await fetch(`${url}/audio/${movieData.track.videoId}`,{headers:{Range:'bytes=0-99'}});assert.equal(movieRange.status,206);assert.equal(movieRange.headers.get('content-type'),'video/mp4');assert.equal((await movieRange.arrayBuffer()).byteLength,100);
+  const duplicateName=await fetch(url+'/upload',{method:'POST',body:Buffer.from('different bytes'),headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':' MOVIE.MP4 '}});assert.equal(duplicateName.status,200);assert.equal((await duplicateName.json()).duplicate,true); // headers normalize surrounding whitespace
+  const duplicateCase=await fetch(url+'/upload',{method:'POST',body:Buffer.from('different bytes'),headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':'MOVIE.mp4'}});assert.equal(duplicateCase.status,200);const duplicateData=await duplicateCase.json();assert.equal(duplicateData.duplicate,true);assert.equal(duplicateData.reason,'name');assert.equal(duplicateData.track.videoId,movieData.track.videoId);
+  const concurrentFile=`${process.env.DATA_DIR}/concurrent.wav`;await run(ffmpegPath()||'ffmpeg',['-hide_banner','-f','lavfi','-i','sine=frequency=880:duration=2','-y',concurrentFile]);const concurrentBytes=await fs.readFile(concurrentFile);const concurrent=await Promise.all(['Concurrent.wav','CONCURRENT.WAV'].map(name=>fetch(url+'/upload',{method:'POST',body:concurrentBytes,headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':name}})));assert.equal(concurrent.filter(r=>r.status===201).length,1);assert.ok(concurrent.every(r=>[200,201,409].includes(r.status)));const {allUploadedTracks}=await import('../lib/uploads.mjs');assert.equal(allUploadedTracks().filter(t=>t.nameKey==='concurrent').length,1);
+  const movieStates=[event(a,'playback:update',s=>s.current?.mediaType==='video'&&s.isPlaying&&!s.preparing),event(b,'playback:update',s=>s.current?.mediaType==='video'&&s.isPlaying&&!s.preparing)];b.emit('control:play-now',{track:movieData.track});const movieState=await Promise.all(movieStates);assert.deepEqual(movieState[0],movieState[1]);assert.equal(movieState[0].syncHolding,true);assert.equal(movieState[0].watchVideo,false);const videoMode=await both('control:video',{enabled:true},s=>s.watchVideo===true);assert.equal(videoMode.watchVideo,true);await both('control:video',{enabled:false},s=>s.watchVideo===false);
   assert.equal((await fetch(url+'/upload',{method:'POST',body:'no'})).status,403);
   assert.equal((await fetch(url+'/upload',{method:'POST',body:'no',headers:{'x-room-code':room.code,'x-upload-token':sb.uploadToken,'x-file-name':'bad.mp3'}})).status,400);
   // Queue play-now must override shuffle and remove exactly the selected item.

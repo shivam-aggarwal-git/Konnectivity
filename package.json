@@ -1,8 +1,8 @@
 {
   "name": "konnectivity",
-  "version": "1.3.0",
+  "version": "10.2.0",
   "private": true,
-  "description": "Konnectivity — self-hosted listening rooms with synchronized audio, YouTube video, shared playlists and image chat.",
+  "description": "Konnectivity 10.02 \u2014 shared audio-first music and video rooms, encrypted calls, plans, polls and personalized themes.",
   "keywords": [
     "spotify-jam-alternative",
     "listen-together",

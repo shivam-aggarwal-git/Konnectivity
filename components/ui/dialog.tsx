@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "sw-fade-in fixed inset-0 z-50 bg-[color:var(--overlay)] backdrop-blur-sm",
+      "sw-fade-in fixed inset-0 z-[100] bg-[color:var(--overlay)] backdrop-blur-sm",
       className
     )}
     {...props}
@@ -41,12 +41,12 @@ const DialogContent = React.forwardRef<
         // One dialog shape for the whole app: the raised glass material, the
         // panel radius, the panel padding. Anything that needs to look
         // different should differ inside this box, not become another box.
-        fullscreen ? "sw-glass-strong fixed inset-0 z-[70] flex h-[var(--kn-app-height,100dvh)] w-full flex-col overflow-hidden" : "sw-glass-strong sw-modal-pop fixed top-[calc(var(--kn-app-height,100dvh)/2)] left-1/2 z-50 grid max-h-[min(85dvh,calc(var(--kn-app-height,100dvh)-2rem))] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto p-6",
+        fullscreen ? "sw-glass-strong fixed inset-0 z-[110] flex h-[var(--kn-app-height,100dvh)] w-full flex-col overflow-hidden" : "sw-glass-strong sw-modal-pop fixed top-[calc(var(--kn-app-height,100dvh)/2)] left-1/2 z-[110] grid max-h-[min(85dvh,calc(var(--kn-app-height,100dvh)-2rem))] w-[calc(100vw-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 overflow-hidden p-6",
         className
       )}
       {...props}
     >
-      {children}
+      {fullscreen||className?.includes("overflow-hidden")||className?.includes("kn-appearance-dialog")?children:<div className="kn-dialog-scroll">{children}</div>}
       <DialogPrimitive.Close className="sw-focus absolute top-4 right-4 grid size-11 place-items-center rounded-full text-muted transition-[background-color,color] duration-200 ease-[var(--ease)] hover:bg-white/10 hover:text-ink disabled:pointer-events-none">
         <X className="size-4" />
         <span className="sr-only">Close</span>

@@ -17,3 +17,15 @@ test-results
 *.m4a
 *.zip
 *.tar.gz
+*.mp4
+*.mov
+*.mkv
+*.m4v
+*.webm
+*.sqlite*
+*.db
+.cloudflared
+coturn
+private
+secrets
+turnserver.conf

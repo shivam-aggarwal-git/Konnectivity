@@ -1,10 +1,20 @@
-# Konnectivity
+# Konnectivity · 10.02
 
-![Konnectivity — Shared Audio](public/konnectivity-brand.png)
+![Konnectivity](public/konnectivity-logo-light.png)
 
-**Your friends. Your music. One shared room.**
+**One Beat. Two Hearts**
 
-Start a room, send one link, and everyone hears the same second of the same song. There's a shared queue anyone can add to, live chat, reactions, and an optional AI DJ that takes requests in plain English. It runs on a computer you already own, and your friends connect to it.
+Create a private room for shared music, YouTube and uploaded MP4 videos, encrypted room calls, chat, plans and polls. Pearl is the default theme; either participant can preview and save a shared appearance. The host manages admission and cannot be removed by guests. When the host leaves, the room and its invitation expire.
+
+### Current interface
+
+- **Appearance:** private previews for themes, backgrounds, visualizers and room lights. X, Save and Cancel remain visible while the content scrolls. Successful Save and Submit actions close their menus.
+- **Activities:** Plans and Polls open directly from the toolbar. The notification bell records new plans, polls, responses and votes, with an in-app popup for live activity.
+- **Song comments:** room members can leave comments on the current song, separate from general chat. Comments are room-scoped and are cleared when the room ends.
+- **Search:** use the Refresh button beside “Suggestions for your next moment” for a different set of suggestions, without reloading the page. Library, Upload, People and Share remain directly accessible.
+- **Media:** uploaded MP3/FLAC/WAV audio and MP4/MOV/MKV/WebM video, up to 100 MB per file. Videos are converted to browser-friendly H.264/AAC MP4. Every new selection starts in Audio mode; switch to Video explicitly. Replay, fullscreen and show/hide controls are available in Video mode.
+- **Calls:** WebRTC media encryption, room membership checks and optional Cloudflare TURN. Casting requires a compatible browser and receiver.
+
 
 > **License:** This is a modified distribution of [Syncwave](https://github.com/SAKMZ/syncwave), under **PolyForm Noncommercial 1.0.0**. It is source-available, not OSI open source. The inherited noncommercial restriction cannot be removed by renaming the project. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [release guidance](docs/RELEASING.md).
 
@@ -12,22 +22,22 @@ Start a room, send one link, and everyone hears the same second of the same song
 
 | Branch | Purpose | Who should use it |
 | --- | --- | --- |
-| [`10.01`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.01) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
+| [`10.02`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.02) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
 | [`main`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/main) | Development branch for new features and improvements. | Contributors and people testing upcoming changes. |
 
-**Recommended: install from `10.01`.** Download links and guided installers below use this stable branch. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
+The previous `10.01` branch is retained for older installations. **Recommended: install from `10.02`.** Download links and guided installers below use this stable branch. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
 
 ```sh
-git clone --branch 10.01 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
+git clone --branch 10.02 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
 cd Konnectivity
 bash start.sh --local
 ```
 
-To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git switch 10.01`, `git pull --ff-only origin 10.01`, and start it again. Keep runtime data and credentials out of Git.
+To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git switch 10.02`, `git pull --ff-only origin 10.02`, and start it again. Keep runtime data and credentials out of Git.
 
 ## Contribute
 
-Contributions normally target `main`; stable fixes target `10.01` only when agreed with the maintainer. See [CONTRIBUTING.md](CONTRIBUTING.md) for fork/clone and sync commands, branch naming, tests, pull requests and the review/merge process. Follow [SECURITY.md](SECURITY.md) for private vulnerability reports.
+Contributions normally target `main`; stable fixes target `10.02` only when agreed with the maintainer. See [CONTRIBUTING.md](CONTRIBUTING.md) for fork/clone and sync commands, branch naming, tests, pull requests and the review/merge process. Follow [SECURITY.md](SECURITY.md) for private vulnerability reports.
 
 ## Credits and thanks to Syncwave
 
@@ -39,7 +49,7 @@ Please visit the [original Syncwave repository](https://github.com/SAKMZ/syncwav
 
 The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are preserved in [LICENSE](LICENSE) and [NOTICE](NOTICE). This fork is maintained separately; no affiliation with or endorsement by the Syncwave team is implied.
 
-![Konnectivity listening room](docs/screenshots/room-desktop.jpg)
+![Konnectivity 10.02 — Pearl theme](docs/screenshots/home-pearl-10.02.png)
 
 ## Features
 
@@ -69,7 +79,7 @@ No songs, cookies, API keys, passwords, existing rooms or user chat are included
 
 ## One-click start
 
-[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.01.zip)
+[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.02.zip)
 
 Extract the ZIP, then open the launcher for your computer. It installs the required packages and media tools, builds the app, and opens localhost automatically. No personal playlists, songs, images, cookies or settings are included.
 
@@ -84,13 +94,13 @@ Prefer one command, without downloading/extracting manually?
 **macOS / Linux:**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.01/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.02/install.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.01/install.ps1)))
+& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.02/install.ps1)))
 ```
 
 These commands install into your user folder’s `Konnectivity` directory and start locally. Re-running starts the existing installation without replacing its data. Node.js 22, npm dependencies, ffmpeg, Deno and a runnable downloader are set up automatically on supported desktop platforms. The standalone downloader avoids requiring a separate Python installation. Internet access is needed on first run; keep the terminal open while listening.
@@ -137,40 +147,17 @@ docker compose down
 
 Complete `/setup` locally before exposing the server. Docker does not create a public tunnel. `data/` and `cache/` are persistent bind mounts. Never commit them.
 
-## Screenshots
+## Screenshots · 10.02
 
-Screenshots use an isolated demo instance and generated demonstration audio, not a personal library.
+These screenshots use a separate demo instance, fictional participants and generated media. They contain no private photos, credentials, TURN settings or public invitation URLs.
 
-| Desktop room | Mobile room |
+| Pearl desktop | Mobile audio player |
 | --- | --- |
-| ![Desktop](docs/screenshots/room-desktop.jpg) | ![Mobile](docs/screenshots/room-mobile.jpg) |
+| ![Desktop room](docs/screenshots/desktop-pearl-10.02.png) | ![Mobile room](docs/screenshots/mobile-pearl-10.02.png) |
 
-![Saved playlists](docs/screenshots/playlists.jpg)
+![Poll results](docs/screenshots/polls-10.02.png)
 
-<details>
-<summary>More screenshots: library, uploads, search, image chat and automatic sync</summary>
-
-### Themes and atmosphere
-![Appearance settings](docs/screenshots/appearance.jpg)
-
-### Saved music library
-![Music library](docs/screenshots/library.jpg)
-
-### Upload songs or folders
-![Uploads](docs/screenshots/uploads.jpg)
-
-### Persistent search
-![Search](docs/screenshots/search.jpg)
-
-### Mobile image chat
-![Image chat](docs/screenshots/image-chat.jpg)
-
-### Automatic synchronization
-![Automatic sync](docs/screenshots/automatic-sync.jpg)
-
-</details>
-
-[Browse the complete screenshot gallery](docs/SCREENSHOTS.md)
+![Video controls](docs/screenshots/video-10.02.png)
 
 ## Documentation
 
@@ -196,52 +183,17 @@ Konnectivity and its upstream project, Syncwave, are not affiliated with, endors
 
 Konnectivity retains Syncwave’s **PolyForm Noncommercial 1.0.0** license and required copyright notice. See [LICENSE](LICENSE) for the full terms and warranty disclaimer, and [NOTICE](NOTICE) for upstream attribution. The software license does not grant rights to third-party music or videos.
 
-## Private rooms and atmosphere
+## Rooms, privacy and playback
 
-![Room lighting controls](docs/screenshots/room-lights.png)
-
-Search remembers recent queries on your device, with an **×** to remove each one, and offers song suggestions. Playback starts in **Audio** mode; **Switch to Video** uses the same YouTube song at its current position, without another link. Local uploads remain audio-only. Appearance includes soft glow and a slow song-timeline pulse, with reduced-motion support.
-
-This is a private, trusted-friends instance: complete invitation links grant room access, and approved participants share the server music library. In approval rooms, waiting guests cannot receive chat or media. Old bare room codes do not grant access; send a fresh link from **Share** after upgrading. See [security](SECURITY.md) and [VPS deployment](DEPLOY.md).
-
-### More room atmosphere
-
-Choose Moonlight, Rosewood, Candlelight, Aurora, Afterglow or Ocean in Appearance. Color glow, a song-timeline pulse and floating lights brighten your room. The Home button and logo return to the player without interrupting the song.
-
-![Aurora room](docs/screenshots/aurora-room.png)
-
-Appearance changes are synchronized within each room: either participant can change the theme, lights, visualizer and motion setting. New and reconnecting listeners receive the saved room appearance. Device accessibility preferences such as reduced motion still take priority.
-
-## Shared photo backgrounds
-
-Open **Appearance → Room background**. Choose **Upload a photo** to use a picture together (JPEG, PNG, WebP or GIF, up to 8 MB), or select **Song artwork** to follow the current song’s thumbnail automatically. Use **Darken background** to keep text readable. **Theme only** switches the image off; **Our photo** returns to the uploaded photo.
-
-Either participant can change the background and darkness for the room. The choice is saved and synchronized to new and reconnecting listeners. Photos use private room-protected image storage on your own server, share the configured image-storage quota, and are not automatically posted to chat. Switching to Theme only does not delete the stored photo. If a local song has no artwork, the theme remains visible.
-
-### Full player and cover recovery
-
-Click the Konnectivity logo/tagline to open the full player, then the down-chevron to keep listening in the bottom bar. Failed cover URLs fall back to an authenticated YouTube thumbnail or the animated placeholder.
-
-### iPhone media and player controls
-
-HEIC/HEIF uploads convert privately to JPEG, while GIF backgrounds retain animation. The visible bottom-bar chevron and mobile swipe gestures expand/collapse the player. A device-local clock appears in the header/player. Lyrics use Hindi/English scripts only when a suitable version is available; no automatic translation is claimed.
-
-The full player shares your selected GIF/photo background and mood lights. Incoming chat banners show unread counts and open chat directly; mobile room controls stay aligned in one row.
-
-You can import a YouTube playlist from Playlists (up to 100 available tracks per import), save it under its original or a custom name, then rename or delete it. The full player also has a shared Hide artwork control for an unobstructed GIF/light background. The clock is explicitly labelled Local time and includes AM/PM and the date.
-
-### Lyrics and host controls
-
-Lyrics now come through [Lyrica](https://github.com/Wilooper/Lyrica). Thank you to Wilooper and the Lyrica contributors. Konnectivity explicitly excludes its LRCLIB provider; configure `LYRICA_URL` to use your own Lyrica service. Availability and timing depend on upstream providers. Only public song metadata is sent, never YouTube cookies.
-
-New listeners require approval by default, with a popup showing their name and **Let in / Decline** actions. Hosts can change this under **People**, mute chat, and remove listeners with confirmation. Phone layouts use keyboard-aware sheets and larger touch targets. See [configuration](docs/CONFIGURATION.md#lyrics-and-room-approval) for temporary removal limits and migration details.
-
-### Playlists and backgrounds on mobile
-
-- Select several saved playlists and queue them together, up to 2,000 songs per batch.
-- Expand a playlist or queue, drag with edge scrolling, or move any song directly to a numbered position.
-- Save shows confirmed saved state and marks playlists already containing the song.
-- Frame photos and animated GIFs with drag, zoom, Fill/Fit and sharpness controls. Framing syncs across the room.
-- Hide the main panels to enjoy your background while keeping playback controls at hand.
-
-See the [user guide](docs/USER_GUIDE.md#queue-several-playlists-and-arrange-long-lists) for instructions and screenshots.
+- The host approves admission when invite-only is enabled. Guests can control shared playback and appearance, create plans/polls, vote and comment; guests cannot remove the host.
+- Host departure ends the room for everyone, clears room chat, polls, plans and comments, and invalidates its invitation. A new room has a new code/token. The server's base hostname can stay the same.
+- The server retains uploaded media privately in its local library. Matching normalized names and renamed byte-identical files reuse existing media rather than writing another file. Files are not overwritten on name collisions.
+- Every new selection starts in Audio mode. Use the camera icon to explicitly switch to Video. Uploads accept common audio formats and MP4/MOV/MKV/WebM, up to 100 MB per file, and convert video to H.264/AAC MP4.
+- Replay uses the circular-arrow icon; fullscreen fills the browser viewport; the eye icon hides/shows controls without stopping playback. A finished video can be replayed.
+- Both audio/crossfade slots stop and clear their sources when the room has no current media, prepares a different track or disconnects. Cached audio is prepared before shared playback, and uploaded media is buffered on each device.
+- Search suggestions have their own Refresh action. It cycles recommendation seeds without reloading the page or changing the room. Results still depend on search-provider availability.
+- Saved appearance, plans, polls and comments are synchronized. Device permissions, notification muting, casting and local control visibility remain per-device.
+- WebRTC calls use encrypted browser-to-browser media. Optional TURN relays carry encrypted traffic; reliable calls on restricted networks require a reachable relay. Configure your own service privately; no working TURN configuration or credentials ship in this repository.
+- Cloudflare TURN supports a 750 decimal GB monthly cutoff based on provider-reported account egress. Reporting can lag; this is not an instantaneous billing hard cap. The guard fails closed if required analytics are unavailable.
+- Casting is offered only where the browser exposes a compatible remote-playback API and requires a compatible receiver.
+- Local notification recordings are optional; this code-only release includes generated fallback tones, not personal recordings.

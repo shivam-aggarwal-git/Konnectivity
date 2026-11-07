@@ -9,11 +9,13 @@ import ChatNotice from "./ChatNotice";
 import RoomClock from "./RoomClock";
 import {usePlayerSwipe} from "@/hooks/usePlayerSwipe";
 import RoomBackground from "./RoomBackground";
+import AmbientVisualizer from "./AmbientVisualizer";
 import RoomLights from "./RoomLights";
 import AppearanceSettings from "./AppearanceSettings";
 import {useAppearance,receiveRoomAppearance} from "@/hooks/useAppearance";
 import { io, type Socket } from "socket.io-client";
 import {
+  ArrowLeft, ArrowRight, Menu, Volume2, VolumeX, PanelsTopLeft, PanelTopClose, Settings, LogOut, Phone,
   Activity as ActivityIcon,
   BarChart3,
   History as HistoryIcon,
@@ -71,12 +73,24 @@ import type { LibrarySection } from "@/components/LibraryPanel";
 import LibraryPanel from "@/components/LibraryPanel";
 import type { Playlist } from "@/lib/types";
 import SearchPanel from "@/components/SearchPanel";
+import {CalendarDays} from "lucide-react";
+import RoomNotifications from "./RoomNotifications";
+import SongComments from "./SongComments";
+import {stopMediaSlots} from "@/lib/browser-playback";
+import {RotateCcw} from "lucide-react";
+import VideoStage from "./VideoStage";
+import UploadedVideo from "@/components/UploadedVideo";
 import YouTubePlayer from "@/components/YouTubePlayer";
 import NowPlaying from "@/components/NowPlaying";
 import QueuePanel from "@/components/QueuePanel";
 import Recommendations from "@/components/Recommendations";
 import ActivityFeed from "@/components/ActivityFeed";
 import ChatPanel from "@/components/ChatPanel";
+import {useRoomExit} from '@/hooks/useRoomExit';
+import {useUploadedBuffer} from '@/hooks/useUploadedBuffer';
+import {PlayerMessageComposer,PlayerMessageOverlay,type PlayerMessage} from './PlayerMessage';
+import {unlockSounds,messageSound,setSoundEnabled,soundEnabled} from '@/lib/notification-sounds';
+import RoomTogether from "@/components/RoomTogether";
 import Reactions, { type IncomingReaction } from "@/components/Reactions";
 import Logo from "@/components/Logo";
 
@@ -98,7 +112,7 @@ const SoundSettings = dynamic(() => import("@/components/SoundSettings"));
 import InstallButton, { InstallBanner } from "@/components/InstallButton";
 import ShareButton from "@/components/ShareButton";
 
-type Tab = "now" | "queue" | "search" | "chat";
+type Tab = "now" | "queue" | "search" | "chat" | "settings";
 const TAB_ORDER: Tab[] = ["now", "queue", "search", "chat"];
 /** The centre column carries three lists; they share one segmented control. */
 type CenterView = "queue" | "history" | "stats";
@@ -107,6 +121,7 @@ type SidePane = "chat" | "activity";
 
 export default function Room({ code, asHost }: { code: string; asHost: boolean }) {
   const [nick, setNick] = useState("");
+  const [flushOnHostLeave,setFlushOnHostLeave]=useState(false),[roomEnded,setRoomEnded]=useState(""),[playerMessage,setPlayerMessage]=useState<PlayerMessage|null>(null),[soundsOn,setSoundsOn]=useState(true);
   const [joined, setJoined] = useState(false);
   const [kicked, setKicked] = useState(false);
   const [awaitingApproval, setAwaitingApproval] = useState(false);
@@ -166,6 +181,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   },[]);
   const openChatNotice=useCallback(()=>{setPlayerExpanded(false);setTab('chat');setPane('chat');setUnread(0);setDismissedUnread(0);window.dispatchEvent(new Event('konnectivity:open-chat'));},[]);
 
+  const [toolsOpen,setToolsOpen]=useState(false),[playbackError,setPlaybackError]=useState<string|null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [searchSignal, setSearchSignal] = useState(0);
   const [library, setLibrary] = useState<Track[]>([]);
@@ -176,10 +192,14 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const openLibrary = useCallback((section: LibrarySection, seed?: Track) => { setLibrarySection(section); setPlaylistSeed(seed); setLibraryOpen(true); }, []);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [uploadToken, setUploadToken] = useState("");
+  const uploadedBuffer=useUploadedBuffer(current?.videoId,code,uploadToken,joined);
+  const uploadReady=useRef(true);uploadReady.current=!current?.videoId.startsWith('local_')||Boolean(uploadedBuffer.url);
   const canControl = joined;
   // The server owns the room volume, including reconnect snapshots.
   const [volume, setVolume] = useState(1);
   const [videoLink, setVideoLink] = useState("");
+  const [activityRequest,setActivityRequest]=useState<{view:'plans'|'polls'|'call';id:number}>({view:'plans',id:0});
+  const openActivities=(view:'plans'|'polls'|'call')=>setActivityRequest(previous=>({view,id:previous.id+1}));
   const [watchVideo, setWatchVideo] = useState(false);
   const [reactionDockOpen, setReactionDockOpen] = useState(false);
   const reactionDockRef = useRef<HTMLElement | null>(null);
@@ -193,7 +213,12 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     document.addEventListener("keydown", escape);
     return () => { document.removeEventListener("pointerdown", outside, true); document.removeEventListener("keydown", escape); };
   }, [reactionDockOpen]);
-  const videoActive = watchVideo && Boolean(current && !current.videoId.startsWith("local_"));
+  const [videoControlsHidden,setVideoControlsHidden]=useState(false),[lastVideo,setLastVideo]=useState<Track|null>(null);
+  const localVideo=current?.mediaType==="video";
+  const videoActive = Boolean(current && watchVideo && (localVideo || !current.videoId.startsWith("local_")));
+  const localVideoRef=useRef<HTMLVideoElement|null>(null);
+  const setLocalVideo=useCallback((element:HTMLVideoElement|null)=>{localVideoRef.current=element;},[]);
+  useEffect(()=>{setVideoControlsHidden(false);if(videoActive&&current)setLastVideo(current);},[current?.videoId,videoActive]);
   const mainRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
     if (!videoActive) return;
@@ -239,9 +264,9 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
   const casting = useCasting(
     useCallback(
-      () => (activeSlot === "A" ? audioRef.current : nextAudioRef.current),
-      [activeSlot]
-    )
+      () => videoActive ? localVideoRef.current : (activeSlot === "A" ? audioRef.current : nextAudioRef.current),
+      [activeSlot,videoActive]
+    ),current?`/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`:undefined
   );
 
   const isHost = you != null && participants.find((p) => p.id === you)?.isHost === true;
@@ -258,6 +283,9 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     []
   );
 
+  const exit=useRoomExit(joined&&!kicked&&!roomEnded,()=>new Promise<void>((resolve,reject)=>{
+    const s=socketRef.current;if(!s?.connected){resolve();return;}s.timeout(5000).emit(EVENTS.ROOM_LEAVE,{},(err:Error|null,result:any)=>{if(err||result?.error)reject(Error(result?.error||'Could not leave the room. Please try again.'));else{audioRef.current?.pause();nextAudioRef.current?.pause();resolve();}});
+  }));
   useEffect(() => {
     if(!joined)return;
     let pending:Record<string,unknown>={},timer:ReturnType<typeof setTimeout>|undefined;
@@ -269,7 +297,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const readinessRef = useRef({ key: "", badSince: 0, foregroundAt: 0 });
   const reportReady = useCallback((ready: boolean, key: string) => {
     if (!key) return;
-    const now = performance.now(), background = document.visibilityState !== "visible";
+    if(!uploadReady.current)ready=false;
+    const now = performance.now(), background = uploadReady.current&&document.visibilityState !== "visible";
     const state = readinessRef.current;
     if (state.key !== key) { state.key = key; state.badSince = 0; state.foregroundAt = now; }
     ready = ready && clockRef.current.calibrated();
@@ -277,7 +306,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     else {
       if (!state.badSince) state.badSince = now;
       // Seeking and OS gestures are transient, not a reason to stop everyone.
-      if (now - state.badSince < 1500 || now - state.foregroundAt < 2500) return;
+      if (uploadReady.current&&(now - state.badSince < 1500 || now - state.foregroundAt < 2500)) return;
     }
     const previous = lastReadyRef.current;
     if (previous?.key === key && previous.ready === ready && previous.background === background && now-previous.at < 3000) return;
@@ -290,7 +319,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       readinessRef.current.foregroundAt = performance.now();
       readinessRef.current.badSince = 0;
       lastReadyRef.current = null;
-      emit(EVENTS.SYNC_MEDIA, { key: syncKey, ready: true, background: document.visibilityState !== "visible" });
+      emit(EVENTS.SYNC_MEDIA, { key: syncKey, ready: uploadReady.current, background: uploadReady.current&&document.visibilityState !== "visible" });
     };
     document.addEventListener("visibilitychange", changed);
     window.addEventListener("pagehide", changed);
@@ -357,6 +386,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     setCurrent(s.current);
     setIsPlaying(s.isPlaying);
     setPreparing(Boolean(s.preparing));
+    setPlaybackError(s.playbackError||null);
     setShuffle(Boolean(s.shuffle));
     if (s.repeat) setRepeat(s.repeat);
     setSkipVotes(s.skipVotes ?? 0);
@@ -365,6 +395,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
   const doJoin = useCallback(() => {
     if (!nick.trim()) return;
+    unlockSounds();setSoundsOn(soundEnabled());
     localStorage.setItem("sw_nick", nick.trim());
     const ownerToken =
       typeof window !== "undefined" ? localStorage.getItem(`sw_owner_${code}`) : null;
@@ -375,6 +406,9 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
     socket.on("connect", () => socket.emit(EVENTS.JOIN, { code, nick: nick.trim(), ownerToken }));
     socket.on(EVENTS.ERROR, (e: { message: string }) => setError(e.message));
+    socket.on('room:policy',(s:{flushOnHostLeave:boolean})=>setFlushOnHostLeave(s.flushOnHostLeave));
+    socket.on('room:ended',(s:{message:string})=>{setRoomEnded(s.message);audioRef.current?.pause();nextAudioRef.current?.pause();socket.disconnect();});
+    socket.on('player:message',(m:PlayerMessage|null)=>setPlayerMessage(m));
     socket.on(EVENTS.KICKED, () => setKicked(true));
     socket.on(EVENTS.JOIN_PENDING, () => setAwaitingApproval(true));
     socket.on(EVENTS.JOIN_DENIED, () => {
@@ -390,6 +424,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       if(s.appearance)receiveRoomAppearance(s.appearance);
       const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
       if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
+      setFlushOnHostLeave(Boolean(s.flushOnHostLeave));
       setPersistentSpace(Boolean(s.persistentSpace));
       setInviteOnly(Boolean(s.inviteOnly));
       setYou(s.you);
@@ -401,6 +436,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       setQueue(s.queue);
       setParticipants(s.participants);
       setChat(s.chat || []);
+      setPlayerMessage(s.playerMessage||null);
       setHistory(s.history || []);
       setStats(s.stats ?? null);
       setMood(s.mood ?? null);
@@ -424,9 +460,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     socket.on(EVENTS.PLAYBACK_UPDATE, (s: any) => applyPlayback(s));
     socket.on(EVENTS.CHAT_NEW, (m: ChatMsg) => {
       setChat((c) => [...c.slice(-199), m]);
+      if(!m.system&&m.nick!==nick.trim())messageSound();
       if (!m.system && m.nick!==nick.trim() && !chatIsVisible()) {
         setUnread((count)=>Math.min(999,count+1));
-        setLatestChat({nick:m.nick||'Someone',text:m.text||(m.image?'Sent an image':'New message')});
+        setLatestChat({nick:m.nick||'Someone',text:m.text||(m.video?'Shared a video':m.location?'Shared a location':m.image?'Sent an image':'New message')});
       }
     });
     socket.on(
@@ -494,6 +531,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
    * preview until the server actually confirms the track changed.
    */
   const retryRef = useRef(0);
+  useEffect(()=>()=>{cancelCrossfade();stopMediaSlots(audioRef.current,nextAudioRef.current);},[cancelCrossfade]);
   useEffect(() => {
     const active = activeSlot === "A" ? audioRef.current : nextAudioRef.current;
     const inactive = activeSlot === "A" ? nextAudioRef.current : audioRef.current;
@@ -501,8 +539,14 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       cancelCrossfade(); crossfadingRef.current = false;
       audioRef.current?.pause(); nextAudioRef.current?.pause(); setBuffering(false); return;
     }
-    if (!active || !current || preparing) return;
-    const wantSrc = `/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
+    if(!joined||roomEnded||!current||preparing){
+      cancelCrossfade();crossfadingRef.current=false;crossfadeStartedRef.current=false;
+      stopMediaSlots(audioRef.current,nextAudioRef.current);setBuffering(false);return;
+    }
+    if(!active)return;
+    const localUpload=current.videoId.startsWith('local_');
+    if(localUpload&&!uploadedBuffer.url){active.pause();inactive?.pause();setBuffering(true);reportReady(false,syncKey);return;}
+    const wantSrc = localUpload?uploadedBuffer.url:`/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
 
     if (!active.src.endsWith(wantSrc)) {
       if (inactive && inactive.src.endsWith(wantSrc) && !inactive.paused) {
@@ -586,7 +630,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         dur - expected <= CROSSFADE_SECONDS
       ) {
         const next = queueRef.current[0];
-        if (next && inactive && next.status?.state === "cached") {
+        if (next && !next.videoId.startsWith("local_") && inactive && next.status?.state === "cached") {
           crossfadeStartedRef.current = true;
           crossfadingRef.current = true;
           inactive.src = `/audio/${next.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
@@ -648,7 +692,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     const id = setInterval(tick, 100);
     return () => { clearInterval(id); for (const name of events) active.removeEventListener(name, tick); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current?.videoId, isPlaying, preparing, activeSlot, shuffle, repeat, videoActive, syncKey, syncHolding, resumeAt, roomGain.outputLatency, roomGain.suspended, needsGesture, code, uploadToken]);
+  }, [joined,roomEnded,current?.videoId, isPlaying, preparing, activeSlot, shuffle, repeat, videoActive, syncKey, syncHolding, resumeAt, roomGain.outputLatency, roomGain.suspended, needsGesture, code, uploadToken, uploadedBuffer.url]);
 
   const resumeAudio = () => {
     roomGain.resume();
@@ -741,7 +785,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     emit(EVENTS.VOTE_SKIP);
     signal("voting");
   }, [emit, signal]);
-  const sendChat = useCallback((text: string, imageId?: string) => emit(EVENTS.CHAT_SEND, { text, imageId }, (result: any) => {
+  const sendChat = useCallback((text: string, imageId?: string, videoId?:string, location?:ChatMsg["location"]) => emit(EVENTS.CHAT_SEND, { text, imageId, videoId, location }, (result: any) => {
     if (result.error) setNotice(result.error);
   }), [emit]);
   const uploadChatImage = useCallback(async (file: File) => {
@@ -752,12 +796,17 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     const data = await response.json(); if (!response.ok) throw new Error(data.error || "Image upload failed");
     return data.image as { id: string; url: string; name: string };
   }, [code, uploadToken]);
+  const uploadChatVideo = useCallback(async (file:File)=>{
+    if(file.size>50*1024*1024)throw Error("Choose a video up to 50 MB.");
+    const response=await fetch('/chat-video',{method:'POST',body:file,headers:{'x-room-code':code,'x-upload-token':uploadToken,'x-file-name':encodeURIComponent(file.name)}});
+    const data=await response.json();if(!response.ok)throw Error(data.error||'Video upload failed.');return data.video as NonNullable<ChatMsg['video']>;
+  },[code,uploadToken]);
   const mediaQuery = `?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
   const setVideoMode = useCallback((enabled: boolean) => {
-    if(enabled && current?.videoId.startsWith("local_")){setNotice("Local files are audio-only. Choose a YouTube song for video.");return;}
+    if(enabled && current?.videoId.startsWith("local_")&&current.mediaType!=="video"){setNotice("Local files are audio-only. Choose a YouTube song for video.");return;}
     emit(EVENTS.CONTROL_VIDEO, { enabled }, (result: any) => { if (result.error) setNotice(result.error); });
     if (enabled) { setTab("now"); setNotice("Video is playing the same song. Switch back to Audio anytime."); }
-  }, [emit, current?.videoId]);
+  }, [emit, current?.videoId,current?.mediaType]);
   const react = useCallback((emoji: string) => emit(EVENTS.REACTION, { emoji }), [emit]);
   const onTyping = useCallback(() => signal("typing"), [signal]);
   const likeCurrent = useCallback(() => {
@@ -795,11 +844,16 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     close: () => setHelpOpen(false),
   });
 
+  const viewHistory=useRef<Tab[]>(['now']),viewIndex=useRef(0),restoringView=useRef(false);
+  const [navigationVersion,setNavigationVersion]=useState(0);
+  useEffect(()=>{if(restoringView.current){restoringView.current=false;return;}if(viewHistory.current[viewIndex.current]===tab)return;viewHistory.current=viewHistory.current.slice(0,viewIndex.current+1);viewHistory.current.push(tab);if(viewHistory.current.length>30)viewHistory.current.shift();viewIndex.current=viewHistory.current.length-1;setNavigationVersion(v=>v+1);},[tab]);
+  const navigateView=(direction:number)=>{if(playerExpanded){setPlayerExpanded(false);return;}if(libraryOpen){setLibraryOpen(false);return;}const next=viewIndex.current+direction;if(next<0||next>=viewHistory.current.length){if(direction<0)exit.request();return;}restoringView.current=true;viewIndex.current=next;setSceneOnly(false);setTab(viewHistory.current[next]);setNavigationVersion(v=>v+1);};
+  const homeView=()=>{setToolsOpen(false);setSceneOnly(false);setPlayerExpanded(false);setLibraryOpen(false);setTab('now');setCenter('queue');};
   const swipe = useSwipe(
     useCallback((dir: 1 | -1) => {
       setTab((t) => {
-        const i = TAB_ORDER.indexOf(t);
-        return TAB_ORDER[Math.min(TAB_ORDER.length - 1, Math.max(0, i + dir))];
+        const order:Tab[]=['now','queue','chat'];const i=Math.max(0,order.indexOf(t));
+        return order[Math.min(order.length-1,Math.max(0,i+dir))];
       });
     }, [])
   );
@@ -822,6 +876,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const currentLikes = current?.likes ?? [];
   const youLikeCurrent = currentLikes.includes(nick.trim());
 
+  if(roomEnded)return <main className="sw-couple mx-auto flex min-h-[100dvh] flex-col items-center justify-center px-6"><Panel className="max-w-md text-center"><h1 className="font-display text-2xl">Room ended</h1><p className="my-4 text-sm text-muted">{roomEnded}</p><a href="/">Return home</a></Panel></main>;
   if (kicked) {
     return (
       <main className="sw-couple mx-auto flex min-h-[100dvh] w-full flex-col items-center justify-center px-6">
@@ -882,7 +937,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             SOMEWHERE ONLY WE KNOW
           </div>
           <h1 className="mb-1 font-display text-2xl font-bold text-ink">Konnectivity</h1>
-          <p className="mb-6 text-sm text-muted">Press play. Feel a little closer.</p>
+          <p className="mb-6 text-sm text-muted">One Beat. Two Hearts</p>
 
           {/* A first look at the avatar this name gets — the same one that will
               sit beside every track you queue and every line you type. */}
@@ -920,7 +975,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const renderChatNotice=()=>unread>dismissedUnread&&latestChat?<ChatNotice count={unread} sender={latestChat.nick} preview={latestChat.text} onOpen={openChatNotice} onDismiss={()=>setDismissedUnread(unread)}/>:null;
 
   const renderPlayer = (expanded=false) => (
-    <BottomPlayer
+    <div className={videoActive&&videoControlsHidden?"kn-transport-hidden":"contents"}><BottomPlayer
         expanded={expanded}
         onToggleExpanded={()=>expanded?setPlayerExpanded(false):goHome()}
         current={current}
@@ -947,10 +1002,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         onShuffle={() => emit(EVENTS.CONTROL_SHUFFLE)}
         onRepeat={() => emit(EVENTS.CONTROL_REPEAT)}
         onReact={react}
-        castSupported={casting.supported}
+        castSupported={casting.supported && (!videoActive || localVideo)}
         castConnected={casting.connected}
         onCast={casting.prompt}
-      />
+      /></div>
   );
 
   return (
@@ -958,12 +1013,13 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
         <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" data-room-background={appearance.background} aria-describedby="expanded-player-description">
           <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
-          <button type="button" className="kn-artwork-toggle" onClick={()=>appearance.update({showArtwork:!appearance.showArtwork})}>{appearance.showArtwork?<EyeOff size={15}/>:<Eye size={15}/>} {appearance.showArtwork?"Hide artwork":"Show artwork"}</button>
-          <button type="button" className="kn-artwork-toggle" aria-pressed={sceneOnly} onClick={()=>setSceneOnly(v=>!v)}>{sceneOnly?"Show song details":"Hide details · enjoy background"}</button>
+          <button type="button" className="kn-artwork-toggle" aria-label={appearance.showArtwork?"Hide artwork":"Show artwork"} title={appearance.showArtwork?"Hide artwork":"Show artwork"} onClick={()=>appearance.update({showArtwork:!appearance.showArtwork})}>{appearance.showArtwork?<EyeOff size={15}/>:<Eye size={15}/>}</button>
+          <button type="button" className="kn-artwork-toggle" title={sceneOnly?"Show song details":"Hide song details"} aria-label={sceneOnly?"Show song details":"Hide song details"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(v=>!v)}>{sceneOnly?<PanelsTopLeft size={17}/>:<PanelTopClose size={17}/>}</button>
           {renderChatNotice()}
           <div className="kn-expanded-scene">
-            <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
-            <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>
+            {!current&&lastVideo&&watchVideo&&<section className="kn-video-finished"><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
+        <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
+            <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
           <NowPlaying current={current} isPlaying={isPlaying} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className={cn("kn-expanded-artwork flex-1",sceneOnly&&"!hidden")}/>
           </div>
           {renderPlayer(true)}
@@ -981,16 +1037,19 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
           onEnded/onError, currently treats as authoritative. */}
       <audio
         ref={audioRef}
+        preload="auto"
         onEnded={activeSlot === "A" ? onEnded : undefined}
         onError={activeSlot === "A" ? onAudioError : undefined}
       />
       <audio
         ref={nextAudioRef}
+        preload="auto"
         onEnded={activeSlot === "B" ? onEnded : undefined}
         onError={activeSlot === "B" ? onAudioError : undefined}
       />
 
       <Reactions incoming={lastReaction} />
+      <PlayerMessageOverlay message={playerMessage} expanded={playerExpanded}/>
       <LibraryPanel open={libraryOpen} section={librarySection} onSection={setLibrarySection} onClose={() => setLibraryOpen(false)}
         code={code} uploadToken={uploadToken} playlists={playlists} library={library} seed={playlistSeed}
         tracks={[...(current ? [current] : []), ...queue]} onAdd={addTrack} onAddMany={addTracks} onPlayNow={playNow} onPlaylistAdd={addToPlaylist} emit={emit} />
@@ -1024,7 +1083,53 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       {/* ── top bar: identity, mood, search, presence ── */}
       {/* z-50 so the search dropdown clears the bottom player (z-40) rather
           than sliding behind it on a short window. */}
-      <header className="sw-safe-t sw-safe-x z-50 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 px-4 py-3 backdrop-blur-xl">
+      <Dialog open={exit.open} onOpenChange={open=>{if(!open)exit.cancel();}}><DialogContent><DialogTitle>Leave this party?</DialogTitle><DialogDescription>{isHost?'Leaving will end this room for everyone and clear its chat, playback, plans, and polls. This room’s invite URL will stop working. Uploaded media will remain in your library.':'Your call will end and you will disconnect from this room.'}</DialogDescription>{exit.error&&<p role="alert">{exit.error}</p>}<div className="flex justify-end gap-3"><Button disabled={exit.leaving} onClick={exit.cancel}>Stay</Button><Button variant="danger" disabled={exit.leaving} onClick={()=>void exit.confirm()}>{exit.leaving?'Leaving…':'Leave party'}</Button></div></DialogContent></Dialog>
+      <Dialog open={toolsOpen} onOpenChange={setToolsOpen}><DialogContent className="kn-settings-dialog !max-w-xl"><DialogTitle>Settings</DialogTitle><DialogDescription>Shared appearance, device sound and keyboard shortcuts.</DialogDescription>        <div id="kn-room-tools" data-open={toolsOpen} className="kn-room-controls ml-auto flex shrink-0 items-center gap-2 md:ml-0">
+          {/* Room code, spelled out for reading aloud across a room. */}
+          <span className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 lg:flex">
+            <span className="text-[10px] font-semibold tracking-eyebrow text-muted uppercase">
+              Code
+            </span>
+            <span className="font-mono text-xs font-bold tracking-[0.18em] text-ink">{code}</span>
+          </span>
+
+
+
+          <RoomClock/>
+          <AppearanceSettings onSaved={()=>{setToolsOpen(false);setNotice("Appearance saved for everyone.");}} onSave={patch=>new Promise((resolve,reject)=>{socketRef.current?.timeout(5000).emit(EVENTS.APPEARANCE_SET,patch,(err:any,result:any)=>err||result?.error?reject(Error(result?.error||"Could not save. Try again.")):resolve());})} playerMessageControls={done=><PlayerMessageComposer disabled={Boolean(participants.find(p=>p.id===you)?.muted)} onClear={()=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{clear:true},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))} onSent={()=>{done();setToolsOpen(false);}} onSend={(text,emoji,duration,animation)=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{text,emoji,duration,animation},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))}/>} persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.videoId&&!current.videoId.startsWith("local_")?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:current?.art||current?.thumbnail} />
+          <Button
+            className="hidden sm:inline-flex"
+            variant="ghost"
+            size="icon"
+            onClick={() => setSoundOpen(true)}
+            aria-label="Sound settings"
+            title="Automatic synchronization"
+          >
+            <SlidersHorizontal className="size-4" /><span>Sound</span>
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setHelpOpen(true)}
+            aria-label="Keyboard shortcuts"
+            title="Keyboard shortcuts (?)"
+            className="hidden lg:inline-flex"
+          >
+            <Keyboard className="size-4" /><span>Keyboard shortcuts</span>
+          </Button>
+
+          {/* The banner below says the same thing with room to explain why, so
+              only one of the two is ever on screen: banner on phones, where
+              installing actually matters, this button on desktop. */}
+          <span className="hidden md:inline-flex">
+            <InstallButton />
+          </span>
+          <button className="kn-small-control kn-icon-action" aria-label={soundsOn?"Mute notifications":"Unmute notifications"} title={soundsOn?"Mute notifications":"Unmute notifications"} aria-pressed={soundsOn} onClick={()=>{unlockSounds();setSoundEnabled(!soundsOn);setSoundsOn(!soundsOn);}}>{soundsOn?<Volume2 size={17}/>:<VolumeX size={17}/>}<span>{soundsOn?"Notification sounds on":"Notification sounds off"}</span></button>
+
+        </div><button className="kn-settings-call" onClick={()=>{setToolsOpen(false);openActivities("call");}}><Phone size={17}/>Plans, polls &amp; encrypted calls</button></DialogContent></Dialog>
+      <header className="kn-room-header sw-safe-t sw-safe-x z-50 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 px-4 py-3 backdrop-blur-xl">
+        <nav className="kn-page-navigation" aria-label="Page navigation"><button aria-label="Back" title="Back" onClick={()=>navigateView(-1)}><ArrowLeft size={18}/></button><button aria-label="Home" title="Home" onClick={homeView}><Home size={18}/></button><button className="kn-forward-control" aria-label="Forward" title="Forward" disabled={viewIndex.current>=viewHistory.current.length-1} onClick={()=>navigateView(1)}><ArrowRight size={18}/></button></nav>
         <button type="button" onClick={()=>{setSceneOnly(false);goHome();}} aria-label="Konnectivity — open player" aria-haspopup="dialog" aria-expanded={playerExpanded} className="kn-brand-button flex min-w-0 flex-1 items-center gap-3 text-left md:flex-initial">
           {/* Same mark as the landing page and the favicon, tinted by the
               artwork like everything else in the room. */}
@@ -1036,8 +1141,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               </h1>
 
             </div>
-            <div className="truncate text-[10px] font-semibold tracking-eyebrow text-[var(--accent-2)] uppercase">
-              A little closer, one song at a time
+            <div className="kn-brand-tagline truncate text-[10px] font-semibold tracking-eyebrow text-[var(--accent-2)]">
+              One Beat. Two Hearts
             </div>
           </div>
           <ChevronUp size={16} className="shrink-0 text-muted" aria-hidden="true"/>
@@ -1046,7 +1151,17 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         {/* Search floats over the layout rather than taking a column from it —
             it is used in bursts, and the queue deserves the space the rest of
             the time. */}
-        <SearchPanel
+        <button className="kn-tools-toggle" aria-label="Settings" title="Settings — appearance, notifications and room controls" aria-haspopup="dialog" aria-expanded={toolsOpen} onClick={()=>setToolsOpen(true)}><Settings size={19}/><span>Settings</span>{pendingRequests.length>0&&<b>{pendingRequests.length}</b>}</button>
+
+
+
+        <div className="kn-header-social"><RoomNotifications socket={socketRef.current} onOpen={openActivities}/><div className="kn-people-controls"><RoomPeople list={participants} you={you} isHost={Boolean(isHost)} pending={pendingRequests} inviteOnly={inviteOnly}
+            onApprovalChange={enabled=>socketRef.current?.emit(EVENTS.HOST_APPROVAL_SET,{enabled})}
+            onApprove={approveJoin} onDeny={denyJoin} onKick={kickParticipant} onMute={muteParticipant}/></div><ShareButton code={code}/></div><div className="kn-header-call"><RoomTogether openRequest={activityRequest} socket={socketRef.current} muted={Boolean(participants.find(p=>p.id===you)?.muted)}/></div><button className="kn-exit-icon" aria-label="Leave party" title="Leave party" onClick={exit.request}><LogOut size={18}/></button>
+      </header>
+
+      <nav className="sw-love-toolbar" aria-label="Room music">
+                <SearchPanel
           library={library} playlists={playlists} onPlaylistAdd={addToPlaylist} onCreatePlaylist={createPlaylistFor}
                 onPlayNow={playFromSearch}
           onAdd={queueFromSearch}
@@ -1055,75 +1170,29 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
           variant="overlay"
           shortcut
           openSignal={searchSignal}
-          className="order-last w-full md:order-none md:mx-auto md:max-w-xl md:flex-1"
+          className="kn-toolbar-search"
         />
-
-        <div className="kn-room-controls ml-auto flex shrink-0 items-center gap-2 md:ml-0">
-          {/* Room code, spelled out for reading aloud across a room. */}
-          <span className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 lg:flex">
-            <span className="text-[10px] font-semibold tracking-eyebrow text-muted uppercase">
-              Code
-            </span>
-            <span className="font-mono text-xs font-bold tracking-[0.18em] text-ink">{code}</span>
-          </span>
-
-          <RoomPeople list={participants} you={you} isHost={Boolean(isHost)} pending={pendingRequests} inviteOnly={inviteOnly}
-            onApprovalChange={enabled=>socketRef.current?.emit(EVENTS.HOST_APPROVAL_SET,{enabled})}
-            onApprove={approveJoin} onDeny={denyJoin} onKick={kickParticipant} onMute={muteParticipant}/>
-
-          <RoomClock/>
-          <AppearanceSettings persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
-          <Button
-            className="hidden sm:inline-flex"
-            variant="ghost"
-            size="icon"
-            onClick={() => setSoundOpen(true)}
-            aria-label="Sound settings"
-            title="Automatic synchronization"
-          >
-            <SlidersHorizontal className="size-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setHelpOpen(true)}
-            aria-label="Keyboard shortcuts"
-            title="Keyboard shortcuts (?)"
-            className="hidden lg:inline-flex"
-          >
-            <Keyboard className="size-4" />
-          </Button>
-
-          {/* The banner below says the same thing with room to explain why, so
-              only one of the two is ever on screen: banner on phones, where
-              installing actually matters, this button on desktop. */}
-          <span className="hidden md:inline-flex">
-            <InstallButton />
-          </span>
-          <ShareButton code={code} />
-        </div>
-      </header>
-
-      <nav className="sw-love-toolbar" aria-label="Room music">
-        <span className="sw-love-caption"><Heart size={12} fill="currentColor" /> Your world. A shared soundtrack.</span>
         <button onClick={() => openLibrary("songs")}><Music2 size={15} />Library <span className="sw-library-count">{library.length}</span></button>
         <button onClick={() => openLibrary("playlists")}><ListMusic size={15} />Playlists</button>
-        <button onClick={() => openLibrary("upload")}><Upload size={15} />Upload</button>
-        <button type="button" onClick={goHome} aria-label="Home — now playing"><Home size={15}/>Home</button>
-        <button aria-label={watchVideo?"Switch to Audio":"Switch to Video"} aria-pressed={watchVideo} onClick={() => setVideoMode(!watchVideo)}><Video size={15} /><span className="kn-mode-label-full">{watchVideo?"Switch to Audio":"Switch to Video"}</span><span className="kn-mode-label-short">{watchVideo?"Audio":"Video"}</span></button>
+        <button className="kn-plan-shortcut" aria-label="Room plans" title="Room plans" onClick={()=>openActivities("plans")}><CalendarDays size={16}/><span>Plans</span></button><button className="kn-poll-shortcut" aria-label="Room polls" title="Room polls" onClick={()=>openActivities("polls")}><BarChart3 size={16}/><span>Polls</span></button><button onClick={() => openLibrary("upload")}><Upload size={15} />Upload</button>
+
+        <button title={watchVideo?"Switch to Audio":"Switch to Video"} aria-label={watchVideo?"Switch to Audio":"Switch to Video"} aria-pressed={watchVideo} onClick={() => setVideoMode(!watchVideo)}><Video size={17}/><span className="sr-only">{watchVideo?"Switch to Audio":"Switch to Video"}</span></button>
       </nav>
+      {playbackError&&<div className="kn-playback-error" role="alert"><div><strong>Playback paused</strong><span>{playbackError}</span></div><Button onClick={()=>emit(EVENTS.CONTROL_RETRY)}>Retry track</Button><Button variant="ghost" onClick={()=>emit(EVENTS.CONTROL_SKIP)}>Skip track</Button></div>}
+      {uploadedBuffer.loading&&current?.videoId.startsWith('local_')&&<div className="kn-upload-buffer" role="status"><span>Buffering uploaded audio on this device · {uploadedBuffer.percent}%</span><progress max="100" value={uploadedBuffer.percent}/>{uploadedBuffer.error&&<><span>{uploadedBuffer.error}</span><button onClick={uploadedBuffer.retry}>Retry download</button></>}</div>}
+      {casting.error&&<p className="kn-cast-notice" role="status">{casting.error}</p>}
       {syncHolding && <div className="sw-sync-message" role="status">♡ Keeping you together{waitingFor.length ? ` — waiting for ${waitingFor.join(" & ")}` : ""}. Playback resumes automatically.</div>}
       {/* ── body ── */}
       <main ref={mainRef} className={cn("relative flex min-h-0 flex-1 flex-col", videoActive && "sw-watching", reactionDockOpen && "sw-reactions-open")} data-view={tab} {...swipe}>
         {videoActive && current && <div className="sw-video-stage">
-          <YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={volume} title={current.title}
+          <VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={()=>{emit(EVENTS.CONTROL_SEEK,{position:0});emit(EVENTS.CONTROL_PLAY_STATE,{playing:true});}}><>{localVideo?<UploadedVideo src={uploadedBuffer.url||`/audio/${current.videoId}${mediaQuery}`} title={current.title} volume={volume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo}/>:<YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={volume} title={current.title}
             onPlaying={(playing) => emit(EVENTS.CONTROL_PLAY_STATE, { playing })} onEnded={onEnded}
             onMetadata={(duration, title) => emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title })}
-            getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} />
+            getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} />}</></VideoStage>
         </div>}
+        {!current&&lastVideo&&watchVideo&&<section className="kn-video-finished"><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
-        <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>
+        <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
         <div className="sw-love-stars" aria-hidden><i>♡</i><i>✦</i><i>♡</i><i>✧</i><i>♡</i></div>
         {/* The bottom padding on phones is the reaction pill's safe area: it
             floats over this region, and without the gap it sits on top of
@@ -1131,6 +1200,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         <div className={cn(sceneOnly&&"!hidden","mx-auto flex min-h-0 w-full max-w-[1600px] flex-1 flex-col gap-4 px-4 pb-8 pt-4 md:grid md:h-full md:grid-cols-[minmax(0,1fr)_360px] md:pb-4 xl:grid-cols-[340px_minmax(0,1fr)_380px]")}>
           {/* ── column 1: the hero ── */}
           <NowPlaying
+            comments={<SongComments socket={socketRef.current} track={current}/>}
             current={current}
             isPlaying={isPlaying}
             preparing={preparing}
@@ -1265,6 +1335,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
               djTyping={djTyping}
               onSend={sendChat}
               onUploadImage={uploadChatImage}
+              onUploadVideo={uploadChatVideo}
               mediaQuery={mediaQuery}
               onExpandedChange={setChatExpanded}
               onTyping={onTyping}
@@ -1283,7 +1354,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
         </div>
       </main>
 
-      <div className="kn-scene-controls"><button type="button" aria-pressed={sceneOnly} onClick={()=>setSceneOnly(value=>!value)}>{sceneOnly?<Eye size={15}/>:<EyeOff size={15}/>} {sceneOnly?"Show panels":"Hide panels · show background"}</button>{sceneOnly&&<span>{current?.title||"Your shared soundtrack"}</span>}</div>
+      <div className="kn-scene-controls"><button type="button" aria-label={sceneOnly?"Show panels":"Hide panels · show background"} title={sceneOnly?"Show panels":"Hide panels · show background"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(value=>!value)}>{sceneOnly?<PanelsTopLeft size={17}/>:<PanelTopClose size={17}/>}</button>{sceneOnly&&<span>{current?.title||"Your shared soundtrack"}</span>}</div>
 
       {/* ── phone chrome: reactions and tabs, both within thumb reach ──
           The tab bar used to sit at the top of the content, which on a 6"
@@ -1302,7 +1373,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       </aside>
 
       <div className="sw-safe-x relative z-40 shrink-0 border-t border-white/8 bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] px-4 py-2 backdrop-blur-xl md:hidden">
-        <TabBar tab={tab} setTab={(value) => value === "search" ? openSearch() : (setSceneOnly(false),setTab(value))} queueCount={queue.length} unread={unread} />
+        <TabBar tab={toolsOpen?"settings":tab} setTab={(value) => value === "settings" ? setToolsOpen(true) : value === "search" ? openSearch() : (setSceneOnly(false),setTab(value))} queueCount={queue.length} unread={unread} />
       </div>
 
       {/* ── fixed bottom player ── */}
@@ -1404,6 +1475,7 @@ function TabBar({
       {item("queue", <ListMusic className="size-4" />, "Queue", queueCount)}
       {item("search", <SearchIcon className="size-4" />, "Add")}
       {item("chat", <MessageSquare className="size-4" />, "Chat", unread)}
+      {item("settings", <Settings className="size-4" />, "Settings")}
     </div>
   );
 }

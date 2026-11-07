@@ -12,7 +12,7 @@ export async function generateMetadata({
   const { code } = await params;
   const upper = code.toUpperCase();
   return {
-    title: `Konnectivity : A Little Closer`,
+    title: `Konnectivity — One Beat. Two Hearts`,
     manifest: `/api/room-manifest?code=${upper}`,
   };
 }

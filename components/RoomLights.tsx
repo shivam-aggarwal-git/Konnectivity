@@ -3,8 +3,8 @@ import {useEffect,useState,type CSSProperties} from 'react';
 import {useAppearance} from '@/hooks/useAppearance';
 
 /** Visual atmosphere only: never attaches processing to the audio output. */
-export default function RoomLights({position,playing}:{position:number;playing:boolean}) {
-  const p=useAppearance();
+export default function RoomLights({position,playing,preview}:{position:number;playing:boolean;preview?:{lights:string;motion:boolean}}) {
+  const shared=useAppearance();const p=preview||shared;
   const [reduced,setReduced]=useState(false);
   useEffect(()=>{
     const q=matchMedia('(prefers-reduced-motion: reduce)');
@@ -19,10 +19,10 @@ export default function RoomLights({position,playing}:{position:number;playing:b
     '--light-strength':pulse ? .42+.32*(.5+.5*Math.sin(phase)):.48,
     '--light-shift':`${pulse?Math.sin(phase/2)*12:0}%`,
   } as CSSProperties;
-  return <div className="kn-room-lights" data-moving={moving} data-pulsing={pulse} style={style} aria-hidden="true">
+  return <div className="kn-room-lights" data-style={p.lights} data-moving={moving} data-pulsing={pulse} style={style} aria-hidden="true">
     <div className="kn-light-wash kn-light-left"/>
     <div className="kn-light-wash kn-light-right"/>
     <div className="kn-light-ribbon"/>
-    <div className="kn-light-dust">{Array.from({length:12},(_,i)=><i key={i} style={{'--i':i} as CSSProperties}/>)}</div>
+    <div className="kn-light-dust">{Array.from({length:24},(_,i)=><i key={i} style={{'--i':i,left:`${4+(i*37%92)}%`,top:`${10+(i*29%80)}%`} as CSSProperties}/>)}</div>
   </div>;
 }

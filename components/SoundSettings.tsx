@@ -9,5 +9,6 @@ export default function SoundSettings({open,onOpenChange,rtt,outputLatency,waiti
   <p className="text-sm leading-relaxed text-muted">If either connection needs to buffer, playback waits briefly and resumes together. Returning to the tab or reconnecting automatically recalibrates this device.</p>
   <dl className="grid grid-cols-2 gap-3 text-xs"><dt className="text-muted">Network round trip</dt><dd>{rtt===null?'Measuring…':`${Math.round(rtt)} ms`}</dd><dt className="text-muted">Audio output estimate</dt><dd>{outputLatency===null?'Not reported by this browser':`${Math.round(outputLatency*1000)} ms`}</dd></dl>
   <p className="text-xs leading-relaxed text-muted">A browser may still require one tap to allow audio. Some headphones do not report their full hardware delay, and YouTube ads or restrictions can affect synchronization.</p>
+ <button className="kn-background-upload" onClick={()=>onOpenChange(false)}>✓ Done · automatic sync is active</button>
  </DialogContent></Dialog>;
 }

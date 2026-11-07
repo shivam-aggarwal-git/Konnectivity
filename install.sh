@@ -9,7 +9,7 @@ else
   command -v tar >/dev/null || { echo "tar is required." >&2; exit 1; }
   TASK_TMP="$(mktemp -d)"
   trap 'rm -rf "$TASK_TMP"' EXIT
-  URL="https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.01.tar.gz"
+  URL="https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.02.tar.gz"
   if command -v curl >/dev/null; then curl -fL --retry 3 "$URL" -o "$TASK_TMP/source.tar.gz";
   elif command -v wget >/dev/null; then wget -O "$TASK_TMP/source.tar.gz" "$URL";
   else echo "curl or wget is required." >&2; exit 1; fi

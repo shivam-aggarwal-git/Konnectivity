@@ -21,7 +21,7 @@ export function useSwipe(
 
   return {
     onTouchStart: (e: React.TouchEvent) => {
-      if (e.touches.length !== 1) return;
+      if (e.touches.length !== 1 || (e.target as Element)?.closest("button,input,textarea,select,video,[role=slider],[data-no-swipe]")) {start.current=null;return;}
       start.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     },
     onTouchEnd: (e: React.TouchEvent) => {

@@ -8,10 +8,18 @@ services:
       - "127.0.0.1:3000:3000"
     environment:
       - PUBLIC_URL=${PUBLIC_URL:-http://localhost:3000}
-      - LYRICA_URL=${LYRICA_URL:-https://test-0k.onrender.com}
       - PORT=3000
       - CACHE_DIR=/app/cache
       - DATA_DIR=/app/data
+      - CHAT_VIDEO_MAX_MB=${CHAT_VIDEO_MAX_MB:-1024}
+      - CALL_STUN_URL=${CALL_STUN_URL:-stun:stun.l.google.com:19302}
+      - CALL_TURN_URL=${CALL_TURN_URL:-}
+      - CALL_TURN_SECRET=${CALL_TURN_SECRET:-}
+      - CALL_CF_KEY_ID=${CALL_CF_KEY_ID:-}
+      - CALL_CF_API_TOKEN=${CALL_CF_API_TOKEN:-}
+      - CALL_CF_ACCOUNT_ID=${CALL_CF_ACCOUNT_ID:-}
+      - CALL_CF_ANALYTICS_TOKEN=${CALL_CF_ANALYTICS_TOKEN:-}
+      - CALL_RELAY_ONLY=${CALL_RELAY_ONLY:-false}
       # On a VPS, mount a cookies file and point this at it for reliable playback:
       - YTDLP_COOKIES_FILE=${YTDLP_COOKIES_FILE:-}
       # Cloud IPs get bot-checked. Konnectivity tries direct first and falls back

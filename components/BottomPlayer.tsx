@@ -103,7 +103,7 @@ export default function BottomPlayer({
   const status = preparing
     ? cachePct >= 100
       ? "Processing audio…"
-      : `Caching audio — ${cachePct}%`
+      : cachePct>0?`Caching audio — ${cachePct}%`:"Preparing audio source…"
     : buffering
       ? "Buffering…"
       : current?.artist;

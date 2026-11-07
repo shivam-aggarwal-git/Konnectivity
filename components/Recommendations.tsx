@@ -60,7 +60,7 @@ function Recommendations({
     let cancelled = false;
     setLoading(true);
 
-    const params = new URLSearchParams({ title, artist, limit: String(limit) });
+    const params = new URLSearchParams({ title, artist, limit: String(limit), page:String(nonce) });
     if (moodId) params.set("mood", moodId);
 
     fetch(`/api/recommend?${params}`)
@@ -113,8 +113,8 @@ function Recommendations({
               size="icon-sm"
               onClick={() => setNonce((n) => n + 1)}
               disabled={loading || !seed}
-              aria-label="Suggest something else"
-              title="Suggest something else"
+              aria-label="Refresh suggestions"
+              title="Refresh suggestions"
             >
               <RefreshCw className={cn("size-3.5", loading && "animate-spin")} />
             </Button>

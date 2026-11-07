@@ -7,7 +7,7 @@ Thanks for helping improve Konnectivity. Read [LICENSE](LICENSE) and [NOTICE](NO
 | Branch | Role | Pull requests |
 | --- | --- | --- |
 | `main` | Development and upcoming features. | Default target for features, improvements, documentation and fixes. |
-| `10.01` | Stable branch for installations and deployments. | Small stable fixes agreed with the maintainer; no unrelated features. |
+| `10.02` | Stable branch for installations and deployments. | Small stable fixes agreed with the maintainer; no unrelated features. |
 
 Open an issue before a substantial feature or architectural change. For bugs include your OS, Node/browser versions, reproduction steps, expected/actual behavior and redacted logs. Report vulnerabilities privately using [SECURITY.md](SECURITY.md).
 
@@ -25,7 +25,7 @@ git merge --ff-only upstream/main
 git switch -c feature/123-playlist-improvements
 ```
 
-`origin` is your fork; `upstream` is the maintained project. Keep your local `main` and `10.01` branches free of your feature commits. Work on a separate topic branch.
+`origin` is your fork; `upstream` is the maintained project. Keep your local `main` and `10.02` branches free of your feature commits. Work on a separate topic branch.
 
 ## Branch naming
 
@@ -38,7 +38,7 @@ Use lowercase letters, numbers and hyphens in the description. Include an issue 
 | `docs/` | Documentation changes. | `docs/installation-guide` |
 | `test/` | Test coverage and fixtures. | `test/125-room-reconnect` |
 | `chore/` | Tooling, dependencies and maintenance. | `chore/126-dependency-update` |
-| `hotfix/` | Agreed fix based on stable `10.01`. | `hotfix/127-installer-download` |
+| `hotfix/` | Agreed fix based on stable `10.02`. | `hotfix/127-installer-download` |
 
 ## Install and validate locally
 
@@ -117,13 +117,13 @@ These are the documented review expectations. CODEOWNERS requests reviews; it do
 
 ## Stable fixes and backports
 
-For an agreed stable fix, start from `10.01`:
+For an agreed stable fix, start from `10.02`:
 
 ```sh
 git fetch upstream --prune
-git switch -c hotfix/127-installer-download upstream/10.01
+git switch -c hotfix/127-installer-download upstream/10.02
 # Make the focused fix, commit and run the relevant checks.
 git push -u origin hotfix/127-installer-download
 ```
 
-Open that PR against **`10.01`** and explain why stable users need it. Use the same review and CI process. The maintainer should also bring the fix to `main`, or backport an existing `main` fix with `git cherry-pick -x COMMIT_SHA` on a hotfix branch. Link the original PR/commit and resolve compatibility differences explicitly. Do not merge an entire development branch into stable just to ship one fix.
+Open that PR against **`10.02`** and explain why stable users need it. Use the same review and CI process. The maintainer should also bring the fix to `main`, or backport an existing `main` fix with `git cherry-pick -x COMMIT_SHA` on a hotfix branch. Link the original PR/commit and resolve compatibility differences explicitly. Do not merge an entire development branch into stable just to ship one fix.

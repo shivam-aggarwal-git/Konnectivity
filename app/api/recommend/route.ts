@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
   const artist = p.get("artist")?.trim();
   const moodId = p.get("mood")?.trim();
   const avoid = (p.get("avoid") || "").split("\n").filter(Boolean);
+  const page=Math.min(5,Math.max(0,Number(p.get("page"))||0));
   const limit = Math.min(8, Math.max(1, Number(p.get("limit")) || 5));
 
   const mood = MOODS.find((m) => m.id === moodId) ?? null;
@@ -60,8 +61,8 @@ export async function GET(req: NextRequest) {
     }
 
     if (!artist) return NextResponse.json({ results: [], source: "none", mood });
-    const results = await searchSongs(artist, limit + 6);
-    return NextResponse.json({ results, source: "artist", seedArtist: artist, mood });
+    const results = await searchSongs(artist, Math.min(50,limit + 6 + page*5));
+    return NextResponse.json({ results:results.slice(page*5).concat(results.slice(0,page*5)), source: "artist", seedArtist: artist, mood });
   } catch (err) {
     return NextResponse.json(
       { error: "recommend_failed" },

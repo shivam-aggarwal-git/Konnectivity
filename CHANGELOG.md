@@ -1,5 +1,18 @@
 # Changelog
 
+## 10.02 — 2026-11-07
+
+- Pearl default with adaptive light/dark logos and updated documentation screenshots.
+- Shared preview/save appearance, pinned dialog actions, direct Share/People/Plans/Polls and notification bell.
+- Live poll charts, close/delete controls, plan/poll activity notifications and room-scoped song comments.
+- Audio-first uploads and YouTube, MP4 video conversion, replay/fullscreen/visibility controls and normalized filename deduplication.
+- Different suggestion sets from the suggestion refresh action; menus close after successful Save/Submit.
+- Stop both audio/crossfade slots when the room clears current media, prepares another track or disconnects.
+- Verified download CA roots, queue-preserving recovery, private media access and room-only encrypted WebRTC calls.
+- A departing host ends the room and invalidates its invitation. Private uploads stay in the local library.
+- 10.02 guided installers, source privacy checks and retained 10.01 compatibility documentation.
+
+
 ## Personal space and automatic installation
 
 - Opt-in playlist references survive new room codes, with shared edits and a room-local opt-out.

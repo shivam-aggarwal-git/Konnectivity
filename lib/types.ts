@@ -6,6 +6,8 @@
 export type Status = { state: "cached" | "downloading" | "pending"; percent: number };
 
 export type Track = {
+  mediaType?:"audio"|"video";
+  sourceName?:string;nameKey?:string;
   id?: string;
   videoId: string;
   title: string;
@@ -66,6 +68,8 @@ export type ChatMsg = {
   nick?: string;
   text: string;
   image?: { id: string; url: string; name: string };
+  video?: { id: string; url: string; name: string };
+  location?: {lat:number;lng:number;label:string};
   system?: boolean;
   dj?: boolean;
   /** Present on system entries written after the activity feed shipped. */
@@ -140,3 +144,9 @@ export type ArtistResult = {
 };
 
 export type AlbumDetail = AlbumResult & { tracks: Track[] };
+
+export type RoomPlan={id:string;creatorId:string;canClose:boolean;by:string;title:string;venue:string;when:string;budget:number;closed:boolean;myResponse:string|null;responses:{nick:string;choice:string}[];suggestions:{id:string;nick:string;text:string}[]};
+export type RoomPoll={id:string;creatorId:string;canClose:boolean;by:string;question:string;options:string[];counts:number[];total:number;myVote:number|null;closed:boolean};
+export type CallInvitation={id:string;from:string;nick:string;video:boolean;expiresAt:number};
+export type CallMember={id:string;nick:string};
+export type SocialState={plans:RoomPlan[];polls:RoomPoll[];call:{members:CallMember[];max:number;invitation?:CallInvitation|null}};

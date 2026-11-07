@@ -1,4 +1,5 @@
 "use client";
+import AmbientVisualizer from "./AmbientVisualizer";
 
 import { useEffect, useMemo, useState } from "react";
 import { Disc3, Heart, Loader2, MicVocal, Radio } from "lucide-react";
@@ -95,7 +96,7 @@ function Waveform({
   );
 }
 
-export default function NowPlaying({
+export default function NowPlaying({comments,
   current,
   isPlaying,
   preparing,
@@ -110,6 +111,7 @@ export default function NowPlaying({
   onSeek,
   className,
 }: {
+  comments?: React.ReactNode;
   current: Track | null;
   isPlaying: boolean;
   preparing: boolean;
@@ -177,7 +179,7 @@ export default function NowPlaying({
           track={current}
           position={position}
           playing={isPlaying && !loading}
-          className="mx-auto h-[min(360px,42vh)] w-full max-w-md shrink-0"
+          className="kn-lyrics-left mr-auto h-[min(360px,42vh)] w-full max-w-md shrink-0"
         />
       )}
 
@@ -266,9 +268,9 @@ export default function NowPlaying({
         )}
       </div>
 
-      {current && <div className={`kn-visualizer ${isPlaying && !loading ? 'is-playing' : ''}`} aria-hidden="true">{Array.from({length:28},(_,i)=><span key={i} style={{'--bar-height':`${8+Math.round(Math.sin(i*.65)**2*18)}px`,'--bar-delay':`${-(i%9)*.17}s`} as React.CSSProperties}/>)}</div>}
+      {current&&<AmbientVisualizer playing={isPlaying&&!loading}/>}
 
-      {current && <div className="kn-track-time"><span>{fmt(position)}</span><span>ONE SONG. TWO WORLDS CLOSER.</span><span>{fmt(dur)}</span></div>}
+      {current && <div className="kn-track-time"><span>{fmt(position)}</span><span>ONE BEAT. TWO HEARTS</span><span>{fmt(dur)}</span></div>}
 
       {/* Who's here. The point of the app is that these people hear the same
           thing at the same moment, so it's worth showing rather than counting.
@@ -289,6 +291,7 @@ export default function NowPlaying({
           ))}
         </ul>
       </div>
+      {comments}
     </section>
   );
 }

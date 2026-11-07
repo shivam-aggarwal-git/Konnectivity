@@ -1,9 +1,11 @@
 # Deployment, backup and updates
 
+Documentation version: **10.02**
+
 ## Local server or native VPS install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.01/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.02/install.sh | bash
 ```
 
 The installer prepares the app and supported runtime dependencies automatically and opens localhost on a desktop. On a headless VPS, the localhost address is printed instead; use `ssh -L 3000:127.0.0.1:3000 user@your-vps` and claim `/setup` in your own browser. This foreground installer does not configure DNS, firewall rules or a system service; use the Docker option below for managed restarts. See [setup](docs/SETUP.md) for supported platforms and developer commands.
@@ -61,3 +63,9 @@ curl --fail http://localhost:3000/api/health
 ```
 
 On failure, stop the new version, restore the previous code/build and restart with the same data path only if compatible. Keep a pre-upgrade data backup for migrations. Never build in the live app’s checkout while it serves users.
+
+## Upgrade from 10.01
+
+Stop the app and back up your private data directory outside Git. For a Git installation, use `git fetch origin`, `git switch --track origin/10.02` (or `git switch 10.02` if present), then `git pull --ff-only origin 10.02`. Start with `bash start.sh --local` or `Start-Konnectivity.bat`. The launcher rebuilds changed sources. Keep your existing ignored data, cache and environment files; never commit them. Archive installations should extract 10.02 into a new folder, then privately transfer their data/cache/configuration before starting. The guided installer launches an existing installation without overwriting its private files.
+
+Audio is the default for all media. MP4, MOV, MKV and WebM uploads are limited to 100 MB and converted locally; movie-length large files are outside this release’s upload limit. Switch to Video in the room to watch.
