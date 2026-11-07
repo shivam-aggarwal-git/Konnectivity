@@ -1,3 +1,9 @@
+## Stable 10.03 validation
+
+The complete isolated integration suite passed after removing readiness holds. Regression checks prove slow, blocked and background listeners cannot stop the shared clock; uploads start without readiness acknowledgements; manual pause and replay remain authoritative. Uploaded audio uses native Range streaming instead of full-file Blob downloads. TypeScript and production builds are checked for this release. Camera switching and physical iOS permission prompts remain device-dependent and require real-device confirmation.
+
+The entries below document earlier versions; readiness-hold behavior described there is superseded in 10.03.
+
 # Validation record
 
 Validated on 6 November 2026 with Node 26 on macOS. This is a local validation record; the included GitHub Actions workflow has not been run on a hosted repository yet.

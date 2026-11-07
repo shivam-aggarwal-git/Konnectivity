@@ -12,10 +12,10 @@ if (Test-Path $InstallDir) {
   try {
     $archive = Join-Path $stage 'source.zip'
     $client = New-Object Net.WebClient
-    try { $client.DownloadFile('https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.03-working.zip', $archive) } finally { $client.Dispose() }
+    try { $client.DownloadFile('https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.03.zip', $archive) } finally { $client.Dispose() }
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     [IO.Compression.ZipFile]::ExtractToDirectory($archive, (Join-Path $stage 'source'))
-    $source = Join-Path $stage 'source\Konnectivity-10.03-working'
+    $source = Join-Path $stage 'source\Konnectivity-10.03'
     if (!(Test-Path (Join-Path $source 'start.bat'))) { throw 'Invalid source archive.' }
     [IO.Directory]::CreateDirectory((Split-Path -Parent $InstallDir)) | Out-Null
     Copy-Item -LiteralPath $source -Destination $InstallDir -Recurse

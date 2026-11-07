@@ -16,40 +16,22 @@ try{
  let changed=event(a,'playback:update',s=>s.isPlaying&&s.current?.videoId==='M7lc1UVf-VE');
  b.emit('control:play-now',{track:{videoId:'M7lc1UVf-VE',title:'Search song',artist:'Artist',duration:300},preferVideo:true});
  let state=await changed;assert.equal(state.watchVideo,true);assert.equal(state.preparing,false);const key=state.syncKey;
- b.emit('sync:report',{rtt:1200});a.emit('sync:media',{key,ready:true});
- const both=[event(a,'playback:update',s=>s.syncHolding),event(b,'playback:update',s=>s.syncHolding)];b.emit('sync:media',{key,ready:false});
- const held=await Promise.all(both);assert.deepEqual(held[0],held[1]);state=held[0];assert.deepEqual(state.waitingFor,['Listener']);assert.equal(state.isPlaying,true);
- const at=playbackPosition(state,state.serverNow);assert.equal(playbackPosition(state,state.serverNow+5000),at);assert.equal(playbackRunning(state,state.serverNow+5000),false);
- // A multi-second stall freezes both clocks, rather than letting the fast
- // listener continue and forcing the slow listener to miss that part.
- await wait(5100);assert.equal(room.syncHolding,true);
- changed=event(a,'playback:update',s=>!s.syncHolding&&s.resumeAt>s.serverNow);b.emit('sync:media',{key,ready:true});state=await changed;
- assert.ok(state.resumeAt-state.serverNow>=1100);assert.equal(playbackPosition(state,state.resumeAt-1),at);assert.equal(playbackPosition(state,state.resumeAt+500),at+.5);
- await wait(Math.max(0,state.resumeAt-state.serverNow)+100);
- changed=event(a,'playback:update',s=>s.syncHolding);b.emit('sync:media',{key,ready:false});await changed;
- // Pausing while waiting cancels automatic resume; ready must not restart it.
- changed=event(a,'playback:update',s=>!s.isPlaying&&!s.syncHolding);a.emit('control:playpause');await changed;b.emit('sync:media',{key,ready:true});await wait(50);assert.equal(room.isPlaying,false);
- // Stale readiness reports from a previous track cannot hold a new selection.
- changed=event(a,'playback:update',s=>s.current?.videoId==='abcdefghijk'&&s.isPlaying);a.emit('control:play-now',{track:{videoId:'abcdefghijk',title:'Next',artist:'Artist',duration:120},preferVideo:true});state=await changed;const second=state.syncKey;
- b.emit('sync:media',{key,ready:false});await wait(50);assert.equal(room.syncHolding,false);
- changed=event(a,'playback:update',s=>s.syncHolding);b.emit('sync:media',{key:second,ready:false});await changed;
- // Background suspension releases an existing hold, and cannot re-hold the room.
- changed=event(a,'playback:update',s=>!s.syncHolding);b.emit('sync:media',{key:second,ready:false,background:true});await changed;
- b.emit('sync:media',{key:second,ready:false,background:true});await wait(80);assert.equal(room.syncHolding,false);
- b.emit('sync:media',{key:second,ready:false});await wait(80);assert.equal(room.syncHolding,false);
- b.emit('sync:media',{key:second,ready:true,background:false});await wait(80);
- changed=event(a,'playback:update',s=>s.syncHolding);b.emit('sync:media',{key:second,ready:false});await changed;
- changed=event(a,'playback:update',s=>!s.syncHolding);b.disconnect();await changed;assert.equal(room.syncHolding,false);
- const[c,sc]=await join('Listener reconnected');assert.equal(sc.watchVideo,true);assert.equal(sc.current.videoId,'abcdefghijk');assert.equal(sc.syncKey,second);
- process.env.SYNC_BUFFER_TIMEOUT_MS='120';changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:second,ready:false});await changed;await wait(200);assert.equal(room.syncHolding,false);c.emit('sync:media',{key:second,ready:false});await wait(50);assert.equal(room.syncHolding,false);c.emit('sync:media',{key:second,ready:true});await wait(30);changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:second,ready:false});await changed;delete process.env.SYNC_BUFFER_TIMEOUT_MS;
+ // Slow, blocked and background listeners never freeze the shared clock.
+ for(const flags of [{ready:false},{ready:false,blocked:true},{ready:false,background:true},{ready:true}]){
+  changed=event(a,'playback:update');b.emit('sync:media',{key,...flags});state=await changed;
+  assert.equal(state.syncHolding,false);assert.deepEqual(state.waitingFor,[]);assert.equal(state.resumeAt,0);
+  assert.equal(playbackRunning(state,state.serverNow+5000),true);
+  assert.ok(playbackPosition(state,state.serverNow+5000)>playbackPosition(state,state.serverNow)+4.9);
+ }
+ changed=event(a,'playback:update',s=>!s.isPlaying);a.emit('control:playpause');await changed;b.emit('sync:media',{key,ready:true});await wait(30);assert.equal(room.isPlaying,false);
+ changed=event(a,'playback:update',s=>s.isPlaying);a.emit('control:playpause');await changed;
+ b.emit('sync:media',{key:'stale-key',ready:false});await wait(30);assert.equal(room.syncHolding,false);
  // Replay resets the authoritative clock and rejects an old end notification.
  a.emit('control:seek',{position:90});await wait(30);const oldKey=room.syncKey;changed=event(a,'playback:update',s=>s.syncKey!==oldKey&&s.pausedPosition===0&&s.isPlaying);a.emit('control:replay',{});const replay=await changed;assert.notEqual(replay.syncKey,oldKey);assert.equal(replay.pausedPosition,0);const replayTrack=room.current.videoId;a.emit('track:ended',{videoId:replayTrack,syncKey:oldKey});await wait(30);assert.equal(room.current.videoId,replayTrack);
- // Uploaded files also have a bounded wait, and autoplay-blocked devices
- // must not hold every other listener indefinitely.
- process.env.SYNC_BUFFER_TIMEOUT_MS='120';
+ // Uploaded files also start without waiting for any readiness report.
  room.current.videoId='local_readiness_fixture';room.playToken++;room.isPlaying=true;
- changed=event(a,'playback:update',s=>s.current?.videoId==='local_readiness_fixture'&&s.syncHolding);a.emit('control:seek',{position:0});state=await changed;const localKey=state.syncKey;
- a.emit('sync:media',{key:localKey,ready:true});changed=event(a,'playback:update',s=>!s.syncHolding);c.emit('sync:media',{key:localKey,ready:false,blocked:true});await changed;
- c.emit('sync:media',{key:localKey,ready:true});await wait(20);changed=event(a,'playback:update',s=>s.syncHolding);c.emit('sync:media',{key:localKey,ready:false});await changed;await wait(180);assert.equal(room.syncHolding,false);delete process.env.SYNC_BUFFER_TIMEOUT_MS;
- console.log('PASS: audio default, explicit video switch, both listeners wait through a 5-second stall, RTT-based shared resume, manual pause respected, stale reports rejected, disconnect recovery and late join');
+ changed=event(a,'playback:update',s=>s.current?.videoId==='local_readiness_fixture');a.emit('control:seek',{position:0});state=await changed;
+ assert.equal(state.syncHolding,false);assert.deepEqual(state.waitingFor,[]);
+ changed=event(a,'playback:update');b.emit('sync:media',{key:state.syncKey,ready:false});state=await changed;assert.equal(state.syncHolding,false);
+ console.log('PASS: immediate playback, independent buffering, blocked/background listeners cannot hold others, pause respected, atomic replay and stale end rejection');
 }finally{for(const s of sockets)s.disconnect();io.close();http.close();}process.exit(0);

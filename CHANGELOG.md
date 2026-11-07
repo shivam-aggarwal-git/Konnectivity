@@ -1,3 +1,7 @@
+## 10.03 — stable
+
+Immediate Range-based upload playback without full-file predownload or shared readiness holds. Calls retain natural video orientation, camera switching and a timed minimized call banner. Home and guarded Back preserve the active room call; explicit host departure ends it. Private configuration remains server-only and excluded from release archives.
+
 # Changelog
 
 ## 10.03-working

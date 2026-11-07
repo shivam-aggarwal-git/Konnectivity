@@ -1,4 +1,4 @@
-# Konnectivity · 10.03-working
+# Konnectivity · 10.03
 
 ![Konnectivity](public/konnectivity-logo-light.png)
 
@@ -6,7 +6,11 @@
 
 Create a private room for shared music, YouTube and uploaded MP4 videos, encrypted room calls, chat, plans and polls. Pearl is the default theme; either participant can preview and save a shared appearance. The host manages admission and cannot be removed by guests. When the host leaves, the room and its invitation expire.
 
-### 10.03-working changes
+### Stable 10.03 changes
+
+- Immediate progressive playback: slow or blocked listeners never pause anyone else.
+- Natural camera orientation, front/rear camera switching, and a timed active-call banner with hangup.
+- Home and browser Back minimize an active call; explicit Leave party still ends the host’s room.
 
 - Direct Audio / Video calling with ringing while the browser requests device permission; no separate preview step.
 - Host hangup or detected host disconnect ends the room call for all participants.
@@ -14,10 +18,10 @@ Create a private room for shared music, YouTube and uploaded MP4 videos, encrypt
 - Remote track mute/unmute refresh and queued early signaling for mobile call receivers.
 - Atomic shared replay with a new playback epoch; stale end events cannot skip the replay.
 - Host listener permissions, protected platform settings, cookie import, Cloudflare diagnostics and a reported 750 GB cutoff.
-- Bounded upload synchronization, silent-video detection, mobile video sizing, floating player and device-enable actions.
+- Independent upload buffering, silent-video detection, mobile video sizing, floating player and device-enable actions.
 - Personal configuration, credentials, uploads, media and runtime/container state are excluded. Docker definitions and empty configuration templates are included.
 
-This is a working branch. Actual device behavior still depends on browser permissions, codec support and network conditions.
+Stable release 10.03. Actual device behavior still depends on browser permissions, codec support and network conditions.
 
 ### Current interface
 
@@ -35,22 +39,22 @@ This is a working branch. Actual device behavior still depends on browser permis
 
 | Branch | Purpose | Who should use it |
 | --- | --- | --- |
-| [`10.02`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.02) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
+| [`10.03`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.03) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
 | [`main`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/main) | Development branch for new features and improvements. | Contributors and people testing upcoming changes. |
 
-The previous `10.01` branch is retained for older installations. **This checkout is `10.03-working`.** Download links and guided installers below install this working branch. Use `10.02` for the previous stable version. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
+The previous `10.01` branch is retained for older installations. **This checkout is `10.03`.** Download links and guided installers below install this stable branch. Previous stable `10.02` remains available. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
 
 ```sh
-git clone --branch 10.03-working --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
+git clone --branch 10.03 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
 cd Konnectivity
 bash start.sh --local
 ```
 
-To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git switch 10.03-working`, `git pull --ff-only origin 10.03-working`, and start it again. Keep runtime data and credentials out of Git.
+To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git switch 10.03`, `git pull --ff-only origin 10.03`, and start it again. Keep runtime data and credentials out of Git.
 
 ## Contribute
 
-Contributions normally target `main`; stable fixes target `10.02` only when agreed with the maintainer. See [CONTRIBUTING.md](CONTRIBUTING.md) for fork/clone and sync commands, branch naming, tests, pull requests and the review/merge process. Follow [SECURITY.md](SECURITY.md) for private vulnerability reports.
+Contributions normally target `main`; stable fixes target `10.03` only when agreed with the maintainer. See [CONTRIBUTING.md](CONTRIBUTING.md) for fork/clone and sync commands, branch naming, tests, pull requests and the review/merge process. Follow [SECURITY.md](SECURITY.md) for private vulnerability reports.
 
 ## Credits and thanks to Syncwave
 
@@ -71,7 +75,7 @@ The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are p
 | Listening rooms | Start a room and invite friends with one link to your self-hosted server. |
 | Shared queue | Anyone in the room can add songs, reorder the queue and vote on tracks. |
 | Synchronized controls | Play, pause, drag the song timeline, seek ±10 seconds and change shared volume. |
-| Automatic synchronization | Calibrate each device’s clock, correct drift, coordinate buffering and recover after reconnecting. |
+| Automatic synchronization | Calibrate each device’s clock, correct drift, buffer independently without holding other listeners and recover after reconnecting. |
 | Play now | Start a selected song immediately instead of adding it to the end of the queue. |
 | YouTube search and video | Search for music and automatically open the selected YouTube video when playing an online result. |
 | Link imports | Add supported YouTube and Spotify links; Spotify imports resolve to matching YouTube tracks. |
@@ -92,7 +96,7 @@ No songs, cookies, API keys, passwords, existing rooms or user chat are included
 
 ## One-click start
 
-[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.03-working.zip)
+[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.03.zip)
 
 Extract the ZIP, then open the launcher for your computer. It installs the required packages and media tools, builds the app, and opens localhost automatically. No personal playlists, songs, images, cookies or settings are included.
 
@@ -107,13 +111,13 @@ Prefer one command, without downloading/extracting manually?
 **macOS / Linux:**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.03-working/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.03/install.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.03-working/install.ps1)))
+& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.03/install.ps1)))
 ```
 
 These commands install into your user folder’s `Konnectivity` directory and start locally. Re-running starts the existing installation without replacing its data. Node.js 22, npm dependencies, ffmpeg, Deno and a runnable downloader are set up automatically on supported desktop platforms. The standalone downloader avoids requiring a separate Python installation. Internet access is needed on first run; keep the terminal open while listening.
@@ -203,7 +207,7 @@ Konnectivity retains Syncwave’s **PolyForm Noncommercial 1.0.0** license and r
 - The server retains uploaded media privately in its local library. Matching normalized names and renamed byte-identical files reuse existing media rather than writing another file. Files are not overwritten on name collisions.
 - Every new selection starts in Audio mode. Use the camera icon to explicitly switch to Video. Uploads accept common audio formats and MP4/MOV/MKV/WebM, up to 100 MB per file, and convert video to H.264/AAC MP4.
 - Replay uses the circular-arrow icon; fullscreen fills the browser viewport; the eye icon hides/shows controls without stopping playback. A finished video can be replayed.
-- Both audio/crossfade slots stop and clear their sources when the room has no current media, prepares a different track or disconnects. Cached audio is prepared before shared playback, and uploaded media is buffered on each device.
+- Both audio/crossfade slots stop and clear their sources when the room has no current media, prepares a different track or disconnects. Cached audio is prepared before shared playback, and uploaded media streams immediately through native HTTP Range playback.
 - Search suggestions have their own Refresh action. It cycles recommendation seeds without reloading the page or changing the room. Results still depend on search-provider availability.
 - Saved appearance, plans, polls and comments are synchronized. Device permissions, notification muting, casting and local control visibility remain per-device.
 - WebRTC calls use encrypted browser-to-browser media. Optional TURN relays carry encrypted traffic; reliable calls on restricted networks require a reachable relay. Configure your own service privately; no working TURN configuration or credentials ship in this repository.
@@ -211,7 +215,7 @@ Konnectivity retains Syncwave’s **PolyForm Noncommercial 1.0.0** license and r
 - Casting is offered only where the browser exposes a compatible remote-playback API and requires a compatible receiver.
 - Local notification recordings are optional; this code-only release includes generated fallback tones, not personal recordings.
 
-### Room calls in 10.03-working
+### Room calls in 10.03
 
 The image below uses synthetic test devices, not personal cameras or photos.
 

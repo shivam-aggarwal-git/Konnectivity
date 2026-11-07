@@ -1,8 +1,8 @@
 {
   "name": "konnectivity",
-  "version": "10.3.0-working.0",
+  "version": "10.3.0",
   "private": true,
-  "description": "Konnectivity 10.03-working \u2014 shared media, room calls, listener permissions and mobile playback fixes.",
+  "description": "Konnectivity 10.03 \u2014 shared media, room calls, listener permissions and mobile playback fixes.",
   "keywords": [
     "spotify-jam-alternative",
     "listen-together",

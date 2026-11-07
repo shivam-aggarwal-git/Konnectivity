@@ -6,7 +6,7 @@ export function useRoomExit(enabled:boolean,onLeave:()=>Promise<void>){
  useEffect(()=>{if(!enabled)return;
   if(!initialized.current){history.pushState({...history.state,knRoomGuard:true},'',location.href);initialized.current=true;}
   const unload=(e:BeforeUnloadEvent)=>{if(!allow.current){e.preventDefault();e.returnValue='';}};
-  const back=()=>{if(allow.current)return;history.pushState({...history.state,knRoomGuard:true},'',location.href);setTarget('/');};
+  const back=()=>{if(allow.current)return;history.pushState({...history.state,knRoomGuard:true},'',location.href);if(document.documentElement.dataset.knCallActive==='true'){window.dispatchEvent(new Event('konnectivity:home'));return;}setTarget('/');};
   const click=(e:MouseEvent)=>{if(allow.current||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;const a=(e.target as Element)?.closest?.('a');if(!a||a.target==='_blank'||a.hasAttribute('download'))return;const href=a.getAttribute('href');if(!href||href.startsWith('#'))return;const url=new URL(href,location.href);if(url.href===location.href)return;e.preventDefault();e.stopPropagation();setTarget(url.href);};
   window.addEventListener('beforeunload',unload);window.addEventListener('popstate',back);document.addEventListener('click',click,true);
   return()=>{window.removeEventListener('beforeunload',unload);window.removeEventListener('popstate',back);document.removeEventListener('click',click,true);};
