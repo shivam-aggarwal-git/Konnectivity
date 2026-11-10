@@ -94,3 +94,7 @@ turnserver.conf
 !/docs/screenshots/*.webp
 !/docs/screenshots/*.svg
 !/docs/screenshots/*.ico
+
+# Cookie UI source files
+!components/CookieExportHelp.tsx
+!components/RoomCookies.tsx

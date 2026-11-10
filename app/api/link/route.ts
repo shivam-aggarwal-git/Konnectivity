@@ -1,3 +1,6 @@
+import { getRoom } from "@/lib/rooms.mjs";
+import { downloadContext } from "@/lib/room-credentials.mjs";
+import { isAuthed } from "@/lib/guard";
 import { NextRequest, NextResponse } from "next/server";
 import { resolveLink, resolveYoutubePlaylist } from "@/lib/links.mjs";
 import { clientIp, rateLimit } from "@/lib/ratelimit.mjs";
@@ -25,7 +28,11 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    return NextResponse.json(await (req.nextUrl.searchParams.get("playlist")==="1"?resolveYoutubePlaylist(url):resolveLink(url)));
+    const code = req.nextUrl.searchParams.get("room");
+    const room = code ? getRoom(code) : null;
+    if (code && !room) return NextResponse.json({ error: "room_not_found" }, { status: 404 });
+    const context = room || await isAuthed() ? downloadContext(room) : { prefix: "", file: null };
+    return NextResponse.json(await (req.nextUrl.searchParams.get("playlist")==="1"?resolveYoutubePlaylist(url, context):resolveLink(url, context)));
   } catch (err) {
     return NextResponse.json(
       { error: "link_failed", message: req.nextUrl.searchParams.get("playlist")==="1"?"Could not read this playlist. Use a public or unlisted YouTube playlist, or one your server account can access.":"Could not read this link. Check its visibility and try again." },

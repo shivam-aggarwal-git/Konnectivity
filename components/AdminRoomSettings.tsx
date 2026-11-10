@@ -1,7 +1,25 @@
 "use client";
-import {useEffect,useState} from 'react';
-import {Cookie,Network,BrainCircuit,ShieldCheck,Settings2} from 'lucide-react';
-import {Dialog,DialogContent,DialogTitle,DialogDescription} from './ui/dialog';
-import CookiesPanel from './CookiesPanel';import CallSettings from './CallSettings';import ProxyPanel from './ProxyPanel';import AiDjSettings from './AiDjSettings';
-const tabs=[{id:'youtube',label:'YouTube access',icon:Cookie},{id:'calls',label:'Calls & TURN',icon:Network},{id:'proxy',label:'Proxy access',icon:ShieldCheck},{id:'ai',label:'AI providers',icon:BrainCircuit}];
-export default function AdminRoomSettings(){const [authorized,setAuthorized]=useState(false),[open,setOpen]=useState(false),[tab,setTab]=useState('youtube');useEffect(()=>{fetch('/api/settings').then(r=>setAuthorized(r.ok)).catch(()=>{});},[]);return <section className="kn-permission-manager kn-admin-launch"><h3><Settings2 size={19}/>Platform administration</h3><p>YouTube access, call relay and server integrations.</p>{authorized?<button onClick={()=>setOpen(true)}>Open platform settings</button>:<a href="/admin/login" target="_blank" rel="noopener">Sign in as platform administrator ↗</a>}<Dialog open={open} onOpenChange={setOpen}><DialogContent className="kn-platform-dialog !max-w-4xl !overflow-hidden"><DialogTitle>Platform administration</DialogTitle><DialogDescription>Private server configuration. Only signed-in platform administrators can make changes.</DialogDescription><nav aria-label="Platform settings" className="kn-admin-tabs">{tabs.map(t=><button key={t.id} role="tab" aria-selected={tab===t.id} onClick={()=>setTab(t.id)}><t.icon size={18}/>{t.label}</button>)}</nav><section className="kn-admin-content" key={tab}>{tab==='youtube'&&<><h3>YouTube cookie import</h3><p>Import a Netscape-format cookies.txt export to use your YouTube session for playback. Your Google password is not required.</p><CookiesPanel compact/></>}{tab==='calls'&&<CallSettings/>}{tab==='proxy'&&<><h3>YouTube proxy access</h3><ProxyPanel/></>}{tab==='ai'&&<><h3>AI provider configuration</h3><AiDjSettings/></>}</section></DialogContent></Dialog></section>}
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Settings2 } from "lucide-react";
+
+export default function AdminRoomSettings() {
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/session", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((session) => setAuthorized(session?.authed === true))
+      .catch(() => {});
+  }, []);
+
+  if (!authorized) return null;
+
+  return (
+    <section className="kn-permission-manager kn-admin-launch">
+      <h3><Settings2 size={19} /> Platform administration</h3>
+      <Link href="/admin" target="_blank" rel="noopener">Open SuperAdmin Console ↗</Link>
+    </section>
+  );
+}

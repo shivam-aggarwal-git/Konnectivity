@@ -1,5 +1,8 @@
 "use client";
 
+import RoomCookies from "./RoomCookies";
+import RoomGuide from "./RoomGuide";
+
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from "./ui/dialog";
@@ -121,7 +124,7 @@ type CenterView = "queue" | "history" | "stats";
 /** The right column carries two surfaces; on a phone they take turns. */
 type SidePane = "chat" | "activity";
 
-export default function Room({ code, asHost }: { code: string; asHost: boolean }) {
+export default function Room({ code, asHost, requestingJoin }: { code: string; asHost: boolean; requestingJoin: boolean }) {
   const [nick, setNick] = useState("");
   const [flushOnHostLeave,setFlushOnHostLeave]=useState(false),[roomEnded,setRoomEnded]=useState(""),[playerMessage,setPlayerMessage]=useState<PlayerMessage|null>(null),[soundsOn,setSoundsOn]=useState(true);
   const [permissions,setPermissions]=useState<Record<string,boolean>>({});
@@ -133,9 +136,11 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const [denied, setDenied] = useState(false);
   // Host-only: who's waiting to be let into an invite-only room.
   useAppViewport();
+  const [roomScoped, setRoomScoped] = useState(false);
   const [persistentSpace,setPersistentSpace]=useState(false);
   const [sceneOnly,setSceneOnly]=useState(false);
   const [inviteOnly,setInviteOnly]=useState(true);
+  const [discoverable, setDiscoverable] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [roomName, setRoomName] = useState(`Room ${code}`);
@@ -187,6 +192,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
   const openChatNotice=useCallback(()=>{setPlayerExpanded(false);setTab('chat');setPane('chat');setUnread(0);setDismissedUnread(0);window.dispatchEvent(new Event('konnectivity:open-chat'));},[]);
 
   const [toolsOpen,setToolsOpen]=useState(false),[playbackError,setPlaybackError]=useState<string|null>(null);
+  const [guideOpen, setGuideOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [searchSignal, setSearchSignal] = useState(0);
   const [library, setLibrary] = useState<Track[]>([]);
@@ -404,12 +410,33 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
     clockRef.current.seed(s.serverNow);
   }
 
-  const doJoin = useCallback(() => {
+  const doJoin = useCallback(async () => {
     if (!nick.trim()) return;
+    if (socketRef.current?.connected || socketRef.current?.active) return;
     unlockSounds();setSoundsOn(soundEnabled());
     localStorage.setItem("sw_nick", nick.trim());
-    const ownerToken =
-      typeof window !== "undefined" ? localStorage.getItem(`sw_owner_${code}`) : null;
+    const key = `sw_owner_${code}`;
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    const claim = fragment.get("room-claim");
+    let credential = fragment.get("room-admin");
+    if (claim) {
+      try {
+        const response = await fetch(`/api/room-admin/${code}/claim`, {
+          method: "POST", headers: { "x-room-admin-key": claim },
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        credential = result.credential;
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Could not accept the room admin invitation.");
+        return;
+      }
+    }
+    if (credential) {
+      localStorage.setItem(key, credential);
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
+    const ownerToken = localStorage.getItem(key);
 
     const socket = io({ path: "/socket.io", auth: { code, ownerToken } });
     socket.on("connect_error", (e: Error) => setError(e.message));
@@ -430,7 +457,10 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       setPendingRequests(s.pending || [])
     );
     socket.on(EVENTS.PERSONAL_SPACE_UPDATE,(s:{enabled:boolean})=>setPersistentSpace(s.enabled));
-    socket.on(EVENTS.ROOM_ACCESS_UPDATE, (s: {inviteOnly:boolean})=>setInviteOnly(s.inviteOnly));
+    socket.on(EVENTS.ROOM_ACCESS_UPDATE, (s: {inviteOnly:boolean; discoverable?: boolean}) => {
+      setInviteOnly(s.inviteOnly);
+      if (typeof s.discoverable === "boolean") setDiscoverable(s.discoverable);
+    });
     socket.on('permissions:update',(p:Record<string,boolean>)=>{setPermissions(p);syncPolicy.current=p.sync!==false||Boolean(socket.id===hostSocketRef.current);});
     socket.on(EVENTS.ROOM_STATE, async (s: any) => {
       hostSocketRef.current=s.participants?.find((p:any)=>p.isHost)?.id;
@@ -439,6 +469,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
       if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
       setFlushOnHostLeave(Boolean(s.flushOnHostLeave));
+      setRoomScoped(Boolean(s.roomScoped));
+      setDiscoverable(Boolean(s.discoverable));
       setPersistentSpace(Boolean(s.persistentSpace));
       setInviteOnly(Boolean(s.inviteOnly));
       setYou(s.you);
@@ -975,7 +1007,7 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
             onKeyDown={(e) => e.key === "Enter" && doJoin()}
           />
           <Button variant="primary" className="w-full" onClick={doJoin} disabled={!nick.trim()}>
-            {asHost ? "Start the room" : "Join"}
+            {asHost ? "Open my group room" : requestingJoin ? "Request to join" : "Join"}
           </Button>
           {error && (
             <p role="alert" className="mt-3 text-sm text-[var(--destructive)]">
@@ -1025,6 +1057,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
   return (
     <div className="sw-couple flex h-[var(--kn-app-height,100dvh)] flex-col overflow-hidden" data-video-active={videoActive} data-room-background={appearance.background}>
+      {isHost && roomScoped && <RoomCookies key={code} code={code} onboarding />}
+      <RoomGuide open={guideOpen} onOpenChange={setGuideOpen} />
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
         <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" data-room-background={appearance.background} aria-describedby="expanded-player-description">
           <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
@@ -1098,8 +1132,8 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
       {/* ── top bar: identity, mood, search, presence ── */}
       {/* z-50 so the search dropdown clears the bottom player (z-40) rather
           than sliding behind it on a short window. */}
-      <Dialog open={exit.open} onOpenChange={open=>{if(!open)exit.cancel();}}><DialogContent><DialogTitle>Leave this party?</DialogTitle><DialogDescription>{isHost?'Leaving will end this room for everyone and clear its chat, playback, plans, and polls. This room’s invite URL will stop working. Uploaded media will remain in your library.':'Your call will end and you will disconnect from this room.'}</DialogDescription>{exit.error&&<p role="alert">{exit.error}</p>}<div className="flex justify-end gap-3"><Button disabled={exit.leaving} onClick={exit.cancel}>Stay</Button><Button variant="danger" disabled={exit.leaving} onClick={()=>void exit.confirm()}>{exit.leaving?'Leaving…':'Leave party'}</Button></div></DialogContent></Dialog>
-      <Dialog open={toolsOpen} onOpenChange={setToolsOpen}><DialogContent className="kn-settings-dialog !max-w-xl"><DialogTitle>Settings</DialogTitle><DialogDescription>Shared appearance, device sound and keyboard shortcuts.</DialogDescription>        <div id="kn-room-tools" data-open={toolsOpen} className="kn-room-controls ml-auto flex shrink-0 items-center gap-2 md:ml-0">
+      <Dialog open={exit.open} onOpenChange={open=>{if(!open)exit.cancel();}}><DialogContent><DialogTitle>Leave this party?</DialogTitle><DialogDescription>{isHost&&!roomScoped?'Leaving will end this room for everyone and clear its chat, playback, plans, and polls. This room’s invite URL will stop working. Uploaded media will remain in your library.':'Your call will end and you will disconnect from this room.'}</DialogDescription>{exit.error&&<p role="alert">{exit.error}</p>}<div className="flex justify-end gap-3"><Button disabled={exit.leaving} onClick={exit.cancel}>Stay</Button><Button variant="danger" disabled={exit.leaving} onClick={()=>void exit.confirm()}>{exit.leaving?'Leaving…':'Leave party'}</Button></div></DialogContent></Dialog>
+      <Dialog open={toolsOpen} onOpenChange={setToolsOpen}><DialogContent className="kn-settings-dialog !max-w-xl"><DialogTitle>Settings</DialogTitle><Button variant="outline" onClick={()=>{setToolsOpen(false);setGuideOpen(true);}}>Room guide</Button><DialogDescription>Shared appearance, device sound and keyboard shortcuts.</DialogDescription>        <div id="kn-room-tools" data-open={toolsOpen} className="kn-room-controls ml-auto flex shrink-0 items-center gap-2 md:ml-0">
           {/* Room code, spelled out for reading aloud across a room. */}
           <span className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 lg:flex">
             <span className="text-[10px] font-semibold tracking-eyebrow text-muted uppercase">
@@ -1111,9 +1145,15 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
 
           {isHost&&<details className="kn-permissions-disclosure"><summary>Manage listener permissions</summary><PermissionManager key={JSON.stringify(permissions)} value={permissions} onSave={patch=>new Promise((resolve,reject)=>socketRef.current?.timeout(5000).emit('permissions:set',patch,(err:any,r:any)=>{if(err||r?.error)reject(Error(r?.error||'Could not save permissions.'));else{setToolsOpen(false);setNotice('Listener permissions saved.');resolve();}}))}/></details>}
-          {isHost&&<AdminRoomSettings/>}
+          {isHost&&<details className="kn-permissions-disclosure"><summary>Room YouTube cookies</summary><RoomCookies code={code} recovery={roomScoped}/></details>}
+          {isHost && roomScoped && <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" checked={discoverable} onChange={event =>
+              socketRef.current?.emit("group:discovery", { enabled: event.target.checked })} />
+            <span>Allow random matching while a group admin is online. You approve each new visitor.</span>
+          </label>}
+          {isHost&&!roomScoped&&<AdminRoomSettings/>}
           <RoomClock/>
-          <AppearanceSettings onSaved={()=>{setToolsOpen(false);setNotice("Appearance saved for everyone.");}} onSave={patch=>new Promise((resolve,reject)=>{socketRef.current?.timeout(5000).emit(EVENTS.APPEARANCE_SET,patch,(err:any,result:any)=>err||result?.error?reject(Error(result?.error||"Could not save. Try again.")):resolve());})} playerMessageControls={done=><PlayerMessageComposer disabled={Boolean(participants.find(p=>p.id===you)?.muted)} onClear={()=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{clear:true},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))} onSent={()=>{done();setToolsOpen(false);}} onSend={(text,emoji,duration,animation)=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{text,emoji,duration,animation},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))}/>} persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.videoId&&!current.videoId.startsWith("local_")?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:current?.art||current?.thumbnail} />
+          <AppearanceSettings onSaved={()=>{setToolsOpen(false);setNotice("Appearance saved for everyone.");}} onSave={patch=>new Promise((resolve,reject)=>{socketRef.current?.timeout(5000).emit(EVENTS.APPEARANCE_SET,patch,(err:any,result:any)=>err||result?.error?reject(Error(result?.error||"Could not save. Try again.")):resolve());})} playerMessageControls={done=><PlayerMessageComposer disabled={Boolean(participants.find(p=>p.id===you)?.muted)} onClear={()=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{clear:true},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))} onSent={()=>{done();setToolsOpen(false);}} onSend={(text,emoji,duration,animation)=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{text,emoji,duration,animation},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))}/>} persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)&&!roomScoped} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.videoId&&!current.videoId.startsWith("local_")?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:current?.art||current?.thumbnail} />
           <Button
             className="hidden sm:inline-flex"
             variant="ghost"
@@ -1172,13 +1212,13 @@ export default function Room({ code, asHost }: { code: string; asHost: boolean }
 
 
 
-        <div className="kn-header-social"><RoomNotifications socket={socketRef.current} onOpen={openActivities}/><div className="kn-people-controls"><RoomPeople list={participants} you={you} isHost={Boolean(isHost)} pending={pendingRequests} inviteOnly={inviteOnly}
+        <div className="kn-header-social"><RoomNotifications socket={socketRef.current} onOpen={openActivities}/><div className="kn-people-controls"><RoomPeople list={participants} you={you} isHost={Boolean(isHost)} pending={pendingRequests} inviteOnly={inviteOnly} discoverable={discoverable}
             onApprovalChange={enabled=>socketRef.current?.emit(EVENTS.HOST_APPROVAL_SET,{enabled})}
             onApprove={approveJoin} onDeny={denyJoin} onKick={kickParticipant} onMute={muteParticipant}/></div><ShareButton code={code}/></div><div className="kn-header-call"><RoomTogether openRequest={activityRequest} socket={socketRef.current} muted={Boolean(participants.find(p=>p.id===you)?.muted)}/></div><button className="kn-exit-icon" aria-label="Leave party" title="Leave party" onClick={exit.request}><LogOut size={18}/></button>
       </header>
 
       <nav className="sw-love-toolbar" aria-label="Room music">
-                <SearchPanel
+                <SearchPanel roomCode={code}
           library={library} playlists={playlists} onPlaylistAdd={addToPlaylist} onCreatePlaylist={createPlaylistFor}
                 onPlayNow={playFromSearch}
           onAdd={queueFromSearch}

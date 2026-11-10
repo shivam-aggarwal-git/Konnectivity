@@ -68,6 +68,7 @@ function looksLikeLink(s: string) {
 type LinkInfo = { source: string; total: number; missing: string[] };
 
 function SearchPanel({
+  roomCode,
   playlists, onPlaylistAdd, onCreatePlaylist,
   onPlayNow,
   onAdd,
@@ -79,6 +80,7 @@ function SearchPanel({
   openSignal = 0,
   className,
 }: {
+  roomCode: string;
   playlists?: Playlist[]; onPlaylistAdd?: (id: string, track: Track) => void; onCreatePlaylist?: (track?: Track) => void;
   onPlayNow?: (t: Track) => void;
   onAdd: (t: Track) => void;
@@ -184,7 +186,7 @@ function SearchPanel({
     setResults([]);
     setCursor(-1);
     try {
-      const res = await fetch(`/api/link?url=${encodeURIComponent(url.trim())}`);
+      const res = await fetch(`/api/link?room=${encodeURIComponent(roomCode)}&url=${encodeURIComponent(url.trim())}`);
       const data = await res.json();
       if (runId.current !== id) return;
       if (!res.ok) {

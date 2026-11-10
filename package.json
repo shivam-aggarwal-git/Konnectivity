@@ -1,8 +1,8 @@
 {
   "name": "konnectivity",
-  "version": "10.3.0",
+  "version": "10.4.0",
   "private": true,
-  "description": "Konnectivity 10.03 \u2014 shared media, room calls, listener permissions and mobile playback fixes.",
+  "description": "Konnectivity 10.04 — discoverable groups, room-scoped credentials, and a SuperAdmin dashboard.",
   "keywords": [
     "spotify-jam-alternative",
     "listen-together",

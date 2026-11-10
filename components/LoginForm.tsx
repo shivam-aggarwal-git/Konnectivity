@@ -34,7 +34,8 @@ export default function LoginForm() {
   }
 
   return (
-    <main className="mx-auto grid min-h-[100dvh] max-w-md place-content-center px-6">
+    <main className="kn-admin kn-admin-login">
+      <div className="kn-admin-login-inner">
       <Link
         href="/"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink"
@@ -47,12 +48,14 @@ export default function LoginForm() {
           <Lock className="size-3.5" /> Admin
         </div>
         <h1 className="font-display text-3xl font-bold">
-          <span className="sw-gradient-text">Sign in</span>
+          Sign in to admin
         </h1>
 
         <div>
-          <Label className="mb-1.5 block">Password</Label>
+          <Label htmlFor="admin-password" className="mb-1.5 block">Password</Label>
           <Input
+            id="admin-password"
+            autoComplete="current-password"
             type="password"
             value={password}
             autoFocus
@@ -68,7 +71,7 @@ export default function LoginForm() {
           </p>
         )}
 
-        <Button variant="accent" size="lg" onClick={login} disabled={busy} className="gap-1.5">
+        <Button variant="accent" size="lg" onClick={login} disabled={busy} className="kn-admin-primary gap-1.5">
           {busy ? <Loader2 className="size-4 animate-spin" /> : null}
           {busy ? "Signing in…" : "Sign in"}
         </Button>
@@ -77,6 +80,7 @@ export default function LoginForm() {
           Lost the password? Delete <code className="text-accent-2">data/admin.json</code>{" "}
           on the server and reload to run setup again.
         </p>
+      </div>
       </div>
     </main>
   );

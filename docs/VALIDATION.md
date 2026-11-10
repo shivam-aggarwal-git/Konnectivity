@@ -1,3 +1,7 @@
+## 10.04 release validation
+
+The production build, client sync tests, integration suite, and installer fixtures passed on macOS. Group tests cover private cookie copies, denied cross-room access, opt-in discovery before cookie setup, approval, and selected-room deletion. The screenshots use a separate demo instance with synthetic groups.
+
 ## Stable 10.03 validation
 
 The complete isolated integration suite passed after removing readiness holds. Regression checks prove slow, blocked and background listeners cannot stop the shared clock; uploads start without readiness acknowledgements; manual pause and replay remain authoritative. Uploaded audio uses native Range streaming instead of full-file Blob downloads. TypeScript and production builds are checked for this release. Camera switching and physical iOS permission prompts remain device-dependent and require real-device confirmation.

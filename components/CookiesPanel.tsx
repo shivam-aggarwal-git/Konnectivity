@@ -8,8 +8,8 @@ import {
   Trash2,
   Loader2,
   TriangleAlert,
-  ExternalLink,
 } from "lucide-react";
+import CookieExportHelp from "./CookieExportHelp";
 import { Button } from "@/components/ui/button";
 
 export type CookiesStatus = {
@@ -94,7 +94,7 @@ export default function CookiesPanel({ compact = false }: { compact?: boolean })
           className="gap-1.5"
         >
           {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-          {status?.present ? "Replace YouTube cookies" : "Import cookies.txt"}
+          {status?.present ? "Replace YouTube cookies" : "Upload cookies.txt"}
         </Button>
         {status?.present && !fromEnv && (
           <Button variant="outline" disabled={busy} onClick={remove} className="gap-1.5">
@@ -152,34 +152,7 @@ export default function CookiesPanel({ compact = false }: { compact?: boolean })
         </div>
       )}
 
-      {/* How to get one */}
-      {!compact && (
-        <ol className="grid gap-2 rounded-sm border border-soft-border bg-white/[0.03] p-4 text-sm text-muted">
-          <li className="font-semibold text-ink">How to get your cookies.txt</li>
-          <li>
-            1. Install a <strong className="text-ink">&ldquo;Get cookies.txt LOCALLY&rdquo;</strong>{" "}
-            extension for Chrome or Firefox.
-          </li>
-          <li>
-            2. Open{" "}
-            <a
-              href="https://www.youtube.com"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-accent-2 hover:underline"
-            >
-              youtube.com <ExternalLink className="size-3" />
-            </a>{" "}
-            and make sure you are <strong className="text-ink">signed in</strong>.
-          </li>
-          <li>
-            3. Click the extension and export in{" "}
-            <strong className="text-ink">Netscape</strong> format (a{" "}
-            <code className="text-accent-2">cookies.txt</code> file).
-          </li>
-          <li>4. Upload it below.</li>
-        </ol>
-      )}
+      {!compact && <CookieExportHelp />}
 
       {/* Privacy warning — this is a live session, treat it as a credential */}
       <div className="flex items-start gap-3 rounded-sm border border-soft-border bg-white/[0.03] p-4 text-sm">

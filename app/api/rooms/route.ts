@@ -1,45 +1,38 @@
 import { limitedJson } from "@/lib/request-body";
 import { NextRequest, NextResponse } from "next/server";
-import { createRoom, getRoom } from "@/lib/rooms.mjs";
-import { clientIp, rateLimit } from "@/lib/ratelimit.mjs";
+import { createOwnedGroup, createRoom, getRoom, roomCount } from "@/lib/rooms.mjs";
+import { isAuthed } from "@/lib/guard";
 
 export const dynamic = "force-dynamic";
 
-// Rooms are held in memory and persisted, so creating them is the one
-// unauthenticated write anyone can repeat forever. The ceiling is per address
-// and per hour, set well above what a person does — you make a room, you send
-// the link, you listen — and low enough that a loop gets bored. Set
-// ROOM_CREATE_LIMIT=0 to turn it off on a private instance.
-const CREATE_LIMIT = Math.max(0, Number(process.env.ROOM_CREATE_LIMIT ?? 20));
-const CREATE_WINDOW_MS = 60 * 60 * 1000;
-
-// Create a durable room. Returns the ownerToken the creator keeps to claim host.
+// Return the durable owner key only to the browser creating the group.
 export async function POST(req: NextRequest) {
-  const ip = clientIp(req);
-  if (ip) {
-    const { ok, retryAfter } = rateLimit(`rooms:${ip}`, CREATE_LIMIT, CREATE_WINDOW_MS);
-    if (!ok) {
-      return NextResponse.json(
-        {
-          error:
-            "That's a lot of rooms from one place. Try again shortly, or self-host your own — it takes about a minute.",
-        },
-        { status: 429, headers: { "retry-after": String(retryAfter) } }
-      );
-    }
+  const superadmin = await isAuthed();
+  if (!superadmin && roomCount() >= 1000) {
+    return NextResponse.json({ error: "This server has reached its group limit." }, { status: 429 });
   }
-
   let name: string | undefined;
+  let assignLater = false;
+  let discoverable = false;
   let inviteOnly: boolean | undefined;
   try {
     const body = await limitedJson(req);
-    name = body?.name;
+    assignLater = body?.assignLater === true;
+    discoverable = body?.discoverable === true;
+    name = typeof body?.name === "string" ? body.name.trim().slice(0, 80) : undefined;
     inviteOnly = typeof body?.inviteOnly === "boolean" ? body.inviteOnly : undefined;
   } catch {
-    /* no body */
+    return NextResponse.json({ error: "Invalid room details." }, { status: 400 });
   }
-  const room = createRoom(name, inviteOnly);
-  return NextResponse.json({ code: room.code, ownerToken: room.ownerToken, name: room.name });
+  if (assignLater) {
+    if (!superadmin) return NextResponse.json({ error: "Superadmin access required." }, { status: 403 });
+    const room = createRoom(name, inviteOnly, true, { requireYoutubeCookie: true });
+    return NextResponse.json({ code: room.code, name: room.name });
+  }
+  const { room, credential } = createOwnedGroup(name, inviteOnly, { discoverable, requireYoutubeCookie: true });
+  return NextResponse.json({ code: room.code, ownerToken: credential, name: room.name }, {
+    headers: { "Cache-Control": "no-store" },
+  });
 }
 
 // Check a room exists (for the join screen).

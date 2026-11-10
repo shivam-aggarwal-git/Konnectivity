@@ -43,7 +43,7 @@ Choose **Heart orbit**, **Soft waves** or **Off** for the ambient visualizer. Th
 
 ## Private invitations and search
 
-Use **Share** to copy the full invitation. A room code alone does not unlock a private server. Hosts sign in at `/admin/login` to create rooms. Enable approval to admit each guest explicitly. The music library is shared with approved friends on this instance.
+Use **Share** to copy the full invitation. A room code alone does not unlock a private group. Visitors can create groups from the home page after the server is set up. Enable approval to admit each guest explicitly. Each group has its own music library.
 
 Open Search to see suggestions and recent queries. Use the small **×** beside a recent query to remove it from this device. The larger **×** clears the current input. Filter with **Local library**, **YouTube**, or **All**.
 
@@ -146,3 +146,41 @@ Platform administration in Settings requires a separate authenticated platform-a
 ### Mobile chat and video
 
 Chat opens a full-height, keyboard-aware panel with a full-width message field, attachment actions and a close button. Video has replay, fullscreen, hide/show controls, picture-in-picture and an in-app floating overlay. System PiP depends on browser support; unsupported sources use the floating overlay inside Konnectivity. MP4/H.264/AAC offers broad mobile compatibility. New tracks start in Audio mode unless Video is selected explicitly.
+
+## Room guide, camera preview, and multiple rooms
+
+The first time a listener joins, the room guide walks them through search, playback, playlists, chat, calls, and invitations. Use **Next**, **Back**, or **Skip guide**. To replay it, open **Settings → Room guide**.
+
+Your front-camera preview behaves like a mirror by default. Toggle **Mirror my camera** in the call controls to change your preview. Other listeners receive the original camera feed, and screen sharing and known rear cameras keep their original orientation.
+
+Open **SuperAdmin Console → Listening rooms** to manage rooms or create a group. Each group has its own admin, code, invitation, queue, chat, call, and participant list. Legacy personal rooms may share settings through Personal Space.
+
+## Private groups and room admins
+
+Sign in as superadmin and use **Admin → Listening rooms** to create a group for someone else. Open **Manage → Create admin setup link**, then send that single-use link privately to the selected room admin. When they join, the browser receives a separate room credential. The setup link then stops working, and the dashboard cannot issue a replacement for a claimed room.
+
+The group admin uploads their own YouTube cookies under **Settings → Room YouTube cookies**, manages listener permissions, and sends the regular **Share** invitation to members. Leave approval enabled if the group should admit only people the admin recognizes. Group cookies, uploads, queue, playlists, appearance, and access stay scoped to the room. Cookies apply to server downloads and link imports. YouTube embeds use each viewer’s browser session.
+
+The room admin should save **Show private admin recovery link** from room settings. When the Cloudflare quick tunnel changes, replace the hostname in that link with the current hostname and keep the rest intact. The same room code, credential and persisted settings work. The room admin can give listeners a fresh invitation for the same room. Listener approvals are session-based, so the admin may need to approve them again.
+
+The superadmin dashboard shows operational room metadata and can delete a group, which ends its call and playback, invalidates its links, and removes its cookie. It does not grant membership or access to group settings or media. The server operator still controls the Mac and its files. Existing personal rooms retain their earlier behavior. Group chat history is session-based.
+
+## Create and remove group rooms
+
+Creating a group makes you its room admin. Listeners can create a group from the **Groups** page. In the superadmin dashboard, select **Create for someone else and assign their admin later** if you want a single-use setup link for another person.
+
+The superadmin can delete individual rooms from **Manage**, or use **Delete all rooms**. Bulk deletion includes every room on the server, even rooms hidden by search. It requires typing `DELETE ALL` and reconfirming if the room list changed.
+
+To remove specific rooms, select their checkboxes and choose **Delete selected**. The confirmation lists the selected rooms by name and code. Selections stay checked across searches and pages.
+
+### Instance branding
+
+In **SuperAdmin Console → Branding**, upload a logo for the home and room headers and a favicon for browser tabs and the installable app. Use PNG, JPEG or WebP images up to 4 MB. The server saves each image independently, and **Restore default** resets only that image. Refresh an open room to see the new branding.
+
+Proxy Pool and TURN relay configuration are available in the SuperAdmin Console. Group admins can use the configured call relay as participants in their rooms.
+
+### Create or find a group
+
+From the home page, select **Open Konnectivity** to open **Groups**, then choose **Create a group**, **Find a random group**, or join from an invitation. Group creators are the group admins. Upload a Netscape-format YouTube `cookies.txt` in the setup prompt or in **Settings → Room YouTube cookies**. New groups need the upload for YouTube playback and link imports. Chat, calls, and local media are available during setup. The upload is stored separately for each group and only that group's admin can replace or remove it.
+
+Groups are private by default. Enable random matching on creation or in room **Settings** to appear in the matching pool while a group admin is online. YouTube setup is separate from admission. Every match is a join request the group admin must approve. TURN remains a server setting in the **SuperAdmin Console**.

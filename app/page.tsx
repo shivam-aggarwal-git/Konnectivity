@@ -12,13 +12,12 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import {personalSpace} from "@/lib/personal-space.mjs";
-import CreateRoom from "@/components/CreateRoom";
+import { Button } from "@/components/ui/button";
 import SiteFooter from "@/components/SiteFooter";
 import Logo from "@/components/Logo";
 import { isSetupComplete } from "@/lib/auth.mjs";
 import { REPO_URL } from "@/lib/brand";
-const DOCUMENTATION_VERSION = "10.03";
+const DOCUMENTATION_VERSION = "10.04";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +44,8 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { n: "01", title: "Start a room", body: "One click. No account, no sign-up, nothing to install for anyone joining." },
-  { n: "02", title: "Share the link", body: "Or the six-character code. Guests open it and they’re in — phone, laptop, anything with a browser." },
+  { n: "01", title: "Create or join a group", body: "Create your own group, follow an invitation, or request to join a random group." },
+  { n: "02", title: "Set up your room", body: "The group admin uploads a YouTube cookies.txt file, then shares the room invitation." },
   { n: "03", title: "Press play once", body: "Listen, watch and connect. Everyone can shape the room; the host manages admission." },
 ];
 
@@ -96,11 +95,13 @@ export default function Home() {
           </h1>
 
           <p className="mt-6 max-w-xl text-base text-ink/60 sm:text-lg">
-            Listen, watch, talk and plan together. One private room for your favourite people, with shared music, videos, encrypted calls and a little atmosphere.
+            Listen, watch, talk and plan together. Create a private group or find one that’s welcoming listeners, with shared music, videos, encrypted calls and a little atmosphere.
           </p>
 
           <div className="mt-9 w-full max-w-md">
-            <CreateRoom defaultInviteOnly={personalSpace.enabled ? (personalSpace.settings.inviteOnly ?? true) : true} />
+            <Button asChild variant="accent" size="lg">
+              <Link href="/groups">Open Konnectivity <Radio className="size-4" /></Link>
+            </Button>
           </div>
 
           <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted">
@@ -112,7 +113,7 @@ export default function Home() {
           </ul>
         </section>
 
-        <section className="kn-home-moments" aria-label="Together in one room"><div><Heart/><strong>One room. Your people.</strong><p>A playlist for the evening. A film with friends. A plan everyone agrees on.</p></div><div className="kn-home-orbit"><Logo size="lg" className="kn-home-brand-logo"/><span>♫</span><span>♡</span><span>✦</span></div><div><ShieldCheck/><strong>Private from the first invite</strong><p>You approve who joins. When the host leaves, the room and its invitation end.</p></div></section>
+        <section className="kn-home-moments" aria-label="Together in one room"><div><Heart/><strong>One room. Your people.</strong><p>A playlist for the evening. A film with friends. A plan everyone agrees on.</p></div><div className="kn-home-orbit"><Logo size="lg" className="kn-home-brand-logo"/><span>♫</span><span>♡</span><span>✦</span></div><div><ShieldCheck/><strong>Private from the first invite</strong><p>You approve who joins. Your group and its settings stay saved when you leave.</p></div></section>
         {/* -------------------------------------------------------- features */}
         <section className="border-t border-white/6 px-6 py-24" aria-labelledby="features">
           <div className="mx-auto max-w-6xl">
@@ -239,7 +240,7 @@ export default function Home() {
 function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-white/6 bg-[color-mix(in_oklab,var(--bg)_72%,transparent)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-3">
+      <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:gap-4 sm:px-6">
         <Link
           href="/"
           aria-label="Konnectivity home"
@@ -277,8 +278,9 @@ function SiteHeader() {
             href="/admin"
             className="rounded-full px-3 py-2 text-xs text-muted transition-colors duration-200 ease-[var(--ease)] hover:bg-white/8 hover:text-ink max-sm:hidden"
           >
-            Server settings
+            SuperAdmin
           </Link>
+          <Link href="/groups" className="rounded-full bg-accent-soft px-3 py-2 text-xs font-semibold text-ink">Groups</Link>
           <a
             href={REPO_URL || "#open-source"}
             target="_blank"

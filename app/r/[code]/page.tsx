@@ -22,9 +22,9 @@ export default async function RoomPage({
   searchParams,
 }: {
   params: Promise<{ code: string }>;
-  searchParams: Promise<{ host?: string }>;
+  searchParams: Promise<{ host?: string; request?: string }>;
 }) {
   const { code } = await params;
-  const { host } = await searchParams;
-  return <Room code={code.toUpperCase()} asHost={host === "1"} />;
+  const { host, request } = await searchParams;
+  return <Room code={code.toUpperCase()} asHost={host === "1"} requestingJoin={request === "1"} />;
 }

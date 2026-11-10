@@ -7,8 +7,8 @@ import {Avatar} from "./ui/avatar";
 import type {Participant, PendingRequest} from "@/lib/types";
 
 const action = "sw-focus min-h-11 rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10";
-export default function RoomPeople({list, you, isHost, pending, inviteOnly, onApprovalChange, onApprove, onDeny, onKick, onMute}: {
- list: Participant[]; you:string|null; isHost:boolean; pending:PendingRequest[]; inviteOnly:boolean;
+export default function RoomPeople({list, you, isHost, pending, inviteOnly, discoverable, onApprovalChange, onApprove, onDeny, onKick, onMute}: {
+ list: Participant[]; you:string|null; isHost:boolean; pending:PendingRequest[]; inviteOnly:boolean; discoverable:boolean;
  onApprovalChange:(enabled:boolean)=>void; onApprove:(id:string)=>void; onDeny:(id:string)=>void;
  onKick:(id:string)=>void; onMute:(id:string,muted:boolean)=>void;
 }) {
@@ -37,7 +37,7 @@ export default function RoomPeople({list, you, isHost, pending, inviteOnly, onAp
    <DialogContent overlayClassName="z-[100]" className="z-[110] w-[calc(100vw-1.5rem)] max-w-md p-5 sm:p-6">
     <DialogTitle className="pr-10">People in your room</DialogTitle>
     <DialogDescription className="text-muted">{list.length} listening together{isHost?" · You manage this room":""}</DialogDescription>
-    {isHost&&<label className="flex items-start gap-3 rounded-2xl border border-white/10 p-3"><ShieldCheck className="mt-1 size-5 shrink-0"/><span className="flex-1 text-sm"><strong className="block">Approve new joins</strong><span className="text-muted">Show a popup before new listeners enter.</span></span><input type="checkbox" className="mt-1 size-6 shrink-0 accent-[var(--accent)]" checked={inviteOnly} onChange={e=>onApprovalChange(e.target.checked)}/></label>}
+    {isHost&&<label className="flex items-start gap-3 rounded-2xl border border-white/10 p-3"><ShieldCheck className="mt-1 size-5 shrink-0"/><span className="flex-1 text-sm"><strong className="block">Approve new joins</strong><span className="text-muted">{discoverable ? "Approval is required while random matching is on." : "Show a popup before new listeners enter."}</span></span><input type="checkbox" className="mt-1 size-6 shrink-0 accent-[var(--accent)]" checked={inviteOnly} disabled={discoverable} onChange={e=>onApprovalChange(e.target.checked)}/></label>}
     {isHost&&pending.length>0&&<button className={action} onClick={()=>{setPeople(false);setRequests(true);}}>Review {pending.length} join request{pending.length===1?"":"s"}</button>}
     <ul className="space-y-3">{list.map(p=><li key={p.id} className="rounded-2xl border border-white/10 p-3">
      <div className="flex min-w-0 items-center gap-3"><Avatar name={p.nick} size="sm" isHost={p.isHost} status={p.status}/><div className="min-w-0 flex-1"><p className="break-words font-semibold">{p.nick}{p.id===you?" (you)":""}</p><p className="text-xs text-muted">{p.isHost?"Host":p.muted?"Chat muted":p.status||"Listening"}</p></div></div>

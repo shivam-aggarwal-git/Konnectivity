@@ -1,8 +1,16 @@
+# Changelog
+
+## 10.04
+
+- Split the product showcase, Groups page, and SuperAdmin Console.
+- Add persistent groups, creator ownership, and opt-in random matching with approval. Matching works while an admin is online, including before YouTube setup.
+- Isolate group cookies and media access. Add a visible upload button, Netscape export guidance, and support for HttpOnly cookie rows.
+- Add room metrics, room search and selection, confirmed bulk deletion, and server-wide logo and favicon uploads.
+- Add a room guide and updated screenshots, documentation, and installers.
+
 ## 10.03 — stable
 
 Immediate Range-based upload playback without full-file predownload or shared readiness holds. Calls retain natural video orientation, camera switching and a timed minimized call banner. Home and guarded Back preserve the active room call; explicit host departure ends it. Private configuration remains server-only and excluded from release archives.
-
-# Changelog
 
 ## 10.03-working
 

@@ -1,9 +1,10 @@
+import {handleRoomAdmin} from "./lib/room-admin-http.mjs";
 import {handleChatVideo} from "./lib/chat-video.mjs";
 // Custom Konnectivity server: Next.js (UI + API routes) + Socket.io (realtime sync
 // & chat) + a raw /audio route (range-served, yt-dlp-backed) on one HTTP server,
 // so the whole app is a single process / single container.
 
-import { guardRequest, allowedOrigin, mayJoin, requestIp } from "./lib/access.mjs";
+import { guardRequest, allowedOrigin, mayRequestJoin, requestIp } from "./lib/access.mjs";
 import { rateLimit } from "./lib/ratelimit.mjs";
 import { createServer } from "http";
 import next from "next";
@@ -30,11 +31,12 @@ await app.prepare();
 
 const server = createServer(async (req, res) => {
   try { if (await guardRequest(req,res,getRoom)) return; } catch { res.writeHead(400); res.end("Invalid request"); return; }
+  if(req.url?.startsWith("/api/room-admin/")){await handleRoomAdmin(req,res,io);return;}
   if(req.url?.startsWith("/chat-video")){await handleChatVideo(req,res,getRoom);return;}
   if (req.url?.startsWith("/chat-media")) { handleChatMedia(req, res, getRoom); return; }
   if (req.url?.split("?")[0] === "/upload") { handleUpload(req, res, getRoom, (room, track) => registerUpload(io, room, track)); return; }
   if (req.url && req.url.startsWith("/audio/")) {
-    handleAudioRequest(req, res);
+    handleAudioRequest(req, res, getRoom(new URL(req.url, "http://localhost").searchParams.get("room")));
     return;
   }
   handle(req, res);
@@ -48,8 +50,8 @@ const io = new IOServer(server, {
   cors: { origin: publicUrl || false },
   allowRequest: (req, done) => done(null, allowedOrigin(req) && rateLimit(`socket:${requestIp(req)}`,60,60000).ok),
 });
-io.use((socket,next) => { const a=socket.handshake.auth||{}; if(mayJoin(socket.request,getRoom(String(a.code||"")),a.ownerToken)) next(); else next(new Error("Open a complete invitation link, or sign in as host.")); });
-registerRoomHandlers(io, { authorizeJoin: (socket,room,owner) => mayJoin(socket.request,room,owner) });
+io.use((socket,next) => { const a=socket.handshake.auth||{}; if(mayRequestJoin(socket.request,getRoom(String(a.code||"")),a.ownerToken)) next(); else next(new Error("Open a complete invitation link, or sign in as host.")); });
+registerRoomHandlers(io, { authorizeJoin: (socket,room,owner) => mayRequestJoin(socket.request,room,owner) });
 server.requestTimeout=30000; server.headersTimeout=15000;
 
 // Any tunnel from a previous run died with it. Drop the address now so nobody

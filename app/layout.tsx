@@ -46,7 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "JQBX alternative",
       "Turntable.fm alternative",
     ],
-    icons: { icon: [{ url: "/konnectivity-favicon-light.png?v=1", sizes: "32x32", type: "image/png" }, { url: "/konnectivity-logo-light.png?v=1", sizes: "512x512", type: "image/png" }], apple: "/apple-touch-icon-light.png?v=1" },
+    icons: { icon: { url: "/api/branding/favicon?size=32", sizes: "32x32", type: "image/png" }, apple: "/api/branding/favicon?size=192" },
     manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, title: "Konnectivity", statusBarStyle: "black-translucent" },
     openGraph: {

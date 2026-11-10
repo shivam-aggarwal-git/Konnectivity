@@ -54,7 +54,7 @@ export default function LibraryPanel({ open, section, onSection, onClose, code, 
     if(busy||!playlistUrl.trim())return;
     setBusy(true);setMessage('Reading YouTube playlist…');
     try{
-      const response=await fetch(`/api/link?playlist=1&url=${encodeURIComponent(playlistUrl.trim())}`,{signal:AbortSignal.timeout(75000)});
+      const response=await fetch(`/api/link?playlist=1&room=${encodeURIComponent(code)}&url=${encodeURIComponent(playlistUrl.trim())}`,{signal:AbortSignal.timeout(75000)});
       const data=await response.json();if(!response.ok)throw Error(data.message||'Could not read this playlist');
       const imported=data.list;if(data.kind!=='list'||!Array.isArray(imported?.tracks)||!imported.tracks.length)throw Error('No available songs were found in this playlist.');
       const result:any=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Saving timed out. Reconnect and check your playlists before retrying.')),12000);emit(EVENTS.PLAYLIST_SAVE,{name:name.trim()||imported.title||'YouTube playlist',tracks:imported.tracks},(reply:any)=>{clearTimeout(timer);reply?.error?reject(Error(reply.error)):resolve(reply);});});
