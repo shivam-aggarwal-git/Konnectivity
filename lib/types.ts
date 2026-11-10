@@ -68,6 +68,7 @@ export type ChatMsg = {
   ts: number;
   nick?: string;
   text: string;
+  privateMedia?: boolean;
   image?: { id: string; url: string; name: string };
   video?: { id: string; url: string; name: string };
   location?: {lat:number;lng:number;label:string};
@@ -82,6 +83,10 @@ export type ChatMsg = {
   /** A batch `queued` entry: how many tracks, and the album or playlist they came from. */
   count?: number;
   from?: string;
+};
+
+export type RoomPhoto = Pick<ChatMsg, "id" | "nick" | "text" | "ts" | "privateMedia"> & {
+  image: NonNullable<ChatMsg["image"]>;
 };
 
 /** Reactions are never persisted, so they only exist in the live session. */

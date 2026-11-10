@@ -184,3 +184,11 @@ Proxy Pool and TURN relay configuration are available in the SuperAdmin Console.
 From the home page, select **Open Konnectivity** to open **Groups**, then choose **Create a group**, **Find a random group**, or join from an invitation. Group creators are the group admins. Upload a Netscape-format YouTube `cookies.txt` in the setup prompt or in **Settings → Room YouTube cookies**. New groups need the upload for YouTube playback and link imports. Chat, calls, and local media are available during setup. The upload is stored separately for each group and only that group's admin can replace or remove it.
 
 Groups are private by default. Enable random matching on creation or in room **Settings** to appear in the matching pool while a group admin is online. YouTube setup is separate from admission. Every match is a join request the group admin must approve. TURN remains a server setting in the **SuperAdmin Console**.
+
+### Room photos and private media
+
+Open **Chat → Photos** to see the room album. Use **Upload image** to share directly from the album, or attach an image in chat to include a caption. Tap a thumbnail or a chat photo to open it. Swipe left or right on a phone, use the arrow buttons or keyboard arrows, and press **X** or Escape to close.
+
+The album keeps the latest 500 photos shared after this feature is installed. Access to private photos follows the browser identity used to join the room. Keep using the same browser profile and hostname to reopen them.
+
+Room admins can enable **Share images and videos privately** under **Settings → Manage listener permissions**. Before attaching a photo or chat video, open **Media recipients**, select **Selected members**, and check the people who should receive it. The album uploader has its own recipient picker. **Everyone in this room** shares the attachment with the whole room.

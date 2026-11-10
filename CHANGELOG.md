@@ -2,6 +2,8 @@
 
 ## 10.04
 
+- Add room photo albums, direct uploads, and a swipe viewer with keyboard and button navigation. Room admins can allow private image and chat video sharing with selected members.
+
 - Split the product showcase, Groups page, and SuperAdmin Console.
 - Add persistent groups, creator ownership, and opt-in random matching with approval. Matching works while an admin is online, including before YouTube setup.
 - Isolate group cookies and media access. Add a visible upload button, Netscape export guidance, and support for HttpOnly cookie rows.

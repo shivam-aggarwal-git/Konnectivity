@@ -51,6 +51,7 @@ The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are p
 | Synchronized playback | Play, pause, seek, adjust shared volume, and reorder the queue. Each device corrects playback drift automatically. |
 | YouTube audio and video | Search YouTube or paste a supported link. Audio is the default. Switch to video when you want to watch together. |
 | Local library and playlists | Upload supported audio and video, import YouTube playlists, rearrange saved tracks, and queue several playlists in order. |
+| Room photo albums | Upload images, browse shared photos with swipes or arrows, and share images or chat videos with selected members when the room admin allows it. |
 | Calls and collaboration | Use encrypted room calls, screen sharing, chat with images, reactions, plans, and polls. |
 | Shared appearance | Choose themes, room lights, and visualizers. Use photos or GIFs as a background, or hide artwork to see more of the scene. |
 | Mobile and PWA | Use responsive playback controls and install the web app from a compatible browser. |
@@ -135,6 +136,8 @@ Complete `/setup` locally before exposing the server. Docker does not create a p
 | ![Product showcase](docs/screenshots/showcase-10.04.png) | ![Groups page on mobile](docs/screenshots/groups-mobile-10.04.png) |
 
 ![SuperAdmin room dashboard with demo groups](docs/screenshots/superadmin-10.04.png)
+
+![Room photo album and private media sharing](docs/screenshots/room-photos-10.04.png)
 
 See the [screenshot gallery](docs/SCREENSHOTS.md) for playback, video calls, and YouTube cookie setup.
 

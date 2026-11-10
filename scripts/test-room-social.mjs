@@ -10,15 +10,16 @@ const root=mkdtempSync(path.join(tmpdir(),'kn-social-'));process.env.DATA_DIR=pa
 const {createRoom,getRoom,registerRoomHandlers}=await import('../lib/rooms.mjs');
 const {guardRequest,allowedOrigin,mayJoin}=await import('../lib/access.mjs');
 const {enforceCallBudget}=await import('../lib/social.mjs');
+const {handleChatMedia}=await import('../lib/chat-media.mjs');
 const {handleChatVideo,videoRange}=await import('../lib/chat-video.mjs');
 const room=createRoom('Room social fixture',true),other=createRoom('Other room',false),sockets=[];
-const http=createServer(async(req,res)=>{try{if(await guardRequest(req,res,getRoom))return;if(req.url.startsWith('/chat-video'))return await handleChatVideo(req,res,getRoom);res.writeHead(200);res.end('ok');}catch{res.writeHead(400);res.end();}});
+const http=createServer(async(req,res)=>{try{if(await guardRequest(req,res,getRoom))return;if(req.url.startsWith('/chat-media'))return await handleChatMedia(req,res,getRoom);if(req.url.startsWith('/chat-video'))return await handleChatVideo(req,res,getRoom);res.writeHead(200);res.end('ok');}catch{res.writeHead(400);res.end();}});
 const io=new Server(http,{maxHttpBufferSize:512*1024,allowRequest:(req,done)=>done(null,allowedOrigin(req))});io.use((s,next)=>mayJoin(s.request,getRoom(s.handshake.auth.code),s.handshake.auth.ownerToken)?next():next(Error('unauthorized')));registerRoomHandlers(io,{authorizeJoin:(s,r,t)=>mayJoin(s.request,r,t)});
 await new Promise(r=>http.listen(0,'127.0.0.1',r));process.env.PORT=String(http.address().port);const base=`http://127.0.0.1:${process.env.PORT}`;
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function event(s,name){return new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('Timeout: '+name)),3000);s.once(name,v=>{clearTimeout(t);resolve(v);});});}
 function request(s,name,data={}){return new Promise((resolve,reject)=>s.timeout(3000).emit(name,data,(e,r)=>e?reject(Error(name+": "+e.message)):resolve(r)));}
-async function client(r,nick,host=false){const cookie=host?'':`kn_invite_${r.code}=${r.inviteToken}`;const s=connect(base,{transports:['websocket'],extraHeaders:{Cookie:cookie},auth:{code:r.code,ownerToken:host?r.ownerToken:null},reconnection:false});sockets.push(s);await event(s,'connect');const ready=event(s,r.inviteOnly&&!host?'join:pending':'room:state');s.emit('join',{code:r.code,nick,ownerToken:host?r.ownerToken:null});return {s,state:await ready};}
+async function client(r,nick,host=false,mediaKey=crypto.randomUUID()){const cookie=host?'':`kn_invite_${r.code}=${r.inviteToken}`;const s=connect(base,{transports:['websocket'],extraHeaders:{Cookie:cookie},auth:{code:r.code,ownerToken:host?r.ownerToken:null},reconnection:false});sockets.push(s);await event(s,'connect');const ready=event(s,r.inviteOnly&&!host?'join:pending':'room:state');s.emit('join',{code:r.code,nick,ownerToken:host?r.ownerToken:null,mediaKey});return {s,state:await ready};}
 try{
  const host=await client(room,'Host',true),pending=await client(room,'Guest');
  assert.match((await request(pending.s,'social:get')).error,/approved/);assert.match((await request(pending.s,'call:join')).error,/approved/);
@@ -71,6 +72,36 @@ try{
  assert.equal((await fetch(base+'/chat-video',{method:'POST',headers,body:'not a video'})).status,415);
  assert.equal(videoRange('bytes=0-1,4-5',100),false);assert.equal(videoRange('bytes=-0',100),false);
  const vm=event(host.s,'chat:new');await request(guest,'chat:send',{videoId:video.id,text:'Look!'});assert.equal((await vm).video.id,video.id);assert.ok((await request(cross.s,'chat:send',{videoId:video.id})).error);
+ // Private attachments must never appear in an unselected member's chat or album.
+ const observer=await client(room,'Guest');
+ const observerReady=event(observer.s,'room:state');
+ host.s.emit('host:approve',{id:observer.s.id});
+ const observerState=await observerReady;
+ const recipientHeaders={...headers,'x-media-recipients':JSON.stringify([host.s.id])};
+ const png=Buffer.from('89504e470d0a1a0a','hex');
+ await request(host.s,'permissions:set',{privateMedia:false});
+ assert.equal((await fetch(base+'/chat-media',{method:'POST',headers:recipientHeaders,body:png})).status,403);
+ await request(host.s,'permissions:set',{privateMedia:true});
+ let leaked=false;
+ observer.s.on('chat:new',message=>{if(message.privateMedia)leaked=true;});
+ for(const [route,field,fixture] of [['/chat-media','image',png],['/chat-video','video',body]]){
+   const result=await fetch(base+route,{method:'POST',headers:recipientHeaders,body:fixture});
+   assert.equal(result.status,201);
+   const asset=(await result.json())[field];
+   const notification=event(host.s,'chat:new');
+   assert.equal((await request(guest,'chat:send',{[field+'Id']:asset.id,text:'Private caption'})).ok,true);
+   assert.equal((await notification).privateMedia,true);
+   assert.equal((await fetch(base+asset.url+`?room=${room.code}&token=${host.state.uploadToken}`)).status,200);
+   assert.equal((await fetch(base+asset.url+`?room=${room.code}&token=${observerState.uploadToken}`)).status,404);
+   assert.ok((await request(host.s,'chat:send',{[field+'Id']:asset.id})).error);
+ }
+ const returningObserver=await client(room,'Guest');
+ const returningReady=event(returningObserver.s,'room:state');
+ host.s.emit('host:approve',{id:returningObserver.s.id});
+ const returningState=await returningReady;
+ assert.ok(!returningState.chat.some(message=>message.privateMedia));
+ assert.ok(!returningState.photos.some(photo=>photo.privateMedia));
+ assert.equal(leaked,false);
  const floating=event(host.s,'player:message');assert.equal((await request(guest,'player:message',{text:'I miss you',emoji:'❤️'})).ok,true);const messageData=await floating;assert.equal(messageData.text,'I miss you');assert.equal(messageData.duration,15000);assert.ok(messageData.sentAt);const cleared=event(host.s,'player:message');await request(guest,'player:message',{clear:true});assert.equal(await cleared,null);room.participants.get(guest.id).lastPlayerMessage=0;await request(guest,'player:message',{text:'Persistent message',emoji:'💕',duration:null});assert.equal(room.playerMessage.duration,null);await wait(500);assert.equal(JSON.parse(readFileSync(path.join(process.env.DATA_DIR,'rooms.json'),'utf8'))[room.code].playerMessage.duration,null);room.participants.get(guest.id).lastPlayerMessage=0;await request(guest,'player:message',{text:'Timed message',emoji:'❤️',duration:30000});assert.equal(room.playerMessage.duration,30000);assert.ok((await request(guest,'player:message',{text:'Invalid',emoji:'❤️',duration:1})).error);assert.ok((await request(guest,'player:message',{text:'Again',emoji:'❤️'})).error);assert.ok((await request(cross.s,'room:policy',{flushOnHostLeave:true})).ok);assert.ok((await request(guest,'room:policy',{flushOnHostLeave:true})).error);
  room.current={videoId:'fixtureSong',title:'Comments fixture'};const commentState=event(host.s,'social:state');assert.equal((await request(guest,'comment:add',{trackId:'fixtureSong',text:'Love this song'})).ok,true);assert.equal((await commentState).comments.at(-1).text,'Love this song');assert.equal((await request(cross.s,'social:get')).comments.length,0);assert.ok((await request(cross.s,'comment:add',{trackId:'fixtureSong',text:'No access'})).error);room.participants.get(guest.id).muted=true;assert.ok((await request(guest,'comment:add',{trackId:'fixtureSong',text:'Muted'})).error);room.participants.get(guest.id).muted=false;assert.ok((await request(guest,'comment:add',{trackId:'fixtureSong',text:'Too fast'})).error);assert.ok((await request(host.s,'social:get')).notifications.some(n=>n.kind==='polls'));
  const kicked=event(guest,'kicked');host.s.emit('host:kick',{id:guest.id});await kicked;await wait(80);assert.equal((await request(host.s,'social:get')).call.members.some(p=>p.id===guestState.you),false);

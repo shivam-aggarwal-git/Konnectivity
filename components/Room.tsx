@@ -90,6 +90,8 @@ import NowPlaying from "@/components/NowPlaying";
 import QueuePanel from "@/components/QueuePanel";
 import Recommendations from "@/components/Recommendations";
 import ActivityFeed from "@/components/ActivityFeed";
+import type { RoomPhoto } from "@/lib/types";
+import { ROOM_PHOTO_LIMIT } from "@/lib/protocol.mjs";
 import ChatPanel from "@/components/ChatPanel";
 import {useRoomExit} from '@/hooks/useRoomExit';
 import {useUploadedBuffer} from '@/hooks/useUploadedBuffer';
@@ -153,6 +155,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   const [queue, setQueue] = useState<Track[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [chat, setChat] = useState<ChatMsg[]>([]);
+  const [photos, setPhotos] = useState<RoomPhoto[]>([]);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [stats, setStats] = useState<RoomStats | null>(null);
   const [mood, setMood] = useState<Mood | null>(null);
@@ -437,12 +440,18 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
     }
     const ownerToken = localStorage.getItem(key);
+    const mediaStorageKey = `kn_media_${code}`;
+    let mediaKey = localStorage.getItem(mediaStorageKey);
+    if (!mediaKey) {
+      mediaKey = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, "0")).join("");
+      localStorage.setItem(mediaStorageKey, mediaKey);
+    }
 
     const socket = io({ path: "/socket.io", auth: { code, ownerToken } });
     socket.on("connect_error", (e: Error) => setError(e.message));
     socketRef.current = socket;
 
-    socket.on("connect", () => socket.emit(EVENTS.JOIN, { code, nick: nick.trim(), ownerToken }));
+    socket.on("connect", () => socket.emit(EVENTS.JOIN, { code, nick: nick.trim(), ownerToken, mediaKey }));
     socket.on(EVENTS.ERROR, (e: { message: string }) => setError(e.message));
     socket.on('room:policy',(s:{flushOnHostLeave:boolean})=>setFlushOnHostLeave(s.flushOnHostLeave));
     socket.on('room:ended',(s:{message:string})=>{setRoomEnded(s.message);audioRef.current?.pause();nextAudioRef.current?.pause();socket.disconnect();});
@@ -463,6 +472,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     });
     socket.on('permissions:update',(p:Record<string,boolean>)=>{setPermissions(p);syncPolicy.current=p.sync!==false||Boolean(socket.id===hostSocketRef.current);});
     socket.on(EVENTS.ROOM_STATE, async (s: any) => {
+      setPhotos(s.photos || []);
       hostSocketRef.current=s.participants?.find((p:any)=>p.isHost)?.id;
       setPermissions(s.permissions||{});syncPolicy.current=s.permissions?.sync!==false||Boolean(s.participants?.find((p:any)=>p.id===s.you)?.isHost);
       if(s.appearance)receiveRoomAppearance(s.appearance);
@@ -506,6 +516,10 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     socket.on(EVENTS.PLAYBACK_UPDATE, (s: any) => applyPlayback(s));
     socket.on(EVENTS.CHAT_NEW, (m: ChatMsg) => {
       setChat((c) => [...c.slice(-199), m]);
+      if (m.image) {
+        const photo = { id: m.id, image: m.image, nick: m.nick, text: m.text, ts: m.ts, privateMedia: m.privateMedia };
+        setPhotos(previous => [...previous.slice(1 - ROOM_PHOTO_LIMIT), photo]);
+      }
       if(!m.system&&m.nick!==nick.trim())messageSound();
       if (!m.system && m.nick!==nick.trim() && !chatIsVisible()) {
         setUnread((count)=>Math.min(999,count+1));
@@ -832,20 +846,27 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     emit(EVENTS.VOTE_SKIP);
     signal("voting");
   }, [emit, signal]);
-  const sendChat = useCallback((text: string, imageId?: string, videoId?:string, location?:ChatMsg["location"]) => emit(EVENTS.CHAT_SEND, { text, imageId, videoId, location }, (result: any) => {
-    if (result.error) setNotice(result.error);
-  }), [emit]);
-  const uploadChatImage = useCallback(async (file: File) => {
+  const sendChat = useCallback((text: string, imageId?: string, videoId?: string, location?: ChatMsg["location"]) =>
+    new Promise<void>((resolve, reject) => {
+      const socket = socketRef.current;
+      if (!socket?.connected) return reject(new Error("Reconnect to the room to send this message."));
+      socket.timeout(5000).emit(EVENTS.CHAT_SEND, { text, imageId, videoId, location }, (error: Error | null, result?: { error?: string }) => {
+        if (error || result?.error) reject(new Error(result?.error || "The room did not confirm the message."));
+        else resolve();
+      });
+    }), []);
+  const uploadChatImage = useCallback(async (file: File, recipients?: string[]) => {
     if (file.size > 8 * 1024 * 1024) throw new Error("Choose an image smaller than 8 MB");
     const response = await fetch("/chat-media", { method: "POST", body: file, headers: {
       "x-room-code": code, "x-upload-token": uploadToken, "x-file-name": encodeURIComponent(file.name),
+      ...(recipients ? { "x-media-recipients": JSON.stringify(recipients) } : {}),
     } });
     const data = await response.json(); if (!response.ok) throw new Error(data.error || "Image upload failed");
     return data.image as { id: string; url: string; name: string };
   }, [code, uploadToken]);
-  const uploadChatVideo = useCallback(async (file:File)=>{
+  const uploadChatVideo = useCallback(async (file: File, recipients?: string[])=>{
     if(file.size>50*1024*1024)throw Error("Choose a video up to 50 MB.");
-    const response=await fetch('/chat-video',{method:'POST',body:file,headers:{'x-room-code':code,'x-upload-token':uploadToken,'x-file-name':encodeURIComponent(file.name)}});
+    const response=await fetch('/chat-video',{method:'POST',body:file,headers:{'x-room-code':code,'x-upload-token':uploadToken,'x-file-name':encodeURIComponent(file.name),...(recipients ? {'x-media-recipients':JSON.stringify(recipients)} : {})}});
     const data=await response.json();if(!response.ok)throw Error(data.error||'Video upload failed.');return data.video as NonNullable<ChatMsg['video']>;
   },[code,uploadToken]);
   const mediaQuery = `?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
@@ -1390,6 +1411,11 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
             />
             <ChatPanel
               chat={chat}
+              photos={photos}
+              canUploadPhotos={isHost || permissions.photos !== false}
+              canUploadVideos={isHost || permissions.videos !== false}
+              canSharePrivately={isHost || permissions.privateMedia === true}
+              members={participants.filter(member => member.id !== you && member.status !== "reconnecting")}
               you={nick.trim()}
               aiDj={aiDj}
               djTyping={djTyping}
