@@ -6,7 +6,8 @@ permissions:
   contents: read
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
       # Ephemeral, read-only Actions token avoids shared-runner API rate limits.
       GITHUB_TOKEN: ${{ github.token }}
@@ -16,7 +17,23 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: sudo apt-get update && sudo apt-get install -y ffmpeg python3
+      - name: Check media dependencies
+        timeout-minutes: 5
+        run: |
+          missing=()
+          for tool in ffmpeg ffprobe python3; do
+            if ! command -v "$tool" >/dev/null; then
+              missing+=("$tool")
+            fi
+          done
+          if (( ${#missing[@]} )); then
+            printf 'Missing required runner tools: %s\n' "${missing[*]}"
+            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update
+            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y ffmpeg python3
+          fi
+          ffmpeg -version
+          ffprobe -version
+          python3 --version
       - run: npm ci
         env:
           YOUTUBE_DL_SKIP_PYTHON_CHECK: '1'
