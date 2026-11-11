@@ -22,7 +22,15 @@ Uploaded songs are persistent and separate from temporary online audio cache. Ev
 
 Open **Library → Playlists**, enter a name and click **Create playlist**. Use **♡ Save** beside a song in search, library or the queue to add it to an existing playlist. Rename a selected playlist from its controls. Saved playlists can be reused to queue songs on later visits. They live on the server and need a data backup to survive disk loss.
 
+Tap **Enable room audio** if your browser asks for a playback gesture. When you return from another app, Konnectivity attempts to resume and resync audio. On iPhone, iOS and other apps can interrupt background playback. Pressing Back from a joined room asks whether you want to stay or leave.
+
+**Room Activity** shows who selected, paused, resumed, replayed, skipped, or sought a track, changed the volume or playback mode, or searched for music. Search terms stay private. Hosts can open **People → Live playback status** and expand **Recent playback reports** to see what each device reports. A preparation popup names the song and requester. Close it with **×**.
+
+Open **People → Rename** to change your own display name. The name updates for the other listeners and is saved in your browser.
+
 ## Chat and reactions
+
+Tap the microphone to record a voice note up to **three minutes** or **8 MB**. Tap Stop, then Send. The chat video permission also controls voice notes. Senders see **Read by** after another listener views their message. Receipts apply to the current room session and follow the message’s audience.
 
 Use **Expand** in the Chat header for a larger conversation view. Scroll the message history independently; the message box stays at the bottom. New messages follow automatically when you are near the bottom, while scrolling up lets you read older messages without jumping. Use **Collapse** or Escape to return to the room.
 

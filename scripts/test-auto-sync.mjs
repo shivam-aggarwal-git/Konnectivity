@@ -9,13 +9,35 @@ const http=createServer(),io=new Server(http);registerRoomHandlers(io,{authorize
 const room=createRoom('Auto sync test',false),url=`http://127.0.0.1:${http.address().port}`,sockets=[];
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const event=(s,name,predicate=()=>true)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>{s.off(name,fn);reject(Error(`Timeout ${name}`));},6000);function fn(data){if(predicate(data)){clearTimeout(timer);s.off(name,fn);resolve(data);}}s.on(name,fn);});
-async function join(nick){const s=connect(url,{transports:['websocket']});sockets.push(s);const ready=event(s,'room:state');s.on('connect',()=>s.emit('join',{code:room.code,nick}));return[s,await ready];}
+async function join(nick){const s=connect(url,{transports:['websocket']});sockets.push(s);const ready=event(s,'room:state');s.on('connect',()=>s.emit('join',{code:room.code,nick,ownerToken:nick==='Host'?room.ownerToken:undefined}));return[s,await ready];}
 try{
  const[a]=await join('Host'),[b]=await join('Listener');
  assert.equal(room.watchVideo,false);b.emit('control:video',{enabled:true});await wait(50);
  let changed=event(a,'playback:update',s=>s.isPlaying&&s.current?.videoId==='M7lc1UVf-VE');
+ const preparing=event(a,'playback:update',s=>s.preparing);
  b.emit('control:play-now',{track:{videoId:'M7lc1UVf-VE',title:'Search song',artist:'Artist',duration:300},preferVideo:true});
+ assert.equal((await preparing).playbackRequester,'Listener');
  let state=await changed;assert.equal(state.watchVideo,true);assert.equal(state.preparing,false);const key=state.syncKey;
+ assert.ok(room.chat.some(msg=>msg.actor==='Listener'&&msg.text==='Listener selected “Search song”'));
+ let activity=event(a,'chat:new',m=>m.actor==='Listener'&&m.text==='Listener lowered the volume to 30%');
+ b.emit('control:volume',{volume:0.4});b.emit('control:volume',{volume:0.3});await activity;
+ assert.equal(room.chat.filter(msg=>msg.text.includes('the volume to')).length,1);
+ activity=event(a,'chat:new',m=>m.actor==='Listener'&&m.text==='Listener searched for music');
+ b.emit('search:activity',{query:'private search'});await activity;
+ b.emit('search:activity',{});await wait(30);
+ assert.equal(room.chat.filter(msg=>msg.text==='Listener searched for music').length,1);
+ assert.ok(room.chat.every(msg=>!msg.text.includes('private search')));
+ const hostStatus=()=>a.timeout(1000).emitWithAck('playback:host-status',{});
+ b.emit('playback:device-report',{key,state:'buffering',position:0});
+ await wait(35);
+ assert.equal((await hostStatus()).listeners.find(p=>p.id===b.id).state,'buffering');
+ assert.deepEqual(await b.timeout(1000).emitWithAck('playback:host-status',{}),{error:'Host access required.'});
+ await wait(520);
+ b.emit('playback:device-report',{key,state:'playing',position:2});
+ await wait(35);
+ const monitor=await hostStatus();
+ assert.equal(monitor.listeners.find(p=>p.id===b.id).state,'playing');
+ assert.ok(monitor.log.some(entry=>entry.nick==='Listener'&&entry.state==='buffering'&&entry.title==='Search song'));
  // Slow, blocked and background listeners never freeze the shared clock.
  for(const flags of [{ready:false},{ready:false,blocked:true},{ready:false,background:true},{ready:true}]){
   changed=event(a,'playback:update');b.emit('sync:media',{key,...flags});state=await changed;
@@ -28,6 +50,9 @@ try{
  b.emit('sync:media',{key:'stale-key',ready:false});await wait(30);assert.equal(room.syncHolding,false);
  // Replay resets the authoritative clock and rejects an old end notification.
  a.emit('control:seek',{position:90});await wait(30);const oldKey=room.syncKey;changed=event(a,'playback:update',s=>s.syncKey!==oldKey&&s.pausedPosition===0&&s.isPlaying);a.emit('control:replay',{});const replay=await changed;assert.notEqual(replay.syncKey,oldKey);assert.equal(replay.pausedPosition,0);const replayTrack=room.current.videoId;a.emit('track:ended',{videoId:replayTrack,syncKey:oldKey});await wait(30);assert.equal(room.current.videoId,replayTrack);
+ for(const action of ['paused','resumed','jumped to 1:30 in','replayed']){
+  assert.ok(room.chat.some(msg=>msg.actor==='Host'&&msg.text===`Host ${action} “Search song”`));
+ }
  // Uploaded files also start without waiting for any readiness report.
  room.current.videoId='local_readiness_fixture';room.playToken++;room.isPlaying=true;
  changed=event(a,'playback:update',s=>s.current?.videoId==='local_readiness_fixture');a.emit('control:seek',{position:0});state=await changed;

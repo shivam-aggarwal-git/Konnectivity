@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useRef, useState } from "react";
 import { ImagePlus, Images, Lock, Video, MapPin, X, Loader2, MessageSquare, Send, Smile, Maximize2, Minimize2 } from "lucide-react";
+import VoiceNoteRecorder from "./VoiceNoteRecorder";
 import { cn } from "@/lib/cn";
 import type { ChatMsg, Participant, PresenceStatus, RoomPhoto } from "@/lib/types";
 import { Avatar, nickColor } from "@/components/ui/avatar";
@@ -32,7 +33,7 @@ function ChatPanel({
   you,
   aiDj,
   djTyping,
-  onUploadImage, onUploadVideo, mediaQuery, onExpandedChange,
+  onUploadImage, onUploadVideo, mediaQuery, onExpandedChange, receipts, onRead,
   onSend, mobileOpen, onMobileClose,
   onTyping,
   statuses,
@@ -55,7 +56,9 @@ function ChatPanel({
   /** The DJ is composing. It has no seat, so the server reports this for it. */
   djTyping?: boolean;
   onUploadImage: (file: File, recipients?: string[]) => Promise<NonNullable<ChatMsg["image"]>>;
-  onUploadVideo: (file: File, recipients?: string[]) => Promise<NonNullable<ChatMsg["video"]>>;
+  onUploadVideo: (file: File, recipients?: string[], voice?: boolean) => Promise<NonNullable<ChatMsg["video"]>>;
+  receipts: Record<string,string[]>;
+  onRead: (ids:string[])=>void;
   mediaQuery: string;
   onSend: (text: string, imageId?: string,videoId?:string,location?:ChatMsg["location"]) => Promise<void>;
   /** Fires as you write, so the room can show you're mid-sentence. */
@@ -131,11 +134,11 @@ function ChatPanel({
     finally { setUploading(false); }
   };
 
-  const attachVideo = async (file?: File) => {
+  const attachVideo = async (file?: File, voice = false) => {
     if (!file || attachmentBlocked || !canUploadVideos) return;
     setUploading(true);
     setUploadError("");
-    try { setVideo(await onUploadVideo(file, recipients)); }
+    try { setVideo(await onUploadVideo(file, recipients, voice)); }
     catch (error) { setUploadError(error instanceof Error ? error.message : "Video upload failed"); }
     finally { setUploading(false); }
   };
@@ -165,6 +168,25 @@ function ChatPanel({
     .filter(([nick, status]) => status === "typing" && nick !== you)
     .map(([nick]) => nick);
 
+  useEffect(() => {
+    const list = scrollRef.current;
+    if (!list || (hidden && !expanded)) return;
+    const observer = new IntersectionObserver(entries => {
+      if (document.visibilityState !== "visible") return;
+      const dialog = document.querySelector('[role="dialog"]');
+      if (dialog && !dialog.contains(list)) return;
+      const ids = entries.filter(entry => entry.isIntersecting)
+        .map(entry => (entry.target as HTMLElement).dataset.readMessage).filter((id): id is string => Boolean(id));
+      for (let i=0; i<ids.length; i+=30) onRead(ids.slice(i,i+30));
+    }, {threshold: 0.5});
+    const refresh = () => {
+      observer.disconnect();
+      list.querySelectorAll("[data-read-message]").forEach(node => observer.observe(node));
+    };
+    refresh();
+    document.addEventListener("visibilitychange", refresh);
+    return () => { observer.disconnect(); document.removeEventListener("visibilitychange", refresh); };
+  }, [chat, hidden, expanded, mobileOpen, onRead]);
   useEffect(()=>{if(mobileOpen)setHidden(false);},[mobileOpen]);
   if(hidden&&!expanded)return <button className="kn-background-upload" onClick={()=>setHidden(false)}><MessageSquare size={15}/>Open chat</button>;
   const content = (
@@ -206,6 +228,7 @@ function ChatPanel({
               onMediaLoad={() => { const list = scrollRef.current; if (list && followRef.current) list.scrollTop = list.scrollHeight; }}
               own={!m.dj && m.nick === you}
               grouped={grouped}
+              readers={receipts[m.id]}
               status={m.nick ? statuses?.[m.nick] : undefined}
             />
           );
@@ -224,7 +247,7 @@ function ChatPanel({
             <MediaRecipients members={members} value={recipients} onChange={setRecipients}
               disabled={uploading || sending || Boolean(image || video)} />
           </details>}
-        {video&&<div className="kn-attachment-preview"><Video size={16}/><span>{video.name}</span><button onClick={()=>setVideo(undefined)} aria-label="Remove video"><X size={15}/></button></div>}
+        {video&&<div className="kn-attachment-preview"><Video size={16}/><span>{video.name}</span><button onClick={()=>setVideo(undefined)} aria-label="Remove attachment"><X size={15}/></button></div>}
         {location&&<div className="kn-attachment-preview"><MapPin size={16}/><span>{location.label} · {location.lat.toFixed(4)}, {location.lng.toFixed(4)}</span><button onClick={()=>setLocation(undefined)} aria-label="Remove location"><X size={15}/></button></div>}
         {locationOpen&&!muted&&<div className="kn-location-composer"><b>Share a one-time location</b><p>Only send a place you want everyone in this room to see. There is no live tracking.</p><input aria-label="Location label" placeholder="Meeting point / landmark" maxLength={120} value={locationLabel} onChange={e=>setLocationLabel(e.target.value)}/><div><input aria-label="Latitude" type="number" min="-90" max="90" step="any" placeholder="Latitude" value={lat} onChange={e=>setLat(e.target.value)}/><input aria-label="Longitude" type="number" min="-180" max="180" step="any" placeholder="Longitude" value={lng} onChange={e=>setLng(e.target.value)}/></div><div><button onClick={locate}>Use my location</button><button onClick={pin}>Attach pin</button><button onClick={()=>setLocationOpen(false)}>Cancel</button></div></div>}
         <input ref={videoInput} type="file" accept="video/mp4,video/webm" className="sr-only" aria-label="Choose chat video" onChange={e=>{void attachVideo(e.target.files?.[0]);e.target.value='';}}/>
@@ -297,6 +320,7 @@ function ChatPanel({
             />
             <button type="button" disabled={attachmentBlocked || !canUploadPhotos || Boolean(recipients && (video || location))} onClick={() => photoInput.current?.click()} aria-label="Attach image" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/8 hover:text-ink disabled:opacity-40">{uploading ? <Loader2 className="size-4 animate-spin"/> : <ImagePlus className="size-4"/>}</button>
             <button type="button" disabled={attachmentBlocked || !canUploadVideos || Boolean(recipients && (image || location))} onClick={()=>videoInput.current?.click()} aria-label="Attach video (up to 50 MB)" title="Video · up to 50 MB" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/8 hover:text-ink disabled:opacity-40"><Video className="size-4"/></button>
+            <VoiceNoteRecorder disabled={attachmentBlocked || !canUploadVideos || Boolean(recipients && (image || location))} onRecorded={file=>void attachVideo(file,true)} onError={setUploadError}/>
             <button type="button" disabled={Boolean(recipients && (image || video))} onClick={()=>setLocationOpen(v=>!v)} aria-label="Share location" title="Share a location pin" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/8 hover:text-ink"><MapPin className="size-4"/></button>
             <button
               type="button"
@@ -379,6 +403,7 @@ function Bubble({ mediaQuery, onMediaLoad, onOpenPhoto,
   msg,
   own,
   grouped,
+  readers,
   status,
 }: {
   mediaQuery: string;
@@ -387,11 +412,12 @@ function Bubble({ mediaQuery, onMediaLoad, onOpenPhoto,
   msg: ChatMsg;
   own: boolean;
   grouped: boolean;
+  readers?: string[];
   status?: PresenceStatus;
 }) {
   const name = msg.nick ?? "guest";
   return (
-    <div
+    <div data-read-message={!own&&!msg.dj?msg.id:undefined}
       className={cn(
         "sw-pop-in flex items-end gap-2",
         own && "flex-row-reverse",
@@ -428,10 +454,13 @@ function Bubble({ mediaQuery, onMediaLoad, onOpenPhoto,
         <div className={cn("sw-bubble", own && "sw-bubble-own", msg.dj && "sw-bubble-dj")}>
           {msg.privateMedia && <p className="mb-1 flex items-center gap-1 text-xs text-muted"><Lock size={12} /> Private media</p>}
           {msg.image && <button type="button" onClick={event => onOpenPhoto(msg.id, event.currentTarget)} className="sw-focus mb-1 block rounded-md"><img src={msg.image.url + mediaQuery} alt={msg.image.name || "Shared photo"} className="sw-chat-image" loading="lazy" onLoad={onMediaLoad} /></button>}
-          {msg.video&&<div className="kn-chat-video"><video src={msg.video.url+mediaQuery} controls playsInline preload="metadata" onLoadedMetadata={onMediaLoad}/><span>{msg.video.name} · playback is local to you</span></div>}
+          {msg.video?.voice?<audio className="block max-w-full" aria-label="Voice note" src={msg.video.url+mediaQuery} controls preload="metadata"/>:msg.video&&<div className="kn-chat-video"><video src={msg.video.url+mediaQuery} controls playsInline preload="metadata" onLoadedMetadata={onMediaLoad}/><span>{msg.video.name} · playback is local to you</span></div>}
           {msg.location&&<a className="kn-location-card" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(msg.location.lat+','+msg.location.lng)}`} target="_blank" rel="noreferrer"><MapPin size={23}/><span><b>{msg.location.label}</b><small>{msg.location.lat.toFixed(4)}, {msg.location.lng.toFixed(4)} · Open map ↗</small></span></a>}
           {msg.text}
         </div>
+        {own&&Boolean(readers?.length)&&<span className="mt-1 text-right text-[11px] text-muted" title={readers?.join(", ")}>
+          {readers?.length===1?`Read by ${readers[0]}`:`Read by ${readers?.length}`}
+        </span>}
       </div>
     </div>
   );

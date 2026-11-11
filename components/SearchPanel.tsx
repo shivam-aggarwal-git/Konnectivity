@@ -71,6 +71,7 @@ function SearchPanel({
   roomCode,
   playlists, onPlaylistAdd, onCreatePlaylist,
   onPlayNow,
+  onSearchActivity,
   onAdd,
   onAddMany,
   queuedIds,
@@ -83,6 +84,7 @@ function SearchPanel({
   roomCode: string;
   playlists?: Playlist[]; onPlaylistAdd?: (id: string, track: Track) => void; onCreatePlaylist?: (track?: Track) => void;
   onPlayNow?: (t: Track) => void;
+  onSearchActivity?: () => void;
   onAdd: (t: Track) => void;
   /** Add a batch in one go: one chat line, one broadcast. Falls back to `onAdd` per track. */
   onAddMany?: (tracks: Track[], from?: string) => void;
@@ -126,6 +128,12 @@ function SearchPanel({
   const runId = useRef(0);
 
   useEffect(() => setRecent(readRecent()), []);
+
+  useEffect(() => {
+    if (!onSearchActivity || q.trim().length < 2 || (variant === "overlay" && !open)) return;
+    const timer = setTimeout(onSearchActivity, 900);
+    return () => clearTimeout(timer);
+  }, [q, open, variant, onSearchActivity]);
 
   useEffect(() => {
     if (!openSignal) return;

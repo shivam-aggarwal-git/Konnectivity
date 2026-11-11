@@ -48,11 +48,12 @@ The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are p
 | Feature | What you can do |
 | --- | --- |
 | Private groups and random matching | Create a persistent group, share an invitation, or request to join a discoverable group. An online group admin approves random visitors. |
-| Synchronized playback | Play, pause, seek, adjust shared volume, and reorder the queue. Each device corrects playback drift automatically. |
+| Synchronized playback | Play, pause, seek, and adjust shared volume. Uploaded tracks stream as data arrives, and each device corrects drift independently. |
+| Playback activity and host monitor | See who changed the song, playback, or volume. Hosts can see each device’s live playback status and recent reports. |
 | YouTube audio and video | Search YouTube or paste a supported link. Audio is the default. Switch to video when you want to watch together. |
 | Local library and playlists | Upload supported audio and video, import YouTube playlists, rearrange saved tracks, and queue several playlists in order. |
 | Room photo albums | Upload images, browse shared photos with swipes or arrows, and share images or chat videos with selected members when the room admin allows it. |
-| Calls and collaboration | Use encrypted room calls, screen sharing, chat with images, reactions, plans, and polls. |
+| Calls and collaboration | Use encrypted room calls, screen sharing, chat with images, voice notes up to three minutes, read receipts, reactions, plans, and polls. |
 | Shared appearance | Choose themes, room lights, and visualizers. Use photos or GIFs as a background, or hide artwork to see more of the scene. |
 | Mobile and PWA | Use responsive playback controls and install the web app from a compatible browser. |
 | Group administration | Approve and remove listeners, manage room permissions, and upload a separate YouTube cookie file for the group. |

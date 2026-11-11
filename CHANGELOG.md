@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Stream uploaded tracks without requiring a complete file download on each device. Show a dismissible preparation notice with the requester’s name.
+- Attribute playback controls in Room Activity and give hosts live device status and recent playback reports.
+- Add a room audio activation button, foreground resync, and a confirmation when navigating Back.
+- Let listeners rename themselves in People. Add chat read receipts and voice notes up to three minutes.
+
 ## 10.05
 
 - Revoke SuperAdmin sessions at logout, rotate them at login, and expire them after eight hours.

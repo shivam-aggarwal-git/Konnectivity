@@ -17,7 +17,7 @@ export function useRoomGain(enabled: boolean, first: RefObject<HTMLAudioElement 
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (!ios) return;
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
-    if (session) { try { session.type = "auto"; } catch {} }
+    if (session) { try { session.type = "playback"; } catch {} }
     let ctx: AudioContext | null = null;
     try {
       ctx = new AudioContext();

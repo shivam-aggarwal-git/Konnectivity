@@ -70,7 +70,7 @@ export type ChatMsg = {
   text: string;
   privateMedia?: boolean;
   image?: { id: string; url: string; name: string };
-  video?: { id: string; url: string; name: string };
+  video?: { id: string; url: string; name: string; voice?: boolean };
   location?: {lat:number;lng:number;label:string};
   system?: boolean;
   dj?: boolean;
