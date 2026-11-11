@@ -17,26 +17,17 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - name: Check media dependencies
-        timeout-minutes: 5
-        run: |
-          missing=()
-          for tool in ffmpeg ffprobe python3; do
-            if ! command -v "$tool" >/dev/null; then
-              missing+=("$tool")
-            fi
-          done
-          if (( ${#missing[@]} )); then
-            printf 'Missing required runner tools: %s\n' "${missing[*]}"
-            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 update
-            sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20 install -y ffmpeg python3
-          fi
-          ffmpeg -version
-          ffprobe -version
-          python3 --version
       - run: npm ci
         env:
           YOUTUBE_DL_SKIP_PYTHON_CHECK: '1'
+      - name: Check media dependencies
+        run: |
+          python3 --version
+          node --input-type=module -e '
+            import { execFileSync } from "node:child_process";
+            import { ffmpegPath } from "./lib/ffmpeg.mjs";
+            execFileSync(ffmpegPath() || "ffmpeg", ["-version"], { stdio: "inherit" });
+          '
       - run: npm run check:release
       - run: npm test
       - run: npm run test:integration
