@@ -5,6 +5,7 @@ import {
   setAdminPassword,
   verifyPassword,
   createSession,
+  revokeSession,
   SESSION_COOKIE,
 } from "@/lib/auth.mjs";
 import { isAuthed, sessionCookieOptions } from "@/lib/guard";
@@ -31,11 +32,17 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "bad_request" }, { status: 400 });
   }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "bad_request" }, { status: 400 });
+  }
   const { action, password } = body;
+  const previous = req.cookies.get(SESSION_COOKIE)?.value;
+  const secure = req.headers.get("x-konnectivity-secure") === "1";
 
   if (action === "logout") {
+    revokeSession(previous);
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(SESSION_COOKIE, "", { ...sessionCookieOptions, maxAge: 0 });
+    res.cookies.set(SESSION_COOKIE, "", { ...sessionCookieOptions, secure, maxAge: 0 });
     return res;
   }
 
@@ -51,9 +58,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: (e as Error).message }, { status: 400 });
     }
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(SESSION_COOKIE, createSession(), {
+    res.cookies.set(SESSION_COOKIE, createSession(previous), {
       ...sessionCookieOptions,
-      secure: req.nextUrl.protocol === "https:" || req.headers.get("x-konnectivity-secure") === "1",
+      secure,
     });
     return res;
   }
@@ -63,9 +70,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Incorrect password." }, { status: 401 });
     }
     const res = NextResponse.json({ ok: true });
-    res.cookies.set(SESSION_COOKIE, createSession(), {
+    res.cookies.set(SESSION_COOKIE, createSession(previous), {
       ...sessionCookieOptions,
-      secure: req.nextUrl.protocol === "https:" || req.headers.get("x-konnectivity-secure") === "1",
+      secure,
     });
     return res;
   }

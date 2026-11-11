@@ -48,10 +48,10 @@ const publicUrl = process.env.PUBLIC_URL || "";
 const io = new IOServer(server, {
   maxHttpBufferSize: 512 * 1024,
   cors: { origin: publicUrl || false },
-  allowRequest: (req, done) => done(null, allowedOrigin(req) && rateLimit(`socket:${requestIp(req)}`,60,60000).ok),
+  allowRequest: (req, done) => done(null, io.engine.clientsCount < 256 && allowedOrigin(req) && rateLimit(`socket:${requestIp(req)}`,60,60000).ok),
 });
-io.use((socket,next) => { const a=socket.handshake.auth||{}; if(mayRequestJoin(socket.request,getRoom(String(a.code||"")),a.ownerToken)) next(); else next(new Error("Open a complete invitation link, or sign in as host.")); });
-registerRoomHandlers(io, { authorizeJoin: (socket,room,owner) => mayRequestJoin(socket.request,room,owner) });
+io.use((socket,next) => { const a=socket.handshake.auth||{}; if(typeof a.code==="string" && /^[A-Z0-9]{6}$/.test(a.code) && mayRequestJoin(socket.request,getRoom(a.code),a.ownerToken)) next(); else next(new Error("Open a complete invitation link, or sign in as host.")); });
+registerRoomHandlers(io, { authorizeJoin: (socket,room,owner) => socket.handshake.auth?.code === room.code && mayRequestJoin(socket.request,room,owner) });
 server.requestTimeout=30000; server.headersTimeout=15000;
 
 // Any tunnel from a previous run died with it. Drop the address now so nobody

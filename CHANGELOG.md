@@ -1,5 +1,13 @@
 # Changelog
 
+## 10.05
+
+- Revoke SuperAdmin sessions at logout, rotate them at login, and expire them after eight hours.
+- Tighten browser request validation and production CSP, room reconnection, and upload permissions.
+- Shorten TURN credentials and rate-limit issuance and renewal. Harden signaling and restart ICE with fresh relay credentials.
+- Make datastore writes atomic and restrict Compose container privileges.
+- Refresh screenshots, installation instructions, and security documentation.
+
 ## 10.04
 
 - Add room photo albums, direct uploads, and a swipe viewer with keyboard and button navigation. Room admins can allow private image and chat video sharing with selected members.

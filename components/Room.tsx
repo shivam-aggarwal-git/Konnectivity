@@ -869,7 +869,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     const response=await fetch('/chat-video',{method:'POST',body:file,headers:{'x-room-code':code,'x-upload-token':uploadToken,'x-file-name':encodeURIComponent(file.name),...(recipients ? {'x-media-recipients':JSON.stringify(recipients)} : {})}});
     const data=await response.json();if(!response.ok)throw Error(data.error||'Video upload failed.');return data.video as NonNullable<ChatMsg['video']>;
   },[code,uploadToken]);
-  const mediaQuery = `?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
+  const mediaQuery = `?room=${encodeURIComponent(code)}`;
   const setVideoMode = useCallback((enabled: boolean) => {
     if(enabled && current?.videoId.startsWith("local_")&&current.mediaType!=="video"){setNotice("Local files are audio-only. Choose a YouTube song for video.");return;}
     emit(EVENTS.CONTROL_VIDEO, { enabled }, (result: any) => { if (result.error) setNotice(result.error); });

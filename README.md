@@ -1,4 +1,4 @@
-# Konnectivity · 10.04
+# Konnectivity · 10.05
 
 ![Konnectivity](public/konnectivity-logo-light.png)
 
@@ -6,7 +6,7 @@
 
 Start a group, share one invitation, and listen together with synchronized playback, a shared queue, and live chat. Konnectivity also supports shared video, room calls, playlists, and custom room appearance. It runs on a computer you control.
 
-**New in 10.04.** The public showcase, Groups page, and SuperAdmin Console now have separate views. Groups can opt into random matching with admin approval. Each group has its own YouTube cookie upload, and the SuperAdmin Console adds room metrics, selected-room deletion, and custom branding.
+**New in 10.05.** SuperAdmin sessions now expire after eight hours and are revoked on sign-out. Room reconnection, media uploads, browser security headers, and TURN credential renewal have been hardened. The release includes the Groups page, room photo albums, and optional private photo and video sharing from 10.04.
 
 > **License:** This is a modified distribution of [Syncwave](https://github.com/SAKMZ/syncwave), under **PolyForm Noncommercial 1.0.0**. It is source-available, not OSI open source. The inherited noncommercial restriction cannot be removed by renaming the project. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [release guidance](docs/RELEASING.md).
 
@@ -14,22 +14,22 @@ Start a group, share one invitation, and listen together with synchronized playb
 
 | Branch | Purpose | Who should use it |
 | --- | --- | --- |
-| [`10.04`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.04) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
+| [`10.05`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.05) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
 | [`main`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/main) | Development branch for new features and improvements. | Contributors and people testing upcoming changes. |
 
-The previous [10.01](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.01) and [10.03](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.03) branches remain available. **This checkout is `10.04`.** Download links and guided installers below install this stable branch. Previous stable `10.02` remains available. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
+The previous [10.04](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.04) and [10.01](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.01) and [10.03](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.03) branches remain available. **This checkout is `10.05`.** Download links and guided installers below install this stable branch. Previous stable `10.02` remains available. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
 
 ```sh
-git clone --branch 10.04 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
+git clone --branch 10.05 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
 cd Konnectivity
 bash start.sh --local
 ```
 
-To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git fetch origin`, `git switch 10.04`, `git pull --ff-only origin 10.04`, and start it again. Keep runtime data and credentials out of Git.
+To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git fetch origin`, `git switch 10.05`, `git pull --ff-only origin 10.05`, and start it again. Keep runtime data and credentials out of Git.
 
 ## Contribute
 
-Contributions normally target `main`; stable fixes target `10.04` only when agreed with the maintainer. See [CONTRIBUTING.md](CONTRIBUTING.md) for fork/clone and sync commands, branch naming, tests, pull requests and the review/merge process. Follow [SECURITY.md](SECURITY.md) for private vulnerability reports.
+Contributions normally target `main`; stable fixes target `10.05` only when agreed with the maintainer. See [CONTRIBUTING.md](CONTRIBUTING.md) for fork/clone and sync commands, branch naming, tests, pull requests and the review/merge process. Follow [SECURITY.md](SECURITY.md) for private vulnerability reports.
 
 ## Credits and thanks to Syncwave
 
@@ -61,7 +61,7 @@ The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are p
 
 ## One-click start
 
-[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.04.zip)
+[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.05.zip)
 
 Extract the ZIP, then open the launcher for your computer. It installs the required packages and media tools, builds the app, and opens localhost automatically. No personal playlists, songs, images, cookies or settings are included.
 
@@ -76,13 +76,13 @@ Prefer one command, without downloading/extracting manually?
 **macOS / Linux:**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.04/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.05/install.sh | bash
 ```
 
 **Windows PowerShell:**
 
 ```powershell
-& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.04/install.ps1)))
+& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.05/install.ps1)))
 ```
 
 These commands install into your user folder’s `Konnectivity` directory and start locally. Re-running starts the existing installation without replacing its data. Node.js 22, npm dependencies, ffmpeg, Deno and a runnable downloader are set up automatically on supported desktop platforms. The standalone downloader avoids requiring a separate Python installation. Internet access is needed on first run; keep the terminal open while listening.
@@ -133,11 +133,11 @@ Complete `/setup` locally before exposing the server. Docker does not create a p
 
 | Product showcase | Groups on mobile |
 | --- | --- |
-| ![Product showcase](docs/screenshots/showcase-10.04.png) | ![Groups page on mobile](docs/screenshots/groups-mobile-10.04.png) |
+| ![Product showcase](docs/screenshots/showcase-10.05.png) | ![Groups page on mobile](docs/screenshots/groups-mobile-10.05.png) |
 
-![SuperAdmin room dashboard with demo groups](docs/screenshots/superadmin-10.04.png)
+![SuperAdmin room dashboard with demo groups](docs/screenshots/superadmin-10.05.png)
 
-![Room photo album and private media sharing](docs/screenshots/room-photos-10.04.png)
+![Room photo album and private media sharing](docs/screenshots/room-photos-10.05.png)
 
 See the [screenshot gallery](docs/SCREENSHOTS.md) for playback, video calls, and YouTube cookie setup.
 
@@ -150,6 +150,7 @@ See the [screenshot gallery](docs/SCREENSHOTS.md) for playback, video calls, and
 - [Architecture and synchronization](docs/ARCHITECTURE.md)
 - [Deployment, backup and upgrades](DEPLOY.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Security and deployment notes for 10.05](docs/SECURITY_10.05.md)
 - [Release and licensing checklist](docs/RELEASING.md)
 - [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Code of conduct](CODE_OF_CONDUCT.md)
 

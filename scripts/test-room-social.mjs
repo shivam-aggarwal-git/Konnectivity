@@ -58,6 +58,12 @@ try{
  const got=event(guest,'call:signal');assert.equal((await request(host.s,'call:signal',{to:guest.id,signal:{description:{type:'offer',sdp:'fixture'}}})).ok,true);assert.equal((await got).from,host.s.id);
  await request(guest,'call:leave');assert.ok((await request(host.s,'call:signal',{to:guest.id,signal:{description:{type:'offer',sdp:'x'}}})).error);
  process.env.CALL_TURN_URL='turn:relay.example:3478';process.env.CALL_TURN_SECRET='synthetic-test-secret';const config=await request(guest,'call:join');assert.equal(config.relayAvailable,true);assert.ok(config.iceServers[1].username.endsWith(':'+guest.id));assert.ok(config.iceServers[1].credential);
+ const expires = Number(config.iceServers[1].username.split(':')[0]);
+ assert.ok(expires > Date.now()/1000 + 295 && expires <= Date.now()/1000 + 300);
+ assert.match((await request(guest,'call:renew')).error,/wait/);
+ process.env.CALL_RELAY_ONLY='true';
+ assert.match((await request(guest,'call:signal',{to:host.s.id,signal:{candidate:{candidate:'candidate:1 1 udp 1 192.0.2.1 5000 typ host'}}})).error,/Relay/);
+ delete process.env.CALL_RELAY_ONLY;
  // Locations are range-checked and emitted only to admitted room members.
  assert.ok((await request(guest,'chat:send',{location:{lat:999,lng:0}})).error);const message=event(host.s,'chat:new');await request(guest,'chat:send',{text:'Meet here',location:{lat:28.61,lng:77.2,label:'Metro'}});assert.equal((await message).location.label,'Metro');
  // Authenticated video upload, isolated access, exact and suffix ranges.

@@ -1,6 +1,6 @@
 # Groups and server administration
 
-Open the local showcase at `http://localhost:3000/`, then select **Open Konnectivity**. The **Groups** page is at `/groups`, and the password-protected **SuperAdmin Console** is at `/admin`. For initial server setup, visit `/setup` on the host computer.
+Open the local showcase at `http://localhost:3000/`, then select **Open Konnectivity**. The **Groups** page is at `/groups`, and the password-protected **SuperAdmin Console** is at `/admin`. For initial server setup, visit `/setup` on the host computer. SuperAdmin sessions expire after eight hours or when the server restarts. Sign out to revoke the current session.
 
 | Role | Responsibilities |
 | --- | --- |

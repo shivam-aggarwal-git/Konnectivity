@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cacheStats, purgeCache, sweepCache } from "@/lib/resolver.mjs";
+import { limitedJson } from "@/lib/request-body";
 import { requireAdmin } from "@/lib/guard";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const denied = await requireAdmin();
   if (denied) return denied;
-  const { action } = await req.json().catch(() => ({ action: "" }));
+  const action = (await limitedJson(req, 1024).catch(() => null))?.action;
 
   // Purge is safe: rooms and queues are untouched, a track just re-downloads
   // the next time someone plays it.

@@ -6,7 +6,7 @@ import {Server} from 'socket.io';
 import {io as connect} from 'socket.io-client';
 import {createRoom,createOwnedGroup,getRoom,randomDiscoverableRoom,registerRoomHandlers} from '../lib/rooms.mjs';
 import {guardRequest,allowedOrigin,mayRequestJoin,equalToken,localSetupRequest} from '../lib/access.mjs';
-import {setAdminPassword,createSession,SESSION_COOKIE} from '../lib/auth.mjs';
+import {setAdminPassword,createSession,verifySession,revokeSession,SESSION_COOKIE} from '../lib/auth.mjs';
 if(!process.env.DATA_DIR||!process.env.CACHE_DIR)throw Error('Use isolated test data');
 assert.equal(localSetupRequest({headers:{host:'localhost:3000'},socket:{remoteAddress:'203.0.113.1'}}),false);
 assert.equal(localSetupRequest({headers:{host:'localhost:3000','x-forwarded-for':'203.0.113.1'},socket:{remoteAddress:'127.0.0.1'}}),false);
@@ -23,6 +23,20 @@ function event(s,name){return new Promise((resolve,reject)=>{const t=setTimeout(
 function socket(headers={},auth={code:room.code}){const s=connect(base,{transports:['websocket'],extraHeaders:headers,auth,reconnection:false});sockets.push(s);return s;}
 async function status(p,options={},expected=401){const r=await fetch(base+p,options);assert.equal(r.status,expected,p);return r;}
 try{
+ const initial = createSession();
+ const rotated = createSession(initial);
+ assert.ok(verifySession(rotated));
+ assert.equal(verifySession(initial), false);
+ revokeSession(rotated);
+ assert.equal(verifySession(rotated), false);
+ const expiring = createSession();
+ const realNow = Date.now;
+ try {
+  Date.now = () => realNow() + 8 * 60 * 60 * 1000 + 1;
+  assert.equal(verifySession(expiring), false);
+ } finally { Date.now = realNow; }
+ assert.equal(verifySession(expiring), false);
+ await status('/api/settings',{method:'POST',headers:{'Sec-Fetch-Site':'cross-site'},body:'{}'},403);
  assert.equal(equalToken('é','a'),false);
  await status('/audio/local_00000000000000000000000000000000');
  await status('/api/search?q=test');

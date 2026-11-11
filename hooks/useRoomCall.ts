@@ -57,7 +57,27 @@ export function useRoomCall(socket:Socket|null){
  useEffect(()=>{if(!incoming)return;startRing();const timer=setTimeout(()=>{setIncoming(null);stopRing();},Math.max(0,incoming.expiresAt-Date.now()));return()=>{clearTimeout(timer);stopRing();};},[incoming?.id]);
  const decline=()=>{if(incoming){declined.current.add(incoming.id);void request('call:decline',{id:incoming.id}).catch(()=>{});}setIncoming(null);stopRing();};
  const preview=async(video:boolean)=>{if(joining.current||active.current)return;unlockSounds();stopRing();setIncoming(null);joining.current=true;setBusy(true);setError('');const gen=++generation.current;try{if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia)throw Error('Calls require HTTPS or localhost.');const media=await acquireMedia({audio:{echoCancellation:true,noiseSuppression:true},video:video?{width:{ideal:640},height:{ideal:360}}:false});if(gen!==generation.current){media.getTracks().forEach(t=>t.stop());return;}stream.current?.getTracks().forEach(t=>t.stop());stream.current=media;cameraTrack.current=media.getVideoTracks()[0]||null;setLocal(media);setPreviewing(true);setCamera(video);setMic(true);}catch(e){setError(e instanceof Error?e.message:'Unable to open camera or microphone.');}finally{joining.current=false;setBusy(false);}};
- useEffect(()=>{if(!inCall)return;const timer=setInterval(()=>{void request('call:renew').then(v=>{if(!active.current)return;setUsage(v.budget||null);config.current={iceServers:v.iceServers,iceTransportPolicy:v.iceTransportPolicy};for(const p of peers.current.values())if(p.pc.signalingState!=='closed')p.pc.setConfiguration(config.current);}).catch(e=>{cleanup();setError(e.message);});},120000);return()=>clearInterval(timer);},[inCall,request,cleanup]);
+ useEffect(() => {
+  if (!inCall) return;
+  const timer = setInterval(() => {
+   void request('call:renew').then(value => {
+    if (!active.current) return;
+    setUsage(value.budget || null);
+    config.current = { iceServers: value.iceServers, iceTransportPolicy: value.iceTransportPolicy };
+    for (const [id, peer] of peers.current) {
+     if (peer.pc.signalingState === 'closed') continue;
+     peer.pc.setConfiguration(config.current);
+     // The same peer that makes initial offers restarts ICE with fresh relay credentials.
+     if (value.relayAvailable && String(socket?.id) < id) peer.pc.restartIce();
+    }
+   }).catch(error => {
+    void request('call:leave').catch(() => {});
+    cleanup();
+    setError(error.message);
+   });
+  }, 120000);
+  return () => clearInterval(timer);
+ }, [inCall, request, cleanup, socket]);
  useEffect(()=>{if(inCall&&members.length===1)startRing();else if(inCall)stopRing();return()=>stopRing();},[inCall,members.length]);
  const join=async(video:boolean)=>{if(joining.current||active.current)return;unlockSounds();setIncoming(null);startRing();joining.current=true;setBusy(true);setError('');const gen=++generation.current;let media:MediaStream|null=null;
   try{if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia)throw Error('Open the room over HTTPS or localhost to make calls.');const ringing=request('call:ring',{video});ringing.catch(()=>{});const capture=stream.current?Promise.resolve(stream.current):acquireMedia({audio:{echoCancellation:true,noiseSuppression:true},video:video?{width:{ideal:640},height:{ideal:360},frameRate:{ideal:20,max:24}}:false});capture.catch(()=>{});try{await ringing;}catch(e){void capture.then(s=>s.getTracks().forEach(t=>t.stop())).catch(()=>{});throw e;}media=await capture;if(gen!==generation.current){media.getTracks().forEach(t=>t.stop());return;}stream.current=media;cameraTrack.current=media.getVideoTracks()[0]||null;setLocal(media);const result=await request('call:join',{video:media.getVideoTracks().some(t=>t.enabled),mic:media.getAudioTracks().some(t=>t.enabled)});if(gen!==generation.current){media.getTracks().forEach(t=>t.stop());void request('call:leave').catch(()=>{});return;}config.current={iceServers:result.iceServers,iceTransportPolicy:result.iceTransportPolicy};setRelay(result.relayAvailable);setProvider(result.provider||'direct');setUsage(result.budget||null);active.current=true;setPreviewing(false);setIncoming(null);stopRing();setInCall(true);setStartedAt(Date.now());setCamera(Boolean(cameraTrack.current?.enabled));setMic(Boolean(media.getAudioTracks()[0]?.enabled));reconcile(result.members);for(const queued of pendingSignals.current.splice(0))receiveSignal.current(queued);

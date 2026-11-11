@@ -10,7 +10,7 @@ import {
 /** Typed here rather than in auth.mjs so `sameSite` narrows for Next's cookie API. */
 export const sessionCookieOptions = {
   httpOnly: true,
-  sameSite: "lax",
+  sameSite: "strict",
   path: "/",
   maxAge: SESSION_MAX_AGE_SECONDS,
 } as const;

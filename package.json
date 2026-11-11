@@ -1,8 +1,8 @@
 {
   "name": "konnectivity",
-  "version": "10.4.0",
+  "version": "10.5.0",
   "private": true,
-  "description": "Konnectivity 10.04 — discoverable groups, room-scoped credentials, and a SuperAdmin dashboard.",
+  "description": "Konnectivity 10.05 — room photo albums, private sharing, and security hardening.",
   "keywords": [
     "spotify-jam-alternative",
     "listen-together",
