@@ -34,10 +34,14 @@ function fmtPlayed(sec: number, duration: number) {
 
 function HistoryPanel({
   history,
+  current,
+  isPlaying,
   onReAdd,
   className,
 }: {
   history: HistoryEntry[];
+  current?: Track | null;
+  isPlaying?: boolean;
   onReAdd: (t: Track) => void;
   className?: string;
 }) {
@@ -90,11 +94,12 @@ function HistoryPanel({
         }
       />
 
+      {current && <div className="history-current"><span>{isPlaying ? "Playing now" : "Current track"}</span><strong>{current.title}</strong><small>{current.artist}</small></div>}
       {history.length === 0 ? (
         <EmptyState
           icon={<HistoryIcon className="size-5" />}
-          title="Nothing has played yet"
-          hint="Once the room gets going, everything it has heard collects here — ready to play again."
+          title={current ? "No completed tracks yet" : "Your listening history"}
+          hint={current ? "The current track will appear here after it finishes or is skipped." : "Finished and skipped tracks will appear here."}
         />
       ) : (
         <ul className="sw-scroll -mx-1 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-1">

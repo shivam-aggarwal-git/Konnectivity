@@ -1,6 +1,6 @@
 // Minimal service worker — enables PWA install + an offline app shell.
 // Network-first for navigations (so the room UI stays fresh), cache fallback.
-const CACHE = "konnectivity-private-v6";
+const CACHE = "konnectivity-private-v7";
 const SHELL = ["/", "/konnectivity-icon.png?v=3"];
 
 self.addEventListener("install", (e) => {
@@ -17,9 +17,10 @@ self.addEventListener("activate", (e) => {
 
 self.addEventListener("fetch", (e) => {
   const { request } = e;
-  // Never cache audio, socket.io, or API traffic.
+  // Leave third-party media and live app traffic to the browser.
   const url = new URL(request.url);
   if (
+    url.origin !== self.location.origin ||
     request.method !== "GET" ||
     url.pathname.startsWith("/audio/") ||
     url.pathname.startsWith("/socket.io") ||

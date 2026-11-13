@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import type { BufferedRange } from "@/lib/media-buffer";
 import { Heart, Play, Video } from "lucide-react";
-type Player = { destroy():void; getCurrentTime():number; getPlayerState():number; getDuration():number; getVideoData():{title?:string}; seekTo(t:number,a:boolean):void; playVideo():void; pauseVideo():void; setVolume(n:number):void; getIframe():HTMLIFrameElement };
+type Player = { destroy():void; getCurrentTime():number; getPlayerState():number; getDuration():number; getVideoLoadedFraction?():number; getVideoData():{title?:string}; seekTo(t:number,a:boolean):void; playVideo():void; pauseVideo():void; setVolume(n:number):void; getIframe():HTMLIFrameElement };
 declare global { interface Window { YT?: { Player:new(element:HTMLElement, options:any)=>Player }; onYouTubeIframeAPIReady?:()=>void } }
 let loading:Promise<void>|undefined;
 function loadApi() {
@@ -11,9 +12,10 @@ function loadApi() {
   const script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.onerror=()=>{loading=undefined;reject(Error('YouTube could not load. Check your connection or content blocker.'));};document.head.appendChild(script);
  });return loading;
 }
+export type PlaybackSample = { position: number; state: "checking" | "playing" | "buffering" | "stopped" | "blocked" | "interrupted" | "error" | "casting" };
 type Props = { videoId:string; position:number; playing:boolean; desiredPlaying:boolean; holding:boolean; volume:number; title:string;
  onPlaying:(playing:boolean)=>void; onEnded:()=>void; onMetadata:(duration:number,title:string)=>void;
- getPosition:()=>number; getRunning:()=>boolean; syncKey:string; onReadyChange:(ready:boolean,key:string)=>void };
+ getPosition:()=>number; getRunning:()=>boolean; syncKey:string; onReadyChange:(ready:boolean,key:string)=>void; onBuffer:(ranges:BufferedRange[])=>void; onPlaybackSampler:(sample:(()=>PlaybackSample)|null)=>void };
 export default function YouTubePlayer(props:Props) {
  const {videoId,title,syncKey}=props;
  const latest=useRef(props);latest.current=props;
@@ -21,6 +23,17 @@ export default function YouTubePlayer(props:Props) {
  const previousTarget=useRef<{position:number;time:number}|null>(null);
  const reported=useRef(false),attempt=useRef(0),bufferSince=useRef(0),lastSeek=useRef(0),aligned=useRef(false);
  const[error,setError]=useState(''),[blocked,setBlocked]=useState(false),[loaded,setLoaded]=useState(false);
+ useEffect(() => {
+  props.onPlaybackSampler(() => {
+   const p = player.current;
+   if (error) return { state: "error", position: 0 };
+   if (blocked) return { state: "blocked", position: 0 };
+   if (!p || !ready.current) return { state: "checking", position: 0 };
+   const status = p.getPlayerState();
+   return { state: status === 1 ? "playing" : status === 3 || status === -1 ? "buffering" : "stopped", position: p.getCurrentTime() };
+  });
+  return () => props.onPlaybackSampler(null);
+ }, [error, blocked, props.onPlaybackSampler]);
  useEffect(()=>{localReady.current=false;aligned.current=false;bufferSince.current=0;latest.current.onReadyChange(false,syncKey);},[syncKey]);
  useEffect(()=>{
   let disposed=false;ready.current=false;reported.current=false;setLoaded(false);setError('');setBlocked(false);
@@ -48,6 +61,9 @@ export default function YouTubePlayer(props:Props) {
    const p=player.current;if(!p||!ready.current)return;
    if(document.visibilityState!=="visible")return;
    const s=latest.current,state=p.getPlayerState(),now=performance.now(),target=s.getPosition(),running=s.getRunning();
+   const duration = p.getDuration();
+   const loaded = p.getVideoLoadedFraction?.() ?? 0;
+   s.onBuffer(duration > 0 && loaded > 0 ? [[0, Math.min(1, loaded) * duration]] : []);
    if(!reported.current&&p.getDuration()>0){reported.current=true;s.onMetadata(p.getDuration(),p.getVideoData().title||'YouTube video');}
    if(state===3&&bufferSince.current&&now-bufferSince.current>650){localReady.current=false;s.onReadyChange(false,s.syncKey);}
    if(state===1){bufferSince.current=0;localReady.current=true;}

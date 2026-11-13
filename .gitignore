@@ -98,3 +98,10 @@ turnserver.conf
 # Cookie UI source files
 !components/CookieExportHelp.tsx
 !components/RoomCookies.tsx
+
+# Production rollback builds are generated artifacts, never release content
+.next.*/
+
+# Original, synthesized UI notification tones (not personal music)
+!/public/sounds/message.mp3
+!/public/sounds/call.mp3

@@ -16,6 +16,7 @@ import {
   Plus,
   Play,
   Search,
+  Upload,
   X,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -71,6 +72,7 @@ function SearchPanel({
   roomCode,
   playlists, onPlaylistAdd, onCreatePlaylist,
   onPlayNow,
+  onSearchActivity, onUpload,
   onAdd,
   onAddMany,
   queuedIds,
@@ -83,6 +85,8 @@ function SearchPanel({
   roomCode: string;
   playlists?: Playlist[]; onPlaylistAdd?: (id: string, track: Track) => void; onCreatePlaylist?: (track?: Track) => void;
   onPlayNow?: (t: Track) => void;
+  onSearchActivity?: () => void;
+  onUpload?:()=>void;
   onAdd: (t: Track) => void;
   /** Add a batch in one go: one chat line, one broadcast. Falls back to `onAdd` per track. */
   onAddMany?: (tracks: Track[], from?: string) => void;
@@ -126,6 +130,12 @@ function SearchPanel({
   const runId = useRef(0);
 
   useEffect(() => setRecent(readRecent()), []);
+
+  useEffect(() => {
+    if (!onSearchActivity || q.trim().length < 2 || (variant === "overlay" && !open)) return;
+    const timer = setTimeout(onSearchActivity, 900);
+    return () => clearTimeout(timer);
+  }, [q, open, variant, onSearchActivity]);
 
   useEffect(() => {
     if (!openSignal) return;
@@ -235,7 +245,7 @@ function SearchPanel({
   useEffect(() => {
     if (variant !== "overlay") return;
     const onDown = (e: PointerEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!wrapRef.current?.contains(e.target as Node) && !(e.target as Element)?.closest?.("[data-playlist-menu]")) setOpen(false);
     };
     document.addEventListener("pointerdown", onDown, true);
     return () => document.removeEventListener("pointerdown", onDown, true);
@@ -436,7 +446,7 @@ function SearchPanel({
         </li>
       )}
 
-      {!album && recent.length > 0 && <li className="px-1 pb-2 pt-2"><div className="sw-label mb-2 text-[10px]"><Clock3 className="size-3"/>Recent searches</div><div className="flex flex-wrap gap-2">{recent.map(term=><div key={term} className="flex max-w-full items-center rounded-full border border-white/10 bg-white/5"><button type="button" className="truncate py-2 pl-3 pr-2 text-xs text-ink-soft" onClick={()=>{setQ(term);setAlbum(null);inputRef.current?.focus();}}>{term}</button><button type="button" aria-label={`Remove ${term} from search history`} title="Remove from history" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/10" onClick={()=>setRecent(prev=>{const next=prev.filter(v=>v!==term);try{localStorage.setItem(RECENT_KEY,JSON.stringify(next));}catch{}return next;})}><X size={12}/></button></div>)}</div></li>}
+      {!album && recent.length > 0 && <li className="px-1 pb-2 pt-2"><div className="sw-label mb-2 text-[10px]"><Clock3 className="size-3"/>Recent searches<button type="button" aria-label="Clear all recent searches" className="ml-auto" onClick={()=>{setRecent([]);try{localStorage.removeItem(RECENT_KEY);}catch{}}}>Clear all</button></div><div className="flex flex-wrap gap-2">{recent.map(term=><div key={term} className="flex max-w-full items-center rounded-full border border-white/10 bg-white/5"><button type="button" className="truncate py-2 pl-3 pr-2 text-xs text-ink-soft" onClick={()=>{setQ(term);setAlbum(null);inputRef.current?.focus();}}>{term}</button><button type="button" aria-label={`Remove ${term} from search history`} title="Remove from history" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/10" onClick={()=>setRecent(prev=>{const next=prev.filter(v=>v!==term);try{localStorage.setItem(RECENT_KEY,JSON.stringify(next));}catch{}return next;})}><X size={12}/></button></div>)}</div></li>}
       {!album && isEmptyQuery && rows.length>0 && <li className="sw-label kn-suggestion-heading px-1 pb-1 pt-2 text-[10px]"><span>Suggestions for your next moment</span><button type="button" className="kn-suggestion-refresh" aria-label="Refresh suggestions" title="Show different suggestions" disabled={loading} onClick={()=>setRefresh(n=>n+1)}><RefreshCw size={15} className={loading?"animate-spin":""}/><span>Refresh</span></button></li>}
 
       {!album && isEmptyQuery && recent.length === 0 && rows.length === 0 && (
@@ -531,8 +541,8 @@ function SearchPanel({
   );
 
   const field = (
-    <div className="relative">
-      <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted" />
+    <div className="kn-search-field">
+      <Search className="pointer-events-none size-4 shrink-0 text-muted" />
       <input
         ref={inputRef}
         value={q}
@@ -542,7 +552,7 @@ function SearchPanel({
           setQ(e.target.value);
           setAlbum(null);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {setOpen(true);if(!q.trim())setRefresh(n=>n+1);}} onClick={()=>{if(!q.trim())setRefresh(n=>n+1);}}
         onKeyDown={onFieldKey}
         placeholder={source === "local" ? "Search local library…" : source === "youtube" ? "Search YouTube Music…" : "Search local songs or YouTube…"}
         aria-label="Search music"
@@ -553,19 +563,16 @@ function SearchPanel({
         // at nothing is worse than not pointing at all.
         aria-controls={showResults ? listId : undefined}
         aria-autocomplete="list"
-        className={cn(
-          "w-full rounded-full border border-input bg-field py-2.5 pl-11 text-[13px] text-ink outline-none",
-          "transition-[border-color,box-shadow,background-color] duration-200 ease-[var(--ease)]",
-          "placeholder:text-muted hover:border-[color:var(--separator-strong)]",
-          "focus:border-[color:color-mix(in_oklab,var(--accent)_55%,transparent)]",
-          "focus:shadow-[0_0_0_3px_color-mix(in_oklab,var(--accent)_18%,transparent)]",
-          shortcut ? "pr-20" : q ? "pr-11" : "pr-4"
-        )}
+        className="min-w-0 flex-1 bg-transparent py-2.5 text-sm text-ink outline-none placeholder:text-muted"
       />
-      <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+      <div className="flex shrink-0 items-center gap-1">
+        {onUpload&&<button type="button" aria-label="Upload music" title="Upload music"
+          className="kn-search-upload" onClick={()=>{setOpen(false);onUpload();}}><Upload size={16}/></button>}
         {loading && <Loader2 className="size-4 animate-spin text-muted" />}
-        {q && (
+        {(
           <button
+            disabled={!q}
+            data-search-clear
             type="button"
             onClick={() => {
               ++runId.current;

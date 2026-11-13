@@ -37,7 +37,9 @@ const DialogContent = React.forwardRef<
     <DialogOverlay className={overlayClassName} />
     <DialogPrimitive.Content
       ref={ref}
+      data-ui-fullscreen={fullscreen}
       className={cn(
+        "kn-ui-dialog",
         // One dialog shape for the whole app: the raised glass material, the
         // panel radius, the panel padding. Anything that needs to look
         // different should differ inside this box, not become another box.

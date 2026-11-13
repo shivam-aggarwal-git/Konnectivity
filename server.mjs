@@ -1,11 +1,14 @@
+import { flushStore } from "./lib/store.mjs";
 import {handleRoomAdmin} from "./lib/room-admin-http.mjs";
 import {handleChatVideo} from "./lib/chat-video.mjs";
 // Custom Konnectivity server: Next.js (UI + API routes) + Socket.io (realtime sync
 // & chat) + a raw /audio route (range-served, yt-dlp-backed) on one HTTP server,
 // so the whole app is a single process / single container.
 
-import { guardRequest, allowedOrigin, mayRequestJoin, requestIp } from "./lib/access.mjs";
+import { guardRequest, allowedOrigin, mayRequestJoin, requestIp, roomAccess } from "./lib/access.mjs";
 import { rateLimit } from "./lib/ratelimit.mjs";
+import { readFile, stat } from "node:fs/promises";
+import path from "node:path";
 import { createServer } from "http";
 import next from "next";
 import { handleChatMedia } from "./lib/chat-media.mjs";
@@ -31,6 +34,20 @@ await app.prepare();
 
 const server = createServer(async (req, res) => {
   try { if (await guardRequest(req,res,getRoom)) return; } catch { res.writeHead(400); res.end("Invalid request"); return; }
+  if (req.url?.split("?")[0] === "/buzz-sound") {
+    const code = new URL(req.url, "http://localhost").searchParams.get("room");
+    if (req.method !== "GET" || !roomAccess(req, getRoom(code))) { res.writeHead(403); res.end(); return; }
+    try {
+      const file = path.resolve(process.env.DATA_DIR || "./data", "buzz.mp3");
+      const info = await stat(file);
+      if (!info.isFile() || info.size > 1024 * 1024) throw Error("Invalid buzz sound");
+      const sound = await readFile(file);
+      if (!sound.length || sound.length > 1024 * 1024) throw Error("Invalid buzz sound");
+      res.writeHead(200, {"Content-Type":"audio/mpeg","Content-Length":sound.length,"Cache-Control":"private, no-store"});
+      res.end(sound);
+    } catch { res.writeHead(404); res.end(); }
+    return;
+  }
   if(req.url?.startsWith("/api/room-admin/")){await handleRoomAdmin(req,res,io);return;}
   if(req.url?.startsWith("/chat-video")){await handleChatVideo(req,res,getRoom);return;}
   if (req.url?.startsWith("/chat-media")) { handleChatMedia(req, res, getRoom); return; }
@@ -81,3 +98,28 @@ server.listen(port, process.env.BIND_HOST || "127.0.0.1", () => {
     );
   }
 });
+
+let shuttingDown = false;
+async function shutdown() {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  io.konnectivityStopping = true;
+  const deadline = setTimeout(() => {
+    console.error("Konnectivity shutdown timed out.");
+    process.exit(1);
+  }, 12000);
+  try {
+    await new Promise(resolve => io.close(resolve));
+    await flushStore();
+    console.log("Konnectivity stopped and pending room changes were saved.");
+    process.exitCode = 0;
+  } catch (error) {
+    console.error("Konnectivity could not save pending changes:", error.code || error.message);
+    process.exitCode = 1;
+  } finally {
+    clearTimeout(deadline);
+  }
+  process.exit(process.exitCode);
+}
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

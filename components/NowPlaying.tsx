@@ -96,7 +96,7 @@ function Waveform({
   );
 }
 
-export default function NowPlaying({comments,
+export default function NowPlaying({comments, lyricsVisible=false, mediaQuery="",
   current,
   isPlaying,
   preparing,
@@ -109,9 +109,12 @@ export default function NowPlaying({comments,
   onLike,
   canSeek,
   onSeek,
+  onFindTrack,
   className,
 }: {
   comments?: React.ReactNode;
+  lyricsVisible?:boolean;
+  mediaQuery?:string;
   current: Track | null;
   isPlaying: boolean;
   preparing: boolean;
@@ -125,6 +128,7 @@ export default function NowPlaying({comments,
   onLike: () => void;
   canSeek: boolean;
   onSeek: (seconds: number) => void;
+  onFindTrack?: () => void;
   className?: string;
 }) {
   const appearance=useAppearance();
@@ -149,7 +153,7 @@ export default function NowPlaying({comments,
       } catch {}
       return !v;
     });
-  const lyricsOpen = showLyrics && Boolean(current);
+  const lyricsOpen = Boolean(lyricsVisible&&current);
   const progress = dur > 0 ? Math.min(1, position / dur) : 0;
 
   return (
@@ -162,6 +166,9 @@ export default function NowPlaying({comments,
     // top with no way to scroll back to it. `safe` falls back to top-aligned
     // exactly then, so a crowded room degrades instead of losing the artwork.
     <section
+      data-has-track={Boolean(current)}
+      data-inline-comments={Boolean(comments)||lyricsOpen}
+      data-lyrics-open={lyricsOpen}
       className={cn(
         "kn-now-card sw-panel sw-scroll flex min-h-0 flex-col overflow-y-auto p-4 sm:p-6 [justify-content:safe_center]",
         className
@@ -170,19 +177,11 @@ export default function NowPlaying({comments,
       {/* No listener count here. The top bar carries the avatar stack at every
           width, and this panel lists everyone in full further down — a third
           copy of the same fact was what made the old panel feel crowded. */}
-      <SectionHeader icon={<Radio className="size-3.5" />} title="Your shared soundtrack" />
+      <SectionHeader className="kn-now-heading" icon={<Radio className="size-3.5" />} title="Now playing" />
 
       {/* Lyrics take the artwork's place rather than adding a panel: the room
           is tinted by the cover anyway, so the art is never really gone. */}
-      {lyricsOpen && current && (
-        <Lyrics
-          track={current}
-          position={position}
-          playing={isPlaying && !loading}
-          className="kn-lyrics-left mr-auto h-[min(360px,42vh)] w-full max-w-md shrink-0"
-        />
-      )}
-
+      <div className="kn-now-media">
       {/* Artwork. The glow lives on the wrapper because .sw-art clips overflow. */}
       <div
         className={cn(
@@ -191,7 +190,7 @@ export default function NowPlaying({comments,
           "sw-art-glow mx-auto aspect-square w-full max-w-[min(300px,30vh)] shrink-0",
           "[@media(max-height:720px)]:max-w-[170px]",
           isPlaying && !loading && "sw-art-playing",
-          (lyricsOpen || !appearance.showArtwork) && "hidden"
+          !appearance.showArtwork && "hidden"
         )}
       >
         <div className="sw-art size-full">
@@ -211,7 +210,7 @@ export default function NowPlaying({comments,
       </div>
 
       {/* Title block */}
-      <div className="mt-6 min-w-0 text-center">
+      <div className="kn-now-track mt-6 min-w-0 text-center">
         {current ? (
           <>
             <h2
@@ -226,51 +225,31 @@ export default function NowPlaying({comments,
             <div className="mt-3 flex items-center justify-center gap-3">
               {current.addedBy && (
                 <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
-                  <Avatar name={current.addedBy} size="xs" />
+                  {participants.find(p=>p.nick===current.addedBy)?.profile?.imageId?<img className="track-added-avatar" alt={current.addedBy} src={`/chat-media/${participants.find(p=>p.nick===current.addedBy)?.profile?.imageId}${mediaQuery}`}/>:<Avatar name={current.addedBy} size="xs" />}
                   <span className="truncate">added by {current.addedBy}</span>
                 </span>
               )}
-              <button
-                type="button"
-                onClick={toggleLyrics}
-                aria-pressed={showLyrics}
-                aria-label={showLyrics ? "Hide lyrics" : "Show lyrics"}
-                title={showLyrics ? "Hide lyrics" : "Show lyrics"}
-                className={cn(
-                  "flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold",
-                  "transition-[background-color,border-color,color,transform] duration-200 ease-[var(--ease)] hover:-translate-y-px active:scale-95",
-                  showLyrics
-                    ? "border-[color:color-mix(in_oklab,var(--accent)_60%,transparent)] bg-[color:color-mix(in_oklab,var(--accent)_22%,transparent)] text-white"
-                    : "border-white/10 bg-white/[0.04] text-muted hover:border-white/20 hover:text-ink"
-                )}
-              >
-                <MicVocal className="size-3.5" /> Lyrics
-              </button>
-              <CountButton
-                icon={<Heart className={cn("size-3.5", liked && "fill-current")} />}
-                count={likes.length}
-                active={liked}
-                tone="pink"
-                label={
-                  likes.length
-                    ? `${liked ? "Unlike" : "Like"} — liked by ${likes.join(", ")}`
-                    : "Like this track"
-                }
-                onClick={onLike}
-              />
+
             </div>
           </>
         ) : (
           <>
-            <h2 className="font-display text-xl font-bold text-ink">A moment, just for you.</h2>
-            <p className="mt-1 text-sm text-muted">Find a song you love. Share it with someone you love.</p>
+            <h2 className="font-display text-xl font-bold text-ink">What are we listening to?</h2>
+            {onFindTrack
+              ? <button type="button" className="studio-find-track" onClick={onFindTrack}>Find a song</button>
+              : <p className="mt-1 text-sm text-muted">Search for a track or pick one from your library.</p>}
           </>
         )}
       </div>
 
+      </div>
+
+
       {current&&<AmbientVisualizer playing={isPlaying&&!loading}/>}
 
-      {current && <div className="kn-track-time"><span>{fmt(position)}</span><span>ONE BEAT. TWO HEARTS</span><span>{fmt(dur)}</span></div>}
+      {current && <div className="kn-track-time"><span>{fmt(position)}</span><span>{fmt(dur)}</span></div>}
+
+      <div className="kn-song-detail-content">{lyricsOpen&&current?<Lyrics track={current} position={position} playing={isPlaying&&!loading} className="kn-inline-lyrics"/>:comments}</div>
 
       {/* Who's here. The point of the app is that these people hear the same
           thing at the same moment, so it's worth showing rather than counting.
@@ -291,7 +270,6 @@ export default function NowPlaying({comments,
           ))}
         </ul>
       </div>
-      {comments}
     </section>
   );
 }

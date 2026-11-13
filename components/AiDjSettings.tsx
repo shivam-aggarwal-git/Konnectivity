@@ -21,6 +21,7 @@ type Settings = {
   llmBaseUrl: string;
   aiDjEnabled: boolean;
   personaId: string;
+  djPrompt?: string;
   hasApiKey?: boolean;
 };
 type TestResult = {
@@ -123,6 +124,7 @@ export default function AiDjSettings({
       llmBaseUrl: s.llmBaseUrl,
       aiDjEnabled: s.aiDjEnabled,
       personaId: s.personaId,
+      djPrompt: s.djPrompt || "",
     };
     if (apiKey.trim()) payload.llmApiKey = apiKey.trim();
     const res = await fetch("/api/settings", {
@@ -236,6 +238,11 @@ export default function AiDjSettings({
       {s.aiDjEnabled && (
         <section className="sw-glass p-6">
           <h2 className="mb-4 text-lg font-semibold text-ink">Language model</h2>
+          <label className="mb-4 block text-sm">DJ instructions
+            <textarea className="mt-1 block w-full rounded-lg border border-input bg-field p-3" rows={3} maxLength={2000}
+              placeholder="For example, favor acoustic Hindi songs when someone asks for a mellow mix."
+              value={s.djPrompt || ""} onChange={e=>setS({...s,djPrompt:e.target.value})}/>
+          </label>
           <div className="grid gap-4">
             <div>
               <Label className="mb-1.5 block">Provider</Label>

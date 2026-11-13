@@ -9,14 +9,16 @@ import {
   ListPlus,
   LogIn,
   LogOut,
+  Maximize2,
   Music,
   SkipForward,
-  UserX,
+  UserX,X,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { ChatMsg, ReactionEvent, SystemKind } from "@/lib/types";
 import { Avatar } from "@/components/ui/avatar";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { SectionHeader } from "@/components/ui/panel";
 
 /**
@@ -85,8 +87,9 @@ function ActivityFeed({
   events,
   reactions,
   limit = 40,
-  className,
+  className,onClose,
 }: {
+  onClose?:()=>void;
   /** The full room log; system entries are picked out here. */
   events: ChatMsg[];
   /** Live reactions from this session — never persisted, so never replayed. */
@@ -95,6 +98,7 @@ function ActivityFeed({
   className?: string;
 }) {
   const now = useTicker();
+  const [expanded, setExpanded] = useState(false);
 
   const items = useMemo<Item[]>(() => {
     const sys: Item[] = events
@@ -119,40 +123,44 @@ function ActivityFeed({
     return [...sys, ...react].sort((a, b) => b.ts - a.ts).slice(0, limit);
   }, [events, reactions, limit]);
 
-  return (
+  const content = (
+      items.length === 0 ? (
+        <EmptyState compact className="min-h-0 overflow-y-auto !items-start !py-3" icon={<ActivityIcon className="size-5" />}
+          title="Nothing has happened yet" hint="Joins, queued tracks, skips and reactions show up here as they happen." />
+      ) : (
+        <ul className="sw-scroll min-h-0 flex-auto space-y-1 overflow-y-auto overscroll-contain pr-2">
+          {items.map(it => <ActivityItem key={it.id} item={it} now={now} />)}
+        </ul>
+      )
+  );
+
+  return <>
     <div className={cn("flex min-h-0 flex-col overflow-hidden", className)}>
-      <SectionHeader
+      <div className="shrink-0"><SectionHeader
         icon={<ActivityIcon className="size-3.5" />}
         title="Room activity"
         trailing={
-          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--success)]">
+          <div className="flex items-center gap-2"><span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--success)]">
             <span className="sw-eq" aria-hidden>
               <span />
               <span />
               <span />
             </span>
             Live
-          </span>
+          </span><button type="button" onClick={() => setExpanded(true)} aria-label="Expand room activity" title="Expand activity"
+            className="flex items-center gap-1 rounded-full border border-current/15 px-2.5 py-1.5 text-xs hover:bg-white/10"><Maximize2 size={18}/></button>{onClose&&<button type="button" aria-label="Close activity" onClick={onClose}><X size={18}/></button>}</div>
         }
-      />
-
-      {items.length === 0 ? (
-        <EmptyState
-          compact
-          className="min-h-0 overflow-y-auto !items-start !py-3"
-          icon={<ActivityIcon className="size-5" />}
-          title="Nothing has happened yet"
-          hint="Joins, queued tracks, skips and reactions show up here as they happen."
-        />
-      ) : (
-        <ul className="sw-scroll -mr-2 min-h-0 flex-1 space-y-1 overflow-y-auto pr-2">
-          {items.map((it) => (
-            <ActivityItem key={it.id} item={it} now={now} />
-          ))}
-        </ul>
-      )}
+      /></div>
+      {content}
     </div>
-  );
+    <Dialog open={expanded} onOpenChange={setExpanded}>
+      <DialogContent className="!flex !h-[min(75dvh,calc(var(--kn-app-height,100dvh)-24px))] !max-w-2xl !flex-col !overflow-hidden">
+        <DialogTitle className="shrink-0 pr-12">Room activity</DialogTitle>
+        <DialogDescription className="sr-only">Recent activity from everyone in this room.</DialogDescription>
+        {content}
+      </DialogContent>
+    </Dialog>
+  </>;
 }
 
 function ActivityItem({ item, now }: { item: Item; now: number }) {
@@ -161,7 +169,7 @@ function ActivityItem({ item, now }: { item: Item; now: number }) {
   const actor = item.type === "reaction" ? item.reaction.nick : item.msg.actor;
 
   return (
-    <li className="sw-rise sw-row flex items-start gap-3 p-2">
+    <li className="room-activity-row flex items-start gap-3 p-2">
       <span
         className={cn("mt-0.5 grid size-7 shrink-0 place-items-center rounded-full", TONE[kind])}
         aria-hidden
@@ -175,7 +183,7 @@ function ActivityItem({ item, now }: { item: Item; now: number }) {
         <span className="mt-0.5 size-6 shrink-0" aria-hidden />
       )}
 
-      <p className="min-w-0 flex-1 text-[13px] leading-snug text-ink-soft">
+      <p className="min-w-0 flex-1 break-words text-sm leading-relaxed text-ink-soft">
         {item.type === "reaction" ? (
           <>
             <span className="font-semibold text-ink">{actor ?? "Someone"}</span> reacted{" "}

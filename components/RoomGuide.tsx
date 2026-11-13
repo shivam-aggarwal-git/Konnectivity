@@ -4,13 +4,15 @@ import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
 
-const seenKey = "konnectivity:room-guide:v1";
+const seenKey = "konnectivity:room-guide:v2";
 const steps = [
   ["Find something to play", "Use Search in the room toolbar. Choose a result to play it now or add it to the shared queue. Library shows uploaded songs and saved playlists."],
   ["Listen together", "Use the player at the bottom to play, pause, seek, or skip. Open Queue to see what's coming up. Playback controls affect everyone in the room."],
   ["Save a playlist", "Use Save on a song, then choose a playlist. Open Playlists to create, arrange, or queue a collection. Enable cross-room saving on a playlist to reuse it in another room."],
-  ["Chat and call", "Open Chat to send a message, photo, or reaction. Use the phone icon for an audio or video call. Your browser will ask for permission when you join a call."],
-  ["Invite someone and set the mood", "Use Share to copy the room invitation. The host can approve requests in People. Open Settings for appearance, sound, and room controls. You can replay this guide from Settings."],
+  ["Chat and call", "Open Chat and tap + to attach photos, GIFs, video, voice notes, or your device location. Use the phone icon for calls and Polls & Plans to make decisions together."],
+  ["Name the room and set the mood", "Use Room name to name this group. The host can tap Mood to set the atmosphere, or Buzz to notify one listener or everyone."],
+  ["Add your profile picture", "Tap Profile, then Upload photo or GIF. Add a status and tap Save profile. The room can see your picture and status."],
+  ["Invite someone", "Use Share to copy the invitation. The host can approve join requests in People. Replay this guide from Settings."],
 ] as const;
 
 export default function RoomGuide({ open, onOpenChange }: {

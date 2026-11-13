@@ -41,6 +41,7 @@ export type Participant = {
   id: string;
   nick: string;
   isHost: boolean;
+  isRoomOwner?: boolean;
   status: PresenceStatus;
   statusAt: number;
   joinedAt: number;
@@ -50,6 +51,7 @@ export type Participant = {
   reactions: Record<string, number>;
   /** Host has muted this participant's chat. */
   muted?: boolean;
+  profile?: {imageId:string|null;status:string};
 };
 
 /** What happened, for system entries in the room log. */
@@ -63,15 +65,22 @@ export type SystemKind =
   | "error"
   | "kicked";
 
+export type RoomGif = {id:number|string;url:string;source:string;title:string;creator:string;license:string};
+
 export type ChatMsg = {
   id: string;
   ts: number;
   nick?: string;
   text: string;
   privateMedia?: boolean;
+  editedAt?: number;
+  senderId?: string;
+  gif?: RoomGif;
+  reply?: {id:string;nick?:string;text:string};
+  reactions?: {emoji:string;count:number}[];
   image?: { id: string; url: string; name: string };
-  video?: { id: string; url: string; name: string };
-  location?: {lat:number;lng:number;label:string};
+  video?: { id: string; url: string; name: string; voice?: boolean };
+  location?: {lat:number;lng:number;label:string;live?:boolean;liveUntil?:number;updatedAt?:number};
   system?: boolean;
   dj?: boolean;
   /** Present on system entries written after the activity feed shipped. */

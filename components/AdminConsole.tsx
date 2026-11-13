@@ -35,7 +35,7 @@ export default function AdminConsole({ children, view, stats }: {
   }
 
   return (
-    <main className="kn-admin">
+    <main className="studio-admin kn-admin">
       <div className="kn-admin-shell">
         <header className="kn-admin-header">
           <div className="kn-admin-topbar">
@@ -51,14 +51,16 @@ export default function AdminConsole({ children, view, stats }: {
           <div><dt><Radio size={17} /> Listeners online</dt><dd>{stats.listeners}</dd></div>
           <div><dt><Shuffle size={17} /> Available for matching</dt><dd>{stats.matching}</dd></div>
         </dl>
-        <nav className="kn-admin-nav kn-admin-views" aria-label="Dashboard views">
+        <div className="kn-admin-workspace">
+        <aside className="studio-admin-rail"><nav className="kn-admin-nav kn-admin-views" aria-label="Dashboard views">
           {VIEWS.map(({id, label, icon: Icon}) => (
             <Link key={id} href={id === "rooms" ? "/admin" : `/admin?view=${id}`}
               aria-current={view === id ? "page" : undefined}>
               <Icon size={17} /> {label}
             </Link>
           ))}
-        </nav>
+        </nav></aside>
+      <div className="kn-admin-content">
       {view === "rooms" && children}
       {view === "branding" && <AdminBranding />}
       {view === "server" && <>
@@ -97,6 +99,8 @@ export default function AdminConsole({ children, view, stats }: {
 
       <div id="admin-dj"><AiDjSettings /></div>
       </>}
+      </div>
+      </div>
       </div>
     </main>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import {createPortal} from "react-dom";
 import { useEffect, useState } from "react";
 import { REACTION_STYLES } from "@/lib/protocol.mjs";
 import { seededRandom } from "@/lib/seed";
@@ -78,9 +79,11 @@ export default function Reactions({ incoming }: { incoming: IncomingReaction | n
     return () => clearTimeout(t);
   }, [incoming]);
 
-  return (
+  if(typeof document==="undefined")return null;
+  return createPortal(
     <div
-      className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
+      className="kn-reaction-overlay pointer-events-none fixed inset-0 overflow-hidden"
+      style={{zIndex:240}}
       aria-hidden
       // The activity feed carries the same information in text, so there is
       // nothing here for a screen reader to miss.
@@ -103,6 +106,6 @@ export default function Reactions({ incoming }: { incoming: IncomingReaction | n
           {p.emoji}
         </span>
       ))}
-    </div>
+    </div>, document.body
   );
 }

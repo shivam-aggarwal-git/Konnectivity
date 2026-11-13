@@ -97,11 +97,16 @@ export default function Lyrics({
   useEffect(() => {
     const box = scrollRef.current;
     if (!box || active < 0 || Date.now() < manualUntil.current) return;
-    const el = box.querySelector<HTMLElement>(`[data-line="${active}"]`);
-    if (!el) return;
-    const top = el.offsetTop - box.clientHeight / 2 + el.clientHeight / 2;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    box.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+    const center=()=>{
+      if(Date.now()<manualUntil.current)return;
+      const el=box.querySelector<HTMLElement>(`[data-line="${active}"]`);
+      if(!el)return;
+      const top=box.scrollTop+el.getBoundingClientRect().top-box.getBoundingClientRect().top-box.clientHeight/2+el.clientHeight/2;
+      box.scrollTo({top,behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+    };
+    center();
+    const resize=new ResizeObserver(center);resize.observe(box);
+    return()=>resize.disconnect();
   }, [active]);
 
   const holdScroll = () => {

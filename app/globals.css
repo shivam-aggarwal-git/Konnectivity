@@ -1624,3 +1624,59 @@ html { scroll-behavior: smooth; }
 @media (max-width: 30rem) {
   .kn-admin-metrics dt { align-items: flex-start; flex-direction: column; gap: .3rem; }
 }
+
+
+/* Only the thread scrolls. Drafts have their own limit on short screens. */
+.kn-chat-drafts { max-height: min(9rem, 24dvh); overscroll-behavior: contain; }
+.kn-chat-footer { min-width: 0; }
+@media (max-width: 767px) {
+  .sw-couple .sw-love-toolbar { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  [data-room-chat] .kn-chat-composer { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+.kn-large-chat-emoji { display:inline-block; font-size:2.5rem; line-height:1.2; animation:kn-chat-emoji-in .42s ease-out both; }
+@keyframes kn-chat-emoji-in {
+  0% { transform:scale(.65) rotate(-8deg); opacity:.5; }
+  65% { transform:scale(1.12) rotate(4deg); }
+  100% { transform:scale(1) rotate(0); opacity:1; }
+}
+@media (prefers-reduced-motion: reduce) { .kn-large-chat-emoji { animation:none; } }
+.kn-chat-composer textarea { min-height:34px; max-height:100px; resize:none; }
+@media (max-width:767px) {
+  [data-room-chat] .kn-chat-composer { grid-template-columns:repeat(7,minmax(0,1fr)); }
+  [data-room-chat] .kn-chat-composer textarea { grid-column:1/-1; width:100%; min-height:42px; padding:6px 8px; font-size:16px; }
+}
+
+.kn-search-field { display:flex; align-items:center; gap:8px; padding:2px 8px 2px 14px; min-width:0; min-height:44px; border:1px solid var(--kn-border); border-radius:999px; background:var(--field); }
+.kn-search-field:focus-within { border-color:var(--accent); }
+.kn-search-upload, .kn-chat-add { display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; border-radius:999px; color:var(--accent-2); background:var(--accent-soft); }
+.kn-search-upload:hover, .kn-chat-add:hover { background:color-mix(in srgb,var(--accent) 26%,transparent); }
+.kn-room-quick { display:flex; flex-shrink:0; align-items:center; gap:6px; padding:5px 16px; overflow-x:auto; scrollbar-width:thin; }
+.kn-room-quick button, .kn-room-mood, .kn-profile-file { display:inline-flex; flex-shrink:0; align-items:center; gap:6px; min-height:34px; padding:5px 10px; border:1px solid var(--kn-border); border-radius:999px; color:var(--ink-soft); font-size:12px; }
+.kn-room-quick button:hover, .kn-profile-file:hover { background:var(--accent-soft); }
+.kn-room-quick button span, .kn-room-mood span { max-width:12rem; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.kn-profile-file { cursor:pointer; background:var(--accent-soft); }
+.kn-profile-file:focus-within { outline:2px solid var(--accent); }
+.kn-chat-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin-bottom:6px; }
+.kn-chat-options > button { display:flex; align-items:center; justify-content:center; gap:5px; width:100%; min-height:36px; border:1px solid var(--kn-border); border-radius:10px; color:var(--ink-soft); font-size:12px; }
+.kn-chat-options > button:hover { background:var(--accent-soft); }
+.kn-chat-options > button:disabled { opacity:.45; }
+[data-room-chat] .kn-chat-composer { display:flex; align-items:flex-end; border-radius:20px; padding:6px !important; }
+[data-room-chat] .kn-chat-composer textarea { min-width:0; min-height:36px; flex:1; padding:7px 4px; line-height:1.4; }
+[data-room-chat] .kn-chat-composer > button:last-child { width:36px; height:36px; }
+.kn-song-comments form { display:flex; align-items:stretch; gap:8px; }
+.kn-song-comments textarea { flex:1; min-width:0; min-height:58px; padding:9px; resize:vertical; border:1px solid var(--kn-border); border-radius:12px; background:var(--field); color:var(--ink); }
+.kn-playlist-menu-trigger { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:6px 10px; border:1px solid var(--kn-border); border-radius:12px; color:var(--accent-2); background:var(--kn-panel-b); }
+.kn-playlist-menu { z-index:150; width:min(250px,calc(100vw - 24px)); max-height:min(55dvh,var(--radix-dropdown-menu-content-available-height)); overflow-y:auto; padding:5px; }
+.kn-playlist-menu-item { display:flex; align-items:center; gap:7px; justify-content:space-between; min-height:40px; padding:6px 8px; border-radius:8px; cursor:pointer; outline:none; font-size:13px; }
+.kn-playlist-menu-item span { flex:1; min-width:0; overflow-wrap:anywhere; }
+.kn-playlist-menu-item[data-highlighted] { background:var(--accent-soft); }
+.kn-playlist-menu-item[data-disabled] { opacity:.5; cursor:default; }
+@media (max-width:767px) {
+  .kn-room-quick { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); padding-inline:8px; gap:4px; }
+  .kn-room-quick > * { min-width:0; justify-content:center; padding-inline:5px; gap:4px; font-size:11px; }
+  .kn-room-quick svg { flex-shrink:0; width:12px; }
+  .kn-room-quick button span, .kn-room-mood span { min-width:0; max-width:100%; }
+  [data-room-chat] .kn-chat-composer textarea, .kn-song-comments textarea, .kn-search-field input { font-size:16px; }
+  .sw-couple .sw-love-toolbar > button.kn-plans-polls-shortcut { white-space:normal; }
+}

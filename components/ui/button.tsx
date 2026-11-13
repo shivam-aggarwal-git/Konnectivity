@@ -4,20 +4,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/cn"
 
-/* Konnectivity's aesthetic: fully rounded pills, uppercase letter-spaced labels,
-   1px borders. Every variant shares one radius, one transition and the same
-   hover/active response — the tone is the only thing that changes.
-   `primary` and `danger` are the canonical names; `accent` and `destructive`
-   are kept as aliases so existing call sites keep working. */
 const buttonVariants = cva(
   [
-    "inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full",
-    "text-[10px] font-bold tracking-[0.2em] whitespace-nowrap uppercase",
-    "transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-[var(--ease)]",
-    "hover:-translate-y-px active:translate-y-0 active:scale-[0.97]",
-    "focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none",
+    "inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl touch-manipulation",
+    "text-sm font-semibold leading-tight whitespace-nowrap",
+    "transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-[var(--ease)]",
+    "active:scale-[0.98] motion-reduce:transition-none",
+    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
     "disabled:pointer-events-none disabled:opacity-40",
-    "[&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0",
+    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   ].join(" "),
   {
     variants: {
@@ -44,12 +39,12 @@ const buttonVariants = cva(
         link: "text-[var(--accent-2)] underline-offset-4 hover:underline",
       },
       size: {
-        default: "px-3.5 py-[7px]",
-        sm: "px-2.5 py-[5px] text-[9px]",
-        lg: "px-[22px] py-[11px] text-[11px]",
-        icon: "size-8",
-        "icon-sm": "size-7",
-        "icon-lg": "size-10",
+        default: "min-h-11 px-4 py-2",
+        sm: "min-h-9 max-md:min-h-11 px-3 py-2 text-xs",
+        lg: "min-h-12 px-5 py-3 text-sm",
+        icon: "size-10 max-md:size-11",
+        "icon-sm": "size-8 max-md:size-11",
+        "icon-lg": "size-11",
       },
     },
     defaultVariants: {

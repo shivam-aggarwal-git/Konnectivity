@@ -30,7 +30,7 @@ export default function ShortcutsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent aria-describedby="shortcuts-desc">
-        <DialogHeader>
+        <button type="button" className="settings-back" onClick={()=>onOpenChange(false)}>← Back to Settings</button><DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display text-ink">
             <Keyboard className="size-4 text-[var(--accent-2)]" /> Keyboard shortcuts
           </DialogTitle>

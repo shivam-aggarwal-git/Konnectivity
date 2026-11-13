@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Logo from "./Logo";
 import { Lock, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,8 @@ export default function LoginForm() {
   }
 
   return (
-    <main className="kn-admin kn-admin-login">
+    <main className="studio-auth kn-admin kn-admin-login">
+      <aside className="studio-auth-mark" aria-hidden="true"><Logo size="lg"/></aside>
       <div className="kn-admin-login-inner">
       <Link
         href="/"

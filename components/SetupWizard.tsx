@@ -6,6 +6,7 @@ import { Lock, Cookie, Bot, Check, Loader2, ArrowRight, PartyPopper } from "luci
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Logo from "./Logo";
 import CookiesPanel from "@/components/CookiesPanel";
 import AiDjSettings from "@/components/AiDjSettings";
 import { MIN_PASSWORD_LENGTH } from "@/lib/constants.mjs";
@@ -52,7 +53,8 @@ export default function SetupWizard() {
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-10">
+    <main className="studio-setup kn-setup mx-auto max-w-2xl px-6 py-10">
+      <div className="studio-setup-brand"><Logo size="md"/><span>Konnectivity</span></div>
       <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold tracking-eyebrow text-accent-2 uppercase">
         <PartyPopper className="size-3.5" /> First-run setup
       </div>

@@ -82,9 +82,9 @@ export default function CreateRoom({defaultInviteOnly=true}:{defaultInviteOnly?:
   }
 
   return (
-    <div className="grid w-full gap-5 text-left md:grid-cols-2">
+    <div className="kn-group-choices grid w-full gap-5 text-left md:grid-cols-2">
       <section className="flex min-w-0 flex-col items-start gap-4 rounded-3xl border border-current/15 bg-white/45 p-5 sm:p-7">
-        <h2 className="font-display text-xl font-bold">Create a group</h2>
+        <h2 className="font-display text-xl font-bold"><Radio size={22} aria-hidden/> Create a group</h2>
         <p className="text-sm text-muted">You become the group admin and decide who can join.</p>
         <label className="w-full max-w-xs text-left text-sm text-muted">
           Group name <span className="text-xs">(optional)</span>
@@ -122,7 +122,7 @@ export default function CreateRoom({defaultInviteOnly=true}:{defaultInviteOnly?:
 
       </section>
       <section className="flex min-w-0 flex-col items-start gap-4 rounded-3xl border border-current/15 bg-white/45 p-5 sm:p-7">
-        <h2 className="font-display text-xl font-bold">Join a group</h2>
+        <h2 className="font-display text-xl font-bold"><Shuffle size={22} aria-hidden/> Join a group</h2>
         <p className="text-sm text-muted">Try a random match, enter a room code, or open a private invitation. Random matches need approval from an online group admin.</p>
         <Button type="button" variant="outline" onClick={joinRandom} disabled={matching || loading || joining} className="h-11 gap-2">
           {matching ? <Loader2 className="size-4 animate-spin" /> : <Shuffle className="size-4" />}

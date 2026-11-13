@@ -15,6 +15,7 @@ import {
   Loader2,
   Search as SearchIcon,
   X,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { Status, Track } from "@/lib/types";
@@ -85,12 +86,12 @@ function QueuePanel({
         icon={<ListMusic className="size-3.5" />}
         title="Up next"
         trailing={
-          queue.length > 0 ? (
+          <div className="kn-queue-heading-actions"><button type="button" aria-label="Add songs to queue" onClick={onOpenSearch}><Plus size={16}/><span>Add songs</span></button>{queue.length > 0 ? (
             <span className="flex flex-wrap items-center justify-end gap-2 text-[11px] text-muted"><button type="button" className="kn-move-track" onClick={()=>setExpanded(v=>!v)}>{expanded?"Restore queue":"Expand queue"}</button>
               {queue.length} {queue.length === 1 ? "track" : "tracks"}
               {mins > 0 ? ` · ${mins} min` : ""}
             </span>
-          ) : undefined
+          ) : null}</div>
         }
       />
 

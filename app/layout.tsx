@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Sora } from "next/font/google";
+import { Sora, DM_Sans, Outfit } from "next/font/google";
 import "./globals.css";
+import "./room-polish.css";
+import "./interface.css";
+import "./studio.css";
+import "./reference-ui.css";
+import MenuDismiss from "@/components/MenuDismiss";
 import PWA from "@/components/PWA";
 import { getPublicUrl } from "@/lib/publicurl.mjs";
 
@@ -11,6 +16,9 @@ const sora = Sora({
   variable: "--font-sora",
   display: "swap",
 });
+
+const dmSans = DM_Sans({subsets:["latin"], variable:"--font-dm-sans", display:"swap"});
+const outfit = Outfit({subsets:["latin"], variable:"--font-outfit", display:"swap"});
 
 const TITLE = "Konnectivity — One Beat. Two Hearts";
 const DESCRIPTION =
@@ -66,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#eeeae3",
+  themeColor: "#0b0b20",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -75,12 +83,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-room-theme="pearl" className={sora.variable}>
+    <html lang="en" data-room-theme="pearl" className={`${sora.variable} ${dmSans.variable} ${outfit.variable}`}>
       <body>
         <div className="sw-aurora" aria-hidden />
         <div className="sw-grain" aria-hidden />
         {children}
         <PWA />
+        <MenuDismiss />
       </body>
     </html>
   );

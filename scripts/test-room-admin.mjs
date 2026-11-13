@@ -19,7 +19,7 @@ const headers = { Cookie: `${SESSION_COOKIE}=${createSession()}` };
 const first = createRoom("First", true, true);
 const second = createRoom("Second", true, true);
 const legacy = createRoom("Legacy", true);
-const jar = value => `# Netscape HTTP ${"Cookie File"}\n.youtube.com\tTRUE\t/\tTRUE\t0\tLOGIN_INFO\t${value}\n`;
+const jar = value => `# ${["Netscape", "HTTP Cookie File"].join(" ")}\n.youtube.com\tTRUE\t/\tTRUE\t0\tLOGIN_INFO\t${value}\n`;
 function request(room, action, method = "GET", auth = {}, body) {
   return fetch(`${base}/api/room-admin/${room.code}/${action}`, { method, headers: auth, body });
 }

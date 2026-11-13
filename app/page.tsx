@@ -1,6 +1,9 @@
 import Link from "next/link";
 import {
   Activity,
+  ArrowUpRight,
+  Headphones,
+  MonitorPlay,
   Bot,
   Github,
   Heart,
@@ -17,7 +20,7 @@ import SiteFooter from "@/components/SiteFooter";
 import Logo from "@/components/Logo";
 import { isSetupComplete } from "@/lib/auth.mjs";
 import { REPO_URL } from "@/lib/brand";
-const DOCUMENTATION_VERSION = "10.05";
+const DOCUMENTATION_VERSION = "10.06";
 
 export const dynamic = "force-dynamic";
 
@@ -56,15 +59,16 @@ export default function Home() {
     <>
       <SiteHeader />
 
-      <main className="relative">
+      <main className="studio-home kn-landing relative">
         {/* ------------------------------------------------------------ hero */}
-        <section className="mx-auto flex max-w-6xl flex-col items-center px-6 pt-16 pb-20 text-center sm:pt-24">
+        <section className="kn-landing-hero" aria-labelledby="landing-title">
+          <div className="kn-landing-intro">
           {/* An unclaimed server is claimable by whoever reaches it first, so say
               so rather than letting it look finished. */}
           {!claimed && (
             <Link
               href="/setup"
-              className="mb-8 flex max-w-lg items-center gap-2.5 rounded-md border border-[color-mix(in_oklab,var(--accent)_45%,transparent)] bg-accent-soft px-4 py-3 text-left text-sm transition-colors duration-200 ease-[var(--ease)] hover:bg-[color-mix(in_oklab,var(--accent)_22%,transparent)]"
+              className="studio-setup-notice mb-8 flex max-w-lg items-center gap-2.5 rounded-md border border-[color-mix(in_oklab,var(--accent)_45%,transparent)] bg-accent-soft px-4 py-3 text-left text-sm transition-colors duration-200 ease-[var(--ease)] hover:bg-[color-mix(in_oklab,var(--accent)_22%,transparent)]"
             >
               <Lock className="size-4 shrink-0 text-accent-2" />
               <span>
@@ -76,31 +80,15 @@ export default function Home() {
             </Link>
           )}
 
-          <div className="sw-rise mb-7 flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 backdrop-blur">
-            <span className="sw-eq" aria-hidden>
-              <span />
-              <span />
-              <span />
-              <span />
-            </span>
-            <span className="text-xs font-semibold tracking-[0.28em] text-ink/80">
-              YOUR PRIVATE SHARED SPACE
-            </span>
-          </div>
+          <h1 id="landing-title" className="font-display">Press play <br className="studio-home-break"/>together.</h1>
 
-          <h1 className="font-display text-5xl leading-[0.95] font-extrabold tracking-tight sm:text-7xl">
-            One Beat.
-            <br />
-            <span className="sw-gradient-text">Two Hearts.</span>
-          </h1>
-
-          <p className="mt-6 max-w-xl text-base text-ink/60 sm:text-lg">
-            Listen, watch, talk and plan together. Create a private group or find one that’s welcoming listeners, with shared music, videos, encrypted calls and a little atmosphere.
+          <p className="kn-landing-summary">
+            A private room for the songs, videos, and conversations you want to share.
           </p>
 
-          <div className="mt-9 w-full max-w-md">
+          <div className="kn-landing-actions">
             <Button asChild variant="accent" size="lg">
-              <Link href="/groups">Open Konnectivity <Radio className="size-4" /></Link>
+              <Link href="/groups">Create or join a room <ArrowUpRight className="size-4" /></Link>
             </Button>
           </div>
 
@@ -111,11 +99,18 @@ export default function Home() {
             <li aria-hidden>·</li>
             <li>Invite-only rooms</li>
           </ul>
+          </div>
+          <div className="kn-landing-art" aria-hidden="true">
+            <div className="kn-landing-record"><Logo size="lg" /></div>
+            <div className="kn-landing-art-label">
+              <Headphones size={20}/><MonitorPlay size={20}/><MessageSquare size={20}/>
+            </div>
+          </div>
         </section>
 
-        <section className="kn-home-moments" aria-label="Together in one room"><div><Heart/><strong>One room. Your people.</strong><p>A playlist for the evening. A film with friends. A plan everyone agrees on.</p></div><div className="kn-home-orbit"><Logo size="lg" className="kn-home-brand-logo"/><span>♫</span><span>♡</span><span>✦</span></div><div><ShieldCheck/><strong>Private from the first invite</strong><p>You approve who joins. Your group and its settings stay saved when you leave.</p></div></section>
+        <section className="studio-home-notes kn-home-moments" aria-label="Together in one room"><div><Heart/><strong>One room. Your people.</strong><p>A playlist for the evening. A film with friends. A plan everyone agrees on.</p></div><div className="kn-home-orbit"><Logo size="lg" className="kn-home-brand-logo"/><span aria-hidden><Headphones size={19}/></span><span aria-hidden><Heart size={19}/></span><span aria-hidden><Sparkles size={19}/></span></div><div><ShieldCheck/><strong>Private from the first invite</strong><p>You approve who joins. Your group and its settings stay saved when you leave.</p></div></section>
         {/* -------------------------------------------------------- features */}
-        <section className="border-t border-white/6 px-6 py-24" aria-labelledby="features">
+        <section className="kn-landing-section border-t border-white/6 px-6 py-24" aria-labelledby="features">
           <div className="mx-auto max-w-6xl">
             <h2 id="features" className="sw-label scroll-mt-24">
               <Sparkles className="size-3.5" aria-hidden />
@@ -128,7 +123,7 @@ export default function Home() {
 
             <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map(({ icon: Icon, title, body }) => (
-                <li key={title} className="sw-card sw-card-hover p-6">
+                <li key={title} className="kn-feature-row p-6">
                   <span className="mb-5 grid size-10 place-items-center rounded-sm bg-accent-soft text-accent-2">
                     <Icon className="size-4.5" aria-hidden />
                   </span>
@@ -141,7 +136,7 @@ export default function Home() {
         </section>
 
         {/* ----------------------------------------------------------- steps */}
-        <section className="border-t border-white/6 px-6 py-24" aria-labelledby="how">
+        <section className="kn-landing-section border-t border-white/6 px-6 py-24" aria-labelledby="how">
           <div className="mx-auto max-w-6xl">
             <h2 id="how" className="sw-label scroll-mt-24">
               <Activity className="size-3.5" aria-hidden />
@@ -153,7 +148,7 @@ export default function Home() {
 
             <ol className="mt-12 grid gap-4 md:grid-cols-3">
               {STEPS.map(({ n, title, body }) => (
-                <li key={n} className="sw-card p-6">
+                <li key={n} className="kn-feature-row p-6">
                   <span className="font-mono text-xs font-bold tracking-[0.2em] text-accent-2">
                     {n}
                   </span>
@@ -166,7 +161,7 @@ export default function Home() {
         </section>
 
         {/* -------------------------------------------------------- open src */}
-        <section className="border-t border-white/6 px-6 py-24" aria-labelledby="open-source">
+        <section className="kn-landing-section border-t border-white/6 px-6 py-24" aria-labelledby="open-source">
           <div className="sw-panel mx-auto flex max-w-6xl flex-col gap-8 p-8 sm:p-12 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-xl">
               <h2 id="open-source" className="sw-label scroll-mt-24">
@@ -239,7 +234,7 @@ export default function Home() {
  */
 function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-white/6 bg-[color-mix(in_oklab,var(--bg)_72%,transparent)] backdrop-blur-xl">
+    <header className="kn-site-topbar sticky top-0 z-40 border-b border-white/6 bg-[color-mix(in_oklab,var(--bg)_72%,transparent)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:gap-4 sm:px-6">
         <Link
           href="/"
