@@ -165,3 +165,14 @@ A responsive entry to private listening rooms, synchronized YouTube video, share
 </p>
 
 AI DJ providers include Ollama, LM Studio, OpenCode, Gemini, OpenAI and Anthropic. See the [provider setup guide](docs/USER_GUIDE.md#lm-studio-and-opencode-ai-dj-providers).
+
+
+### Private Android and iPhone apps
+
+Konnectivity now includes Android APK and iOS IPA build scripts with an Admin, Host and Listener entry flow. Listeners paste a room invitation to join; hosts create groups; admins sign in to the existing console. No store publication is required. See [manual installation and mobile build instructions](mobile/README.md).
+
+
+<details>
+<summary>Focus lyrics on mobile</summary>
+<img src="docs/screenshots/10.06-mobile-focus-lyrics.png" alt="Konnectivity mobile Focus mode displaying synchronized lyrics without album artwork" width="300" />
+</details>

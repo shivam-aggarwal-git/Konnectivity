@@ -63,3 +63,11 @@ Added movable reactions that remain usable in Focus mode and avoid overlapping c
 - The public homepage has a new responsive listening-room preview and clearer room entry.
 - AI DJ settings include LM Studio and OpenCode, with editable base URLs. LM Studio uses its local OpenAI-compatible API. OpenCode uses its Console Chat Completions API and requires a compatible model and API key.
 - The administrator room list supports selecting all filtered rooms across pages. Selection alone does not delete rooms; the existing confirmation remains required.
+
+
+### Private mobile apps, video search and full emoji picker
+
+- Added private-install Android APK and unsigned arm64 iPhone IPA build scripts, with native Admin, Host and Listener entry screens. Listener invitations open the room automatically using the supplied name; existing approval and authentication remain in effect.
+- General YouTube video search is available under Videos, alongside direct YouTube URLs. People, Queue and bell counts use matching contrasting badges.
+- Emoji Mart supplies its bundled full catalog for chat, message reactions, floating reactions and song comments.
+- Approved listeners can upload optional personal YouTube resolver cookies. Credentials and cached downloads are isolated per member; removing personal cookies restores host fallback. This does not sign an embedded YouTube player into that account.

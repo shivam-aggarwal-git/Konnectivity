@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchSongs, searchAlbums, searchArtists } from "@/lib/ytmusic.mjs";
 
+import { searchYouTubeVideos } from "@/lib/links.mjs";
+
 export const dynamic = "force-dynamic";
 
 /**
@@ -15,7 +17,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const results =
-      type === "albums"
+      type === "videos"
+        ? await searchYouTubeVideos(q)
+        : type === "albums"
         ? await searchAlbums(q)
         : type === "artists"
           ? await searchArtists(q)

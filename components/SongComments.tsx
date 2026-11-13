@@ -1,7 +1,9 @@
 "use client";
+import EmojiPicker from "./EmojiPicker";
+import {createPortal} from "react-dom";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, MessageCircle, Pencil, Send, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Smile, ChevronDown, ChevronUp, MessageCircle, Pencil, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 import type { Socket } from "socket.io-client";
 import type { Participant, Track } from "@/lib/types";
 import AnimatedChatText from "./AnimatedChatText";
@@ -10,6 +12,10 @@ type Comment = {id:string;trackId:string;text:string;nick:string;at:number;edite
   canEdit?:boolean;likes:number;dislikes:number;myVote:number};
 
 export default function SongComments({socket, track, members, compact=false,onClose}: {onClose?:()=>void;compact?:boolean;socket:Socket|null;track:Track|null;members:Participant[]}) {
+  const [emojiOpen,setEmojiOpen]=useState(false);
+  const [emojiAnchor,setEmojiAnchor]=useState({left:8,top:8});
+  const emojiPanel=useRef<HTMLDivElement>(null),emojiTrigger=useRef<HTMLButtonElement>(null);
+  useEffect(()=>{if(!emojiOpen)return;const close=(event:PointerEvent)=>{if(!emojiPanel.current?.contains(event.target as Node)&&!emojiTrigger.current?.contains(event.target as Node))setEmojiOpen(false);};const escape=(event:KeyboardEvent)=>{if(event.key==="Escape")setEmojiOpen(false);};document.addEventListener("pointerdown",close,true);document.addEventListener("keydown",escape);return()=>{document.removeEventListener("pointerdown",close,true);document.removeEventListener("keydown",escape);};},[emojiOpen]);
   const [collapsed,setCollapsed]=useState(false);
   useEffect(()=>{const show=()=>setCollapsed(false);window.addEventListener("konnectivity:show-comments",show);return()=>window.removeEventListener("konnectivity:show-comments",show);},[]);
   const [comments,setComments]=useState<Comment[]>([]);
@@ -67,8 +73,9 @@ export default function SongComments({socket, track, members, compact=false,onCl
       <label className="song-comment-label"><span className={compact?"sr-only":""}>Your comment</span><textarea ref={input} rows={compact?1:2} aria-label={editing?"Edit song comment":"Comment on this song"} placeholder={editing?"Edit your comment…":"Leave a comment…"}
         maxLength={500} value={text} onChange={event=>{setText(event.target.value);findMention(event.target.value,event.target.selectionStart);setPosted(false);}}
         onClick={event=>findMention(text,event.currentTarget.selectionStart)} onKeyDown={event=>{if(mention){if(event.key==="Escape"){event.preventDefault();setMention(null);return;}if(suggestions.length&&["ArrowDown","ArrowUp","Enter","Tab"].includes(event.key)){event.preventDefault();if(event.key==="ArrowDown")setSelected(i=>(i+1)%suggestions.length);else if(event.key==="ArrowUp")setSelected(i=>(i+suggestions.length-1)%suggestions.length);else insertMention(suggestions[selected]||suggestions[0]);return;}}if(event.key==="Enter"&&!event.shiftKey&&!event.nativeEvent.isComposing){event.preventDefault();event.currentTarget.form?.requestSubmit();}}}/></label>
-      <button type="submit" aria-label={editing?"Save comment":"Post song comment"} disabled={busy||!text.trim()}><Send size={16}/><span>{busy?"Posting…":editing?"Save":"Post"}</span></button>
+      <button ref={emojiTrigger} type="button" aria-label="Choose comment emoji" aria-expanded={emojiOpen} onClick={()=>{const rect=emojiTrigger.current?.getBoundingClientRect();if(rect)setEmojiAnchor({left:Math.max(8,Math.min(window.innerWidth-328,rect.right-320)),top:Math.max(8,rect.top-Math.min(420,window.innerHeight*.5)-8)});setEmojiOpen(value=>!value);}}><Smile size={18}/></button><button type="submit" aria-label={editing?"Save comment":"Post song comment"} disabled={busy||!text.trim()}><Send size={16}/><span>{busy?"Posting…":editing?"Save":"Post"}</span></button>
     </form>
+    {emojiOpen&&createPortal(<div ref={emojiPanel} className="kn-comment-emoji-panel" style={{position:"fixed",left:emojiAnchor.left,top:emojiAnchor.top,zIndex:2147483000}}><EmojiPicker onSelect={emoji=>{const start=input.current?.selectionStart??text.length;const end=input.current?.selectionEnd??start;setText(text.slice(0,start)+emoji+text.slice(end));setEmojiOpen(false);requestAnimationFrame(()=>{input.current?.focus();input.current?.setSelectionRange(start+emoji.length,start+emoji.length);});}}/></div>,document.querySelector(".kn-expanded-player")||document.body)}
     {editing&&<button type="button" className="mt-2 text-xs underline" onClick={()=>{setEditing(null);setText("");}}>Cancel edit</button>}
     {posted&&<p role="status" className="text-sm text-success">Comment posted to the room.</p>}
     {error&&<p role="alert">{error}</p>}

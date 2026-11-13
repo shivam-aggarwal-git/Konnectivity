@@ -105,3 +105,24 @@ turnserver.conf
 # Original, synthesized UI notification tones (not personal music)
 !/public/sounds/message.mp3
 !/public/sounds/call.mp3
+
+# Native mobile build output and local SDK/signing configuration
+mobile/artifacts/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/build/
+mobile/ios/DerivedData/
+*.xcarchive/
+*.ipa
+*.apk
+*.keystore
+*.jks
+*.xcuserstate
+**/xcuserdata/
+!mobile/ios/Konnectivity/Assets.xcassets/AppIcon.appiconset/*.png
+!mobile/android/app/src/main/res/mipmap-*/ic_launcher.png
+
+!mobile/ios/Konnectivity/Icon*.png
+
+!lib/member-cookies-http.mjs
+!components/PersonalCookies.tsx

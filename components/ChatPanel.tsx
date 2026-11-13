@@ -1,4 +1,5 @@
 "use client";
+import EmojiPicker from "./EmojiPicker";
 
 import { memo, useEffect, useRef, useState } from "react";
 import { MoreHorizontal, Download, Film, ImagePlus, Images, Lock, Plus, Reply, Pencil, Search, Video, MapPin, X, MessageSquare, Send, Smile, Maximize2, Minimize2, Zap, Phone, Users } from "lucide-react";
@@ -28,7 +29,6 @@ const GifPicker = dynamic(() => import("./GifPicker"), { ssr: false });
  * the avatar and name appear once, not on every line.
  */
 
-const QUICK_EMOJI = ["😂", "🔥", "❤️", "🎉", "😮", "🙌", "😅", "🎧"];
 const GROUP_WINDOW_MS = 5 * 60 * 1000;
 
 function clock(ts: number) {
@@ -413,24 +413,7 @@ function ChatPanel({
           </div>
         )}
 
-        {pickerOpen && (
-          <div ref={emojiPanel} className="sw-fade-in mb-2 flex flex-wrap gap-1 rounded-md border border-white/8 bg-white/[0.03] p-2">
-            {QUICK_EMOJI.map((e) => (
-              <button
-                key={e}
-                type="button"
-                onClick={() => {
-                  setText((t) => t + e);
-                  inputRef.current?.focus();
-                }}
-                className="grid size-8 place-items-center rounded-full text-base transition-transform duration-200 ease-[var(--ease)] hover:scale-125 hover:bg-white/10 active:scale-90"
-                aria-label={`Insert ${e}`}
-              >
-                {e}
-              </button>
-            ))}
-          </div>
-        )}
+        {pickerOpen && <div ref={emojiPanel} className="kn-chat-emoji-panel"><EmojiPicker onSelect={emoji => { setText(value => value + emoji); inputRef.current?.focus(); }}/></div>}
 
         </div>
         {!muted&&(optionsOpen||recording)&&<div ref={optionsPanel} className="kn-chat-options" aria-label="Message options">
@@ -610,7 +593,7 @@ function Bubble({ mediaQuery, onMediaLoad, onOpenPhoto,
           {onReact&&<button type="button" aria-label="React to message" aria-expanded={reactionsOpen} onClick={()=>setReactionsOpen(!reactionsOpen)}><Smile size={14}/></button>}
           {msg.reactions?.filter(item=>item.count>0).map(item=><button type="button" key={item.emoji} onClick={()=>onReact?.(item.emoji)} disabled={!onReact}>{item.emoji} {item.count}</button>)}
         </div>}
-        {reactionsOpen&&<div className="flex flex-wrap gap-2 py-1">{["❤️","😂","🔥","🙌","🥰","😮","👏","🎧"].map(emoji=><button key={emoji} type="button" aria-label={`React ${emoji}`} onClick={()=>{onReact?.(emoji);setReactionsOpen(false);}}>{emoji}</button>)}</div>}
+        {reactionsOpen&&<div className="kn-message-emoji-panel"><EmojiPicker onSelect={emoji=>{onReact?.(emoji);setReactionsOpen(false);}}/></div>}
         {own&&Boolean(readers?.length)&&<span className="mt-1 text-right text-[11px] text-muted" title={readers?.join(", ")}>
           {readers?.length===1?`Read by ${readers[0]}`:`Read by ${readers?.length}`}
         </span>}

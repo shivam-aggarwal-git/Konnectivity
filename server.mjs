@@ -1,3 +1,4 @@
+import {handleMemberCookies} from "./lib/member-cookies-http.mjs";
 import { flushStore } from "./lib/store.mjs";
 import {handleRoomAdmin} from "./lib/room-admin-http.mjs";
 import {handleChatVideo} from "./lib/chat-video.mjs";
@@ -48,6 +49,7 @@ const server = createServer(async (req, res) => {
     } catch { res.writeHead(404); res.end(); }
     return;
   }
+  if(req.url?.split("?")[0]==="/api/member-cookies"){await handleMemberCookies(req,res,getRoom);return;}
   if(req.url?.startsWith("/api/room-admin/")){await handleRoomAdmin(req,res,io);return;}
   if(req.url?.startsWith("/chat-video")){await handleChatVideo(req,res,getRoom);return;}
   if (req.url?.startsWith("/chat-media")) { handleChatMedia(req, res, getRoom); return; }

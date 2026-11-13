@@ -2,7 +2,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Smile} from 'lucide-react';
-import {ReactionBar} from './BottomPlayer';
+import EmojiPicker from './EmojiPicker';
 
 /** A movable control stays above the focus player, but yields to other controls. */
 export default function FloatingReactions({onReact}:{onReact:(emoji:string)=>void}){
@@ -33,7 +33,7 @@ export default function FloatingReactions({onReact}:{onReact:(emoji:string)=>voi
  useEffect(()=>{if(!open)return;const dismiss=(e:PointerEvent)=>{if(!root.current?.contains(e.target as Node))setOpen(false);};const escape=(e:KeyboardEvent)=>{if(e.key==='Escape')setOpen(false);};document.addEventListener('pointerdown',dismiss,true);window.addEventListener('keydown',escape);return()=>{document.removeEventListener('pointerdown',dismiss,true);window.removeEventListener('keydown',escape);};},[open]);
  if(!mounted)return null;
  return createPortal(<div ref={root} className="kn-floating-reactions" data-covered={covered} aria-label="Floating room reactions" style={{transform:`translate3d(${position.current.x}px,${position.current.y}px,0)`}}>
-  {open&&!covered&&<ReactionBar className={`kn-floating-reaction-options ${position.current.y<300?"kn-floating-menu-down":""}`} onReact={emoji=>{onReact(emoji);setOpen(false);}}/>}
+  {open&&!covered&&<div className="kn-floating-emoji-panel" style={{...(position.current.y < window.innerHeight / 2 ? {top:50}:{bottom:50}),...(position.current.x < window.innerWidth / 2 ? {left:0}:{right:0})}}><EmojiPicker onSelect={emoji=>{onReact(emoji);setOpen(false);}}/></div>}
   <button ref={button} type="button" aria-label="Reactions" title="Reactions · drag to move, or use arrow keys" aria-expanded={open} tabIndex={covered?-1:0}
    onPointerDown={e=>{if(e.button!==0)return;drag.current={x:e.clientX,y:e.clientY,left:position.current.x,top:position.current.y,moved:false};e.currentTarget.setPointerCapture(e.pointerId);}}
    onPointerMove={e=>{const d=drag.current;if(!d)return;const dx=e.clientX-d.x,dy=e.clientY-d.y;if(Math.abs(dx)+Math.abs(dy)>6)d.moved=true;if(!d.moved)return;position.current={x:Math.max(8,Math.min(window.innerWidth-52,d.left+dx)),y:Math.max(8,Math.min((window.visualViewport?.height||window.innerHeight)-52,d.top+dy))};if(root.current)root.current.style.transform=`translate3d(${position.current.x}px,${position.current.y}px,0)`;}}

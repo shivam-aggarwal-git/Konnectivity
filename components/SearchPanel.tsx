@@ -4,6 +4,7 @@ import type { Playlist } from "@/lib/types";
 
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import {
+  Video,
   ArrowLeft,
   RefreshCw,
   Check,
@@ -48,6 +49,7 @@ const DEBOUNCE_MS = 350;
 
 const TABS: { id: SearchType; label: string; icon: React.ElementType }[] = [
   { id: "songs", label: "Songs", icon: Music },
+  { id: "videos", label: "Videos", icon: Video },
   { id: "albums", label: "Albums", icon: Disc },
   { id: "artists", label: "Artists", icon: Mic2 },
 ];
@@ -298,7 +300,7 @@ function SearchPanel({
   /** The rows the arrow keys walk, whatever the current tab is showing. */
   const rows = useMemo(() => {
     if(q.trim().length<2 && !album){ const offset=library.length?(refresh*4)%library.length:0;const local=source==='youtube'?[]:[...library.slice(offset),...library.slice(0,offset)].slice(0,source==='local'?8:4);return [...local,...(source==='local'?[]:results.slice(0,6))]; }
-    if (source === "youtube") return album ? album.tracks : results;
+    if (source === "youtube" || tab === "videos") return album ? album.tracks : results;
     if (album) return album.tracks;
     if (tab !== "songs" || q.trim().length < 2 || isLink) return results;
     const term = q.trim().toLowerCase();
@@ -474,7 +476,7 @@ function SearchPanel({
           <EmptyState
             icon={<Search className="size-5" />}
             title={source === "local" ? "Search your local library" : "Search music"}
-            hint={source === "local" ? "Find uploaded songs by title or artist. Switch to YouTube to search online." : "Search songs, albums and artists, or paste a YouTube or Spotify link."}
+            hint={source === "local" ? "Find uploaded songs by title or artist. Switch to YouTube to search online." : "Search songs, videos, albums and artists, or paste a YouTube or Spotify URL."}
           />
         </li>
       )}
@@ -581,7 +583,7 @@ function SearchPanel({
         }}
         onFocus={() => {setOpen(true);if(!q.trim())setRefresh(n=>n+1);}} onClick={()=>{if(!q.trim())setRefresh(n=>n+1);}}
         onKeyDown={onFieldKey}
-        placeholder={source === "local" ? "Search local library…" : source === "youtube" ? "Search YouTube Music…" : "Search local songs or YouTube…"}
+        placeholder={source === "local" ? "Search local library…" : source === "youtube" ? "Search YouTube music or videos…" : "Search local songs or YouTube…"}
         aria-label="Search music"
         role="combobox"
         aria-expanded={showResults}

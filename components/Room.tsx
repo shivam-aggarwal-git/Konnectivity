@@ -1,6 +1,7 @@
 "use client";
 
 import FeedbackToast from "./FeedbackToast";
+import PersonalCookies from "./PersonalCookies";
 import RoomCookies from "./RoomCookies";
 import Lyrics from "./Lyrics";
 import RoomGuide from "./RoomGuide";
@@ -134,7 +135,10 @@ type CenterView = "queue" | "history" | "stats";
 type SidePane = "chat" | "activity" | "people";
 
 export default function Room({ code, asHost, requestingJoin }: { code: string; asHost: boolean; requestingJoin: boolean }) {
+  const [personalCookieRevision,setPersonalCookieRevision]=useState(0);
   const [nick, setNick] = useState("");
+  const nativeAutoJoin = useRef(false);
+  const nativeJoinAttempted = useRef(false);
   const [messageComposerOpen,setMessageComposerOpen]=useState(false);
   const [lyricsOpen,setLyricsOpen]=useState(false);
   const [commentsOpen,setCommentsOpen]=useState(false);
@@ -433,7 +437,10 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("sw_nick") : "";
-    if (saved) setNick(saved);
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    const appName = fragment.get("app-name")?.trim().slice(0,24);
+    nativeAutoJoin.current = fragment.get("app-join") === "1" && Boolean(appName);
+    if (appName || saved) setNick(appName || saved || "");
   }, []);
 
   // Apply volume to the *active* element whenever it, the track, or which
@@ -715,6 +722,16 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nick, code, asHost]);
 
+  useEffect(() => {
+    if (!nativeAutoJoin.current || nativeJoinAttempted.current || !nick.trim()) return;
+    nativeJoinAttempted.current = true;
+    const fragment = new URLSearchParams(window.location.hash.slice(1));
+    fragment.delete("app-name"); fragment.delete("app-join");
+    const hash = fragment.toString();
+    window.history.replaceState(null, "", window.location.pathname + window.location.search + (hash ? `#${hash}` : ""));
+    void doJoin();
+  }, [nick, doJoin]);
+
   // smooth position ticker for the progress bar
   useEffect(() => {
     const id = setInterval(() => {
@@ -748,7 +765,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   const retryRef = useRef(0);
   const currentAudioUrl = joined && !roomEnded && !videoActive && !preparing && current &&
     current.mediaType !== "video" && uploadToken
-    ? `/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`
+    ? `/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}&account=${personalCookieRevision}`
     : undefined;
   const localAudioUrl = usePausedAudioDownload(currentAudioUrl, !isPlaying, buffering && !needsGesture,
     deviceBuffer.some(([start, end]) => start <= .05 && end >= (current?.duration || Infinity) - .1));
@@ -772,7 +789,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     if(!active)return;
     if(current.mediaType==="video"&&current.hasAudio===false){stopMediaSlots(active,inactive);setBuffering(false);reportReady(true,syncKey);return;}
     const localUpload=current.videoId.startsWith('local_');
-    const wantSrc = `/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
+    const wantSrc = `/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}&account=${personalCookieRevision}`;
 
     const downloaded = localAudioUrl && active.src === localAudioUrl;
     const adoptDownload = localAudioUrl && (!isPlaying || !audioPrimed.current) && !downloaded;
@@ -898,7 +915,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
         if (next && !next.videoId.startsWith("local_") && inactive && next.status?.state === "cached") {
           crossfadeStartedRef.current = true;
           crossfadingRef.current = true;
-          inactive.src = `/audio/${next.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}`;
+          inactive.src = `/audio/${next.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}&account=${personalCookieRevision}`;
           inactive.currentTime = 0;
           inactive.playbackRate = 1;
           inactive.volume = 0;
@@ -976,7 +993,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       window.removeEventListener("pageshow", onVisibility);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [joined,roomEnded,current?.videoId, isPlaying, preparing, activeSlot, shuffle, repeat, videoActive, syncKey, syncHolding, resumeAt, nativeVolumeOnly, needsGesture, code, uploadToken, localAudioUrl, updateDeviceBuffer]);
+  }, [joined,roomEnded,current?.videoId, isPlaying, preparing, activeSlot, shuffle, repeat, videoActive, syncKey, syncHolding, resumeAt, nativeVolumeOnly, needsGesture, code, uploadToken, localAudioUrl, personalCookieRevision, updateDeviceBuffer]);
 
   const renameMe = useCallback(async (name: string, targetId?:string) => {
     const socket = socketRef.current;
@@ -1378,6 +1395,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
 
   const renderChatNotice=()=>unread>dismissedUnread&&latestChat?<ChatNotice count={unread} sender={latestChat.nick} preview={latestChat.text} onOpen={openChatNotice} onDismiss={()=>setDismissedUnread(unread)}/>:null;
 
+  const focusLyrics = sceneOnly && lyricsOpen && !commentsOpen && current && !videoActive ? <section className="kn-focus-lyrics" aria-label="Focus lyrics"><Lyrics track={current} position={position} playing={isPlaying&&!syncHolding&&!preparing}/></section> : null;
   const renderPlayer = (expanded=false) => (
     <div className={videoActive&&videoControlsHidden?"kn-transport-hidden":"contents"}><BottomPlayer lyricsVisible={lyricsOpen&&!commentsOpen}
         expanded={expanded}
@@ -1409,7 +1427,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
         onShuffle={() => {emit(EVENTS.CONTROL_SHUFFLE);setNotice(shuffle?"Shuffle off":"Shuffle on");}}
         onRepeat={() => {emit(EVENTS.CONTROL_REPEAT);setNotice(repeat==="off"?"Repeat this song":repeat==="one"?"Repeat the queue":"Repeat off");}}
         onReact={react}
-        onLyrics={()=>{setCommentsOpen(false);setLyricsOpen(value=>!value);setSceneOnly(false);if(!playerExpanded)setTab("now");}}
+        onLyrics={()=>{setCommentsOpen(false);setLyricsOpen(value=>!value);if(!playerExpanded)setTab("now");}}
         castSupported={casting.supported && (!videoActive || localVideo)}
         castConnected={casting.connected}
         onCast={casting.prompt}
@@ -1429,7 +1447,8 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
             {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
         {videoActive&&current&&(commentsOpen||lyricsOpen)&&<section className="kn-video-detail-panel" aria-label={commentsOpen?"Video comments":"Video lyrics"}>{commentsOpen?<SongComments compact onClose={()=>setCommentsOpen(false)} socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:<Lyrics track={current} position={position} playing={isPlaying&&!syncHolding&&!preparing}/>}</section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
-            <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
+            <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&!(lyricsOpen&&!commentsOpen)&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
+          {focusLyrics}
           <PlaybackBoundary key={`expanded:${current?.videoId||"empty"}`}><NowPlaying lyricsVisible={lyricsOpen&&!commentsOpen} mediaQuery={mediaQuery} comments={current&&commentsOpen?<SongComments onClose={()=>setCommentsOpen(false)} compact socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:undefined} current={current} isPlaying={isPlaying&&!syncHolding} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className={cn("kn-expanded-artwork flex-1",sceneOnly&&"!hidden")}/></PlaybackBoundary>
           </div>
           <div className="expanded-room-actions" aria-label="Player messages and emoji reactions"><button type="button" onClick={()=>setMessageComposerOpen(true)}><MessageSquare size={17}/>Broadcast</button><button type="button" aria-label="Song comments and tags" onClick={openSongComments}><span className="song-comments-at" aria-hidden="true">@</span><span className="sr-only">Comments</span></button><ReactionBar onReact={react}/></div>
@@ -1528,7 +1547,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       {!adminSettingsMode?<nav className="settings-personal-options" aria-label="Settings sections"><AppearanceSettings onSaved={()=>{setNotice("Appearance saved for everyone.");}} onSave={patch=>new Promise((resolve,reject)=>{socketRef.current?.timeout(5000).emit(EVENTS.APPEARANCE_SET,patch,(err:any,result:any)=>err||result?.error?reject(Error(result?.error||"Could not save. Try again.")):(result?.appearance&&receiveRoomAppearance(result.appearance),resolve()));})} persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.videoId&&!current.videoId.startsWith("local_")?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:current?.art||current?.thumbnail} />
       <button type="button" onClick={()=>{setAdminSettingsMode(true);setSettingsSection("overview");}}><Users size={18}/>Room management<ArrowRight size={16}/></button>
       <label className="settings-check-row"><input type="checkbox" aria-label="Continuous play" checked={continuousPlay} disabled={!canControl} onChange={event=>roomAction("control:continuous-play",{enabled:event.target.checked}).then(()=>setNotice(event.target.checked?"Continuous play on":"Continuous play off")).catch(error=>setNotice(error.message))}/><span><strong>Continuous play</strong><small>Play a recommended song when the queue ends. Shuffle controls queue order separately.</small></span></label>
-      <button type="button" disabled={!canControl} onClick={()=>setResetRequested(true)}><RotateCcw size={18}/>Reset appearance & playback</button>
+      <PersonalCookies code={code} token={uploadToken} onChanged={()=>setPersonalCookieRevision(value=>value+1)}/><button type="button" disabled={!canControl} onClick={()=>setResetRequested(true)}><RotateCcw size={18}/>Reset appearance & playback</button>
       <button type="button" onClick={()=>setSoundOpen(true)}><SlidersHorizontal size={18}/>Sound & playback<ArrowRight size={16}/></button>
       <button type="button" onClick={()=>{setAdminSettingsMode(true);setSettingsSection("dj");}}><Sparkles size={18}/>AI DJ<ArrowRight size={16}/></button>
       <button type="button" onClick={()=>setHelpOpen(true)}><Keyboard size={18}/>Keyboard shortcuts<ArrowRight size={16}/></button>
@@ -1650,11 +1669,12 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
         {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
         {videoActive&&current&&(commentsOpen||lyricsOpen)&&<section className="kn-video-detail-panel" aria-label={commentsOpen?"Video comments":"Video lyrics"}>{commentsOpen?<SongComments compact onClose={()=>setCommentsOpen(false)} socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:<Lyrics track={current} position={position} playing={isPlaying&&!syncHolding&&!preparing}/>}</section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
-        <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
+        <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&!(lyricsOpen&&!commentsOpen)&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
         <div className="sw-love-stars" aria-hidden><i>♡</i><i>✦</i><i>♡</i><i>✧</i><i>♡</i></div>
         {/* The bottom padding on phones is the reaction pill's safe area: it
             floats over this region, and without the gap it sits on top of
             whatever the panel ends with. */}
+        {focusLyrics}
         <div className={cn(sceneOnly&&"!hidden","studio-stage-grid kn-listening-layout flex min-h-0 w-full flex-1 flex-col")}>
           {/* ── column 1: the hero ── */}
           <PlaybackBoundary key={`details:${current?.videoId||"empty"}`}><NowPlaying

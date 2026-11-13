@@ -832,3 +832,28 @@ body:has(.kn-landing) .kn-site-topbar nav a:last-child { border-color:#ffffff30;
 .studio-home.kn-landing .kn-landing-section .sw-panel { background:#1b2a40; border-color:#ffffff18; color:#f4f0ed; }
 .studio-home.kn-landing .kn-landing-section .sw-panel .sw-card { background:#122036; border-color:#ffffff18; }
 .studio-home.kn-landing .kn-landing-section pre { color:#e4e9f2; }
+
+/* Matching Queue and notification count placement and contrast. */
+.studio-room .kn-bell { position:relative; overflow:visible; }
+.studio-room .kn-bell > b { position:absolute; top:0; right:0; min-width:17px; height:17px; display:grid; place-items:center; padding:0 4px; border-radius:999px; font-size:11px; line-height:17px; font-weight:750; background:var(--accent); color:var(--primary-foreground); box-shadow:0 0 0 2px var(--bg); }
+
+.studio-header-tools .kn-people-controls > button { position:relative; flex-direction:row; }
+.studio-header-tools .kn-people-controls > button .people-active-count { position:absolute!important; top:0; right:0; display:grid!important; place-items:center; min-width:17px; height:17px; padding:0 4px; border-radius:999px; background:var(--accent); color:var(--primary-foreground); box-shadow:0 0 0 2px var(--bg); font-size:11px; line-height:17px; }
+.kn-emoji-picker { width:min(320px,calc(100vw - 40px)); max-height:min(420px,50dvh); overflow:auto; border-radius:14px; background:var(--popover); }
+.kn-emoji-picker em-emoji-picker { width:100%; max-height:min(420px,50dvh); --border-radius:14px; }
+.kn-chat-emoji-panel,.kn-message-emoji-panel { max-width:100%; overflow:auto; }
+.kn-message-emoji-panel { align-self:flex-start; }
+.kn-floating-emoji-panel { position:absolute; z-index:1; border:1px solid var(--input); border-radius:15px; box-shadow:0 12px 36px #0005; }
+.kn-personal-cookies { padding:14px 0; border-bottom:1px solid var(--input); }
+.kn-personal-cookies > summary { cursor:pointer; font-size:15px; font-weight:600; }
+.kn-personal-cookies .space-y-3 { font-size:14px; line-height:1.6; }
+.kn-personal-cookies button { display:inline-flex!important; width:auto!important; margin:4px 8px 4px 0; }
+.kn-song-comments form textarea { min-width:0; flex:1; }
+.kn-song-comments form button { flex-shrink:0; }
+.kn-comment-emoji-panel { margin-top:8px; max-width:100%; }
+
+.kn-focus-lyrics { position:relative; z-index:2; display:flex; flex-direction:column; width:min(100%,800px); flex:1; min-height:0; align-self:center; padding:20px clamp(16px,4vw,40px); background:color-mix(in srgb,var(--bg) 72%,transparent); }
+.kn-focus-lyrics > div { flex:1; min-height:0; }
+.kn-focus-lyrics ol { padding-block:25%; }
+.kn-focus-lyrics li { font-size:clamp(20px,3vw,32px); }
+.kn-song-comments-inline form { grid-template-columns:32px minmax(0,1fr) 36px 40px; }

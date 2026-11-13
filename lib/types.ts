@@ -146,7 +146,7 @@ export type Repeat = "off" | "one" | "all";
 
 /* --- search ------------------------------------------------------------- */
 
-export type SearchType = "songs" | "albums" | "artists";
+export type SearchType = "songs" | "videos" | "albums" | "artists";
 
 export type AlbumResult = {
   albumId: string;
