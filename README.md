@@ -16,9 +16,9 @@ Actual application screens captured at 390 × 844 using an isolated demonstratio
 
 | Mobile listening room | Organized room settings |
 | --- | --- |
-| ![Konnectivity 10.06 mobile music player with inline lyrics and persistent playback controls](docs/screenshots/10.06-mobile-player.png) | ![Konnectivity 10.06 mobile Settings with appearance, room management and saved preferences](docs/screenshots/10.06-mobile-settings.png) |
+| ![Konnectivity 10.06 mobile music player with inline lyrics and persistent playback controls](docs/screenshots/10.06-mobile-listening-room.png) | ![Konnectivity 10.06 mobile Settings with appearance, room management and saved preferences](docs/screenshots/10.06-mobile-settings-navigation.png) |
 
-See the [screenshot gallery](docs/SCREENSHOTS.md) for capture details.
+See the [updated mobile screenshot gallery](docs/SCREENSHOTS.md) for room management, chat, voice notes, polls and plans.
 
 ## What is new in 10.06?
 

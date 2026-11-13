@@ -1,11 +1,23 @@
-# Konnectivity 10.06 Mobile Screenshots
+# Konnectivity 10.06 Mobile Screenshots: Music Rooms, Chat and Settings
 
-Actual 390 × 844 application captures from an isolated test room with fictional verification content. These show the player and final Settings navigation; they are not physical-device performance certification.
+Fresh 390 × 844 captures of the current 10.06 interface, using an isolated test room. Fictional verification content is shown; no personal conversations or credentials are included.
 
-## Mobile player and inline lyrics
+## Mobile music listening room and shared playback
 
-![Mobile synchronized player with inline timed lyrics](screenshots/10.06-mobile-player.png)
+![Konnectivity 10.06 mobile music listening room and shared playback](screenshots/10.06-mobile-listening-room.png)
 
-## Mobile Settings
+## Mobile settings and appearance navigation
 
-![Mobile Settings with consistent appearance and notification rows](screenshots/10.06-mobile-settings.png)
+![Konnectivity 10.06 mobile settings and appearance navigation](screenshots/10.06-mobile-settings-navigation.png)
+
+## Room management, co-hosts and listener permissions
+
+![Konnectivity 10.06 room management, co-hosts and listener permissions](screenshots/10.06-mobile-room-management.png)
+
+## Live chat, voice notes and media recipients
+
+![Konnectivity 10.06 live chat, voice notes and media recipients](screenshots/10.06-mobile-chat-voice-notes.png)
+
+## Polls, plans and location sharing
+
+![Konnectivity 10.06 polls, plans and location sharing](screenshots/10.06-mobile-polls-plans.png)
