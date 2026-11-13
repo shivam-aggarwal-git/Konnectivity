@@ -37,7 +37,15 @@ export default function YouTubePlayer(props:Props) {
  useEffect(()=>{localReady.current=false;aligned.current=false;bufferSince.current=0;latest.current.onReadyChange(false,syncKey);},[syncKey]);
  useEffect(()=>{
   let disposed=false;ready.current=false;reported.current=false;setLoaded(false);setError('');setBlocked(false);
-  const element=document.createElement('div');mount.current?.replaceChildren(element);
+  // Set referrer policy before the first embed request. onReady is too late
+  // for YouTube client identification (error 153); never send room query tokens.
+  const element=document.createElement('iframe');
+  element.title=title || 'YouTube video';
+  element.referrerPolicy='strict-origin-when-cross-origin';
+  element.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
+  element.allowFullscreen=true;
+  element.src=`https://www.youtube.com/embed/${encodeURIComponent(videoId)}?enablejsapi=1&playsinline=1&controls=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`;
+  mount.current?.replaceChildren(element);
   loadApi().then(()=>{
    if(disposed||!window.YT)return;
    const p=new window.YT.Player(element,{videoId,host:'https://www.youtube.com',width:'100%',height:'100%',playerVars:{playsinline:1,controls:0,rel:0,origin:window.location.origin,enablejsapi:1},events:{

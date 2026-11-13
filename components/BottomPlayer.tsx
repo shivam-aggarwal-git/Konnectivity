@@ -107,6 +107,8 @@ export default function BottomPlayer({
   const cachePct = downloadPct ?? 0;
   const bufferedSeconds = bufferedRanges.reduce((sum, [start, end]) => sum + Math.max(0, Math.min(dur, end) - start), 0);
   const bufferedPercent = dur > 0 ? Math.min(100, (dur-bufferedSeconds<.5?100:Math.floor(bufferedSeconds / dur * 100))) : 0;
+  const ahead = Math.max(0, (bufferedRanges.find(([start,end])=>start<=position+.25&&end>position)?.[1] ?? position)-position);
+  const bufferLabel = buffering ? "Waiting for playback…" : ahead > 1 ? `${fmt(ahead)} ready ahead` : "Loading media…";
   const loading = preparing || buffering;
   const canSeek = isHost && dur > 0 && !preparing;
 
@@ -252,7 +254,7 @@ export default function BottomPlayer({
               {fmt(dur)}
             </span>
           </div>
-          {current && !preparing && <span className="kn-buffer-label" aria-label={`Buffered ${bufferedPercent} percent on this device`}>{bufferedPercent}% buffered</span>}
+          {current && !preparing && <span className="kn-buffer-label" title="Media currently buffered ahead on this device; playback can also wait for decoding or room synchronization." aria-label={bufferLabel}>{bufferLabel}</span>}
         </div>
 
         {/* ── right: reactions, cast and volume ── */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, Pencil, Send, ThumbsDown, ThumbsUp } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageCircle, Pencil, Send, ThumbsDown, ThumbsUp } from "lucide-react";
 import type { Socket } from "socket.io-client";
 import type { Participant, Track } from "@/lib/types";
 import AnimatedChatText from "./AnimatedChatText";
@@ -10,6 +10,8 @@ type Comment = {id:string;trackId:string;text:string;nick:string;at:number;edite
   canEdit?:boolean;likes:number;dislikes:number;myVote:number};
 
 export default function SongComments({socket, track, members, compact=false}: {compact?:boolean;socket:Socket|null;track:Track|null;members:Participant[]}) {
+  const [collapsed,setCollapsed]=useState(false);
+  useEffect(()=>{const show=()=>setCollapsed(false);window.addEventListener("konnectivity:show-comments",show);return()=>window.removeEventListener("konnectivity:show-comments",show);},[]);
   const [comments,setComments]=useState<Comment[]>([]);
   const [text,setText]=useState("");
   const [tags,setTags]=useState<string[]>([]);
@@ -44,7 +46,8 @@ export default function SongComments({socket, track, members, compact=false}: {c
     finally { setBusy(false); }
   }
   return <section className={`kn-song-comments ${compact?"kn-song-comments-inline":""}`} id={compact?"kn-song-comments-inline":"kn-song-comments"}>
-    <h3><MessageCircle size={16}/>Song comments <span>{shown.length}</span></h3>
+    <h3><MessageCircle size={16}/>Song comments <span>{shown.length}</span><button type="button" aria-label={collapsed?"Show song comments":"Hide song comments"} aria-expanded={!collapsed} onClick={()=>setCollapsed(v=>!v)}>{collapsed?<ChevronDown size={18}/>:<ChevronUp size={18}/>}</button></h3>
+    <div className="kn-comment-content" hidden={collapsed}>
     {!compact&&<p>About “{track.title}” · shared with this room.</p>}
     <ul aria-label="Song comments">{shown.map(comment=><li key={comment.id}>
       <strong>{comment.nick}</strong><time>{new Date(comment.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</time>
@@ -69,5 +72,6 @@ export default function SongComments({socket, track, members, compact=false}: {c
     {editing&&<button type="button" className="mt-2 text-xs underline" onClick={()=>{setEditing(null);setText("");}}>Cancel edit</button>}
     {posted&&<p role="status" className="text-sm text-success">Comment posted to the room.</p>}
     {error&&<p role="alert">{error}</p>}
+    </div>
   </section>;
 }

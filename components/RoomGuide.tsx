@@ -12,6 +12,12 @@ const steps = [
   ["Chat and call", "Open Chat and tap + to attach photos, GIFs, video, voice notes, or your device location. Use the phone icon for calls and Polls & Plans to make decisions together."],
   ["Name the room and set the mood", "Use Room name to name this group. The host can tap Mood to set the atmosphere, or Buzz to notify one listener or everyone."],
   ["Add your profile picture", "Tap Profile, then Upload photo or GIF. Add a status and tap Save profile. The room can see your picture and status."],
+  ["Comments and listener tags", "Tap Comments below the artwork. Type @ to choose a listener inline. Use the chevron beside Song comments to hide or restore the thread; your draft stays in place."],
+  ["Lyrics and reactions", "Tap Lyrics in the player to read along in the room. Use the smile button at the right for reactions, even with artwork hidden. The heart likes the current song."],
+  ["Notifications", "The bell opens room notifications. Mark them read or Clear all to remove them from this device. New activity will still appear."],
+  ["Polls and plans", "Open Polls & Plans from the bottom tabs. Delete individual poll options, share a meeting location, or expand the panel. Leaving this tab keeps your draft; use Clear draft to discard it."],
+  ["Room settings", "Open the menu, then Room management for hosts, listener permissions, device sync, room name, avatar and integrations. Nested settings have a Back button. Your personal profile stays under your avatar."],
+  ["Playback readiness", "The timeline shows the media buffered on this device. Ready ahead measures the playable range after your current position, not a guarantee against network, decoding or synchronization waits."],
   ["Invite someone", "Use Share to copy the invitation. The host can approve join requests in People. Replay this guide from Settings."],
 ] as const;
 

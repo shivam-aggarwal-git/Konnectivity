@@ -628,3 +628,53 @@ body:has(.kn-expanded-player) .kn-message-restore { visibility:visible; }
 @media(max-width:450px){.studio-room .room-media-toolbar { grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) 32px 32px; gap:3px; padding-inline:8px; }.studio-room .room-media-toolbar .room-media-modes { min-width:0; }.room-media-toolbar button { gap:4px; font-size:11px; }}
 .chat-heading-actions .kn-media-recipients > summary::before,.chat-heading-actions .kn-media-recipients > summary::after { content:none!important; display:none!important; }
 .kn-media-recipients > .kn-recipient-menu { padding:8px; text-align:left; }
+
+/* Keep room navigation outside transient panels on narrow, dynamic viewports. */
+.kn-search-results { position:fixed!important; left:max(12px,env(safe-area-inset-left)); right:max(12px,env(safe-area-inset-right)); margin:0!important; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.kn-search-results > div:last-child { display:flex; flex-direction:column; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+.kn-search-results [role=listbox] { max-height:none; flex:1; min-height:0; }
+.kn-search-results-heading { display:flex; align-items:center; justify-content:space-between; padding:2px 8px 6px; flex:none; }
+.kn-search-results-heading button,.kn-song-comments h3 > button { display:grid; place-items:center; width:40px; height:40px; flex:none; border-radius:10px; background:var(--field); color:var(--ink); }
+.kn-comment-content:not([hidden]) { display:flex; flex-direction:column; min-height:0; flex:1; gap:6px; }
+.kn-comment-content[hidden] { display:none!important; }
+.kn-comment-content > ul { overflow-y:auto; overscroll-behavior:contain; min-height:0; flex:1; }
+.kn-comment-content > form { flex:none; }
+.kn-song-comments h3 > span { margin-left:auto; }
+.kn-song-comments h3 > button { width:32px; height:32px; }
+.kn-notification-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.kn-notification-actions > button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; flex:1; }
+[data-room-chat] .kn-chat-options { overscroll-behavior:contain; scrollbar-width:thin; touch-action:pan-y; }
+[data-room-chat] .kn-chat-options > * { flex-shrink:0; }
+.studio-room .sw-reaction-dock { display:flex!important; position:absolute; top:50%; bottom:auto; right:8px; z-index:45; }
+.studio-room .sw-reaction-dock-toggle { color:var(--accent-2); background:var(--bg); border-color:var(--input); width:40px; height:40px; }
+.studio-room .sw-side-reactions { background:var(--bg); border-color:var(--input); }
+.studio-room .room-media-toolbar { display:flex!important; align-items:center; gap:6px; overflow-x:auto; overflow-y:hidden; scrollbar-width:thin; flex-shrink:0; }
+.studio-room .room-media-toolbar > * { flex-shrink:0; }
+.studio-room .room-media-toolbar > button[aria-label='Change room mood'] { width:auto; max-width:none; }
+.studio-room .room-media-toolbar > button[aria-label='Change room mood'] span:last-child { max-width:none; overflow:visible; white-space:nowrap; }
+.studio-room .room-media-toolbar .room-media-mode { display:flex; flex-shrink:0; }
+.studio-room .room-media-toolbar button { min-height:40px; }
+.studio-room .room-media-toolbar > .room-chat-toggle { margin-left:auto; }
+@media(max-width:767px){
+ .studio-room main[data-view='chat'] > .room-media-toolbar { display:flex!important; }
+ .studio-room .room-media-toolbar { padding:6px 10px; }
+ .studio-room .room-media-toolbar button { padding-inline:8px; font-size:12px; }
+ .studio-room .kn-player-bar { backdrop-filter:none; }
+ .studio-room .kn-now-card { backdrop-filter:none!important; }
+}
+@media(min-width:768px){.kn-search-results { left:max(280px,calc((100vw - 1100px)/2)); right:20px; }}
+.studio-room .room-media-toolbar .room-media-mode { width:auto; }
+.studio-room .room-media-toolbar > button,.studio-room .room-media-toolbar .room-media-mode button { width:auto; min-width:40px; }
+.studio-room .room-media-toolbar .room-media-mode button { padding-inline:8px; }
+@media(min-width:768px){.studio-room .room-media-toolbar > button:not(.room-chat-toggle):not(.room-focus-toggle),.studio-room .room-media-toolbar .room-media-mode { flex:1; }.studio-room .room-media-toolbar .room-media-mode button { flex:1; }}
+.kn-comment-content > ul:empty { display:none; }
+@media(max-width:767px){
+ .studio-room .room-media-toolbar { gap:4px; }
+ .studio-room .room-media-toolbar .room-media-mode button { flex-direction:column; width:44px; min-width:44px; padding:3px!important; gap:2px; font-size:10px; }
+ .studio-room .room-media-toolbar > button { flex-direction:column; padding:3px 5px; gap:2px; min-width:36px; font-size:10px; }
+ .studio-room .room-media-toolbar > button[aria-label='Open media library'] { min-width:48px; }
+ .studio-room .room-media-toolbar > button[aria-label='Change room mood'] { flex:1; min-width:max-content; }
+ .studio-room .room-media-toolbar > .room-chat-toggle { margin-left:0; }
+}
+.studio-room main[data-view='activities'] > .room-media-toolbar { display:flex!important; order:-1; }
+.room-activities-workspace .room-activities-content { overflow:visible; }

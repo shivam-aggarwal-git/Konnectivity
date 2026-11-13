@@ -367,6 +367,23 @@ function SearchPanel({
   };
 
   const showResults = variant === "panel" || open;
+  const [resultBounds,setResultBounds]=useState<{top:number;bottom:number}|null>(null);
+  useEffect(()=>{
+    if(!open||variant!=="overlay")return;
+    const measure=()=>{
+      const room=wrapRef.current?.closest('.studio-room');
+      const toolbar=room?.querySelector('.room-media-toolbar')?.getBoundingClientRect();
+      const header=wrapRef.current?.getBoundingClientRect();
+      const footer=room?.querySelector('.kn-player-bar')?.getBoundingClientRect();
+      const height=window.visualViewport?.height||window.innerHeight;
+      setResultBounds({top:Math.max(header?.bottom||0,toolbar?.bottom||0)+4,bottom:Math.max(8,height-(footer?.top||height)+4)});
+    };
+    measure();const observer=new ResizeObserver(measure);
+    const room=wrapRef.current?.closest('.studio-room');
+    for(const el of [wrapRef.current,room?.querySelector('.kn-player-bar'),room?.querySelector('.room-media-toolbar')])if(el)observer.observe(el);
+    window.addEventListener('resize',measure);window.visualViewport?.addEventListener('resize',measure);
+    return()=>{observer.disconnect();window.removeEventListener('resize',measure);window.visualViewport?.removeEventListener('resize',measure);};
+  },[open,variant]);
   const isEmptyQuery = q.trim().length < 2;
 
   const list = (
@@ -642,7 +659,8 @@ function SearchPanel({
       <div ref={wrapRef} className={cn("relative", className)}>
         {field}
         {showResults && (
-          <div className="sw-glass-strong sw-fade-in absolute inset-x-0 top-full z-50 mt-2 p-2">
+          <div style={resultBounds?{top:resultBounds.top,bottom:resultBounds.bottom}:undefined} className="kn-search-results sw-glass-strong sw-fade-in absolute inset-x-0 top-full z-50 mt-2 p-2">
+            <div className="kn-search-results-heading"><strong>Search</strong><button type="button" aria-label="Close search results" onClick={()=>{setOpen(false);inputRef.current?.blur();}}><X size={18}/></button></div>
             {body}
           </div>
         )}

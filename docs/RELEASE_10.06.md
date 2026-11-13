@@ -37,3 +37,14 @@ The custom server and Node 22+ remain required. Provider access, browser permiss
 ## Attribution
 
 The release retains Syncwave attribution, the inherited LICENSE and NOTICE, and third-party notices. Bundled notification tones in this source distribution are generated UI tones, not personal recordings.
+
+### Mobile usability follow-up
+
+- Collapsible song comments retain drafts; the Comments action restores the thread.
+- Search results close independently and stay between persistent room navigation and the player.
+- Attachment actions scroll within the available viewport, including when the keyboard changes its height.
+- Notifications can be cleared on the current device; new notifications continue arriving.
+- Profile action icons and labels share one baseline. Mood labels and reactions remain reachable with artwork hidden.
+- YouTube embeds set an origin-only referrer policy before loading to address error 153 without exposing invitation query strings. Provider embedding restrictions still apply.
+- Playback readiness shows the contiguous media buffered ahead instead of treating a percentage as a guarantee of uninterrupted playback. Physical iPhone foreground/background stalls still require device verification.
+- The room guide now covers comments, tags, lyrics, reactions, notifications, drafts and nested settings.

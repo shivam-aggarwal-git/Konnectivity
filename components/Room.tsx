@@ -233,7 +233,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   function openSongComments(){
     if(!current){setNotice("Play a song to comment.");return;}
     setLyricsOpen(false);setSceneOnly(false);setTab("now");
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{const fields=Array.from(document.querySelectorAll<HTMLTextAreaElement>('.kn-song-comments-inline textarea'));fields.find(field=>field.getBoundingClientRect().height>0)?.focus();}));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{window.dispatchEvent(new Event('konnectivity:show-comments'));const fields=Array.from(document.querySelectorAll<HTMLTextAreaElement>('.kn-song-comments-inline textarea'));fields.find(field=>field.getBoundingClientRect().height>0)?.focus();}));
   }
   const openChatNotice=useCallback(()=>{setPlayerExpanded(false);setSceneOnly(false);setCompanionOpen(true);setTab('chat');setPane('chat');setUnread(0);setDismissedUnread(0);window.dispatchEvent(new Event('konnectivity:open-chat'));},[]);
 
@@ -1802,7 +1802,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
           way to react at all, the player's own bar not starting until lg.
           Zero-height and absolutely positioned so it overlays whatever is
           above it rather than taking a row of the height a phone hasn't got. */}
-      <aside ref={reactionDockRef} className="sw-reaction-dock lg:hidden" aria-label="Room reactions">
+      <aside ref={reactionDockRef} className="sw-reaction-dock" aria-label="Room reactions">
         {reactionDockOpen && <ReactionBar onReact={(emoji) => { react(emoji); setReactionDockOpen(false); }} className="sw-side-reactions" />}
         <button className="sw-reaction-dock-toggle" aria-label="Reactions" aria-expanded={reactionDockOpen} onClick={() => setReactionDockOpen(v => !v)}><Smile size={18}/></button>
       </aside>

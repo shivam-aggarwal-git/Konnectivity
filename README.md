@@ -140,3 +140,9 @@ This branch is **10.06** (`package.json`: `10.6.0`). Earlier release branches re
 Konnectivity builds on [Syncwave](https://github.com/SAKMZ/syncwave). Thank you to its original creators, maintainers and contributors. Upstream notices and the **PolyForm Noncommercial 1.0.0** license are preserved in [LICENSE](LICENSE) and [NOTICE](NOTICE). This is a source-available, noncommercial distribution, not an OSI open-source license or an affiliation with the upstream project.
 
 Only upload and access media you are authorized to use. Optional services have their own terms and availability. No personal songs, cookies, API keys, room data or account credentials are included in this source release.
+
+### Mobile search navigation
+
+Search closes independently while room controls, the music player and bottom tabs stay visible.
+
+<img src="docs/screenshots/10.06-mobile-search-navigation.png" width="260" alt="Konnectivity mobile music search with persistent navigation and a close button" />

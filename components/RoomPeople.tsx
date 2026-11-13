@@ -15,7 +15,7 @@ const playbackLabels: Record<string, string> = {
 };
 type PlaybackStatus = { listeners: {id:string; state:string; position:number|null;audioEnabled:boolean|null}[]; log:{nick:string;state:string;at:number;title:string}[] };
 export type PeopleShortcut = "profile" | "name" | "mood" | "buzz" | "participants" | "admin" | "rename";
-const action = "sw-focus min-h-11 rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10";
+const action = "inline-flex items-center justify-center gap-2 text-left sw-focus min-h-11 rounded-full border border-white/15 px-4 py-2 text-sm font-semibold hover:bg-white/10";
 export default function RoomPeople({socket, list, you, isHost, pending, inviteOnly, discoverable, onApprovalChange, onApprove, onDeny, onKick, onMute, onRename, onProfile, onMood, onBuzz, mediaQuery, mood, roomName, onRoomName, shortcut,onHostRole,onBack}: {
  onBack?:()=>void;
  onHostRole?:(id:string,enabled:boolean)=>Promise<void>;

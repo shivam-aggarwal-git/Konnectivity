@@ -21,3 +21,7 @@ Fresh 390 × 844 captures of the current 10.06 interface, using an isolated test
 ## Polls, plans and location sharing
 
 ![Konnectivity 10.06 polls, plans and location sharing](screenshots/10.06-mobile-polls-plans.png)
+
+## Mobile search with persistent navigation
+
+![Konnectivity mobile music search with close button and persistent room tabs](screenshots/10.06-mobile-search-navigation.png)

@@ -89,6 +89,7 @@ function ChatPanel({
   const locationRequest=useRef(0);
   const [optionsOpen,setOptionsOpen]=useState(false);
   const optionsPanel=useRef<HTMLDivElement>(null),optionsButton=useRef<HTMLButtonElement>(null);
+
   const videoInput=useRef<HTMLInputElement>(null);
   const [image, setImage] = useState<ChatMsg["image"]>();
   const [uploading, setUploading] = useState(false);
@@ -111,6 +112,16 @@ function ChatPanel({
   const [searchOpen,setSearchOpen]=useState(false),[search,setSearch]=useState("");
   const [reply,setReply]=useState<ChatMsg>(),[editing,setEditing]=useState<ChatMsg>();
   const [recording,setRecording]=useState(false);
+  useEffect(()=>{
+    if(!optionsOpen&&!recording)return;
+    const measure=()=>{
+      const button=optionsButton.current,panel=optionsPanel.current;if(!button||!panel)return;
+      const header=button.closest('.studio-room')?.querySelector('.studio-header')?.getBoundingClientRect();
+      panel.style.maxHeight=`${Math.max(96,button.getBoundingClientRect().top-Math.max(window.visualViewport?.offsetTop||0,header?.bottom||0,button.closest('.studio-room')?.querySelector('.room-media-toolbar')?.getBoundingClientRect().bottom||0)-16)}px`;
+    };
+    measure();window.visualViewport?.addEventListener('resize',measure);window.addEventListener('resize',measure);
+    return()=>{window.visualViewport?.removeEventListener('resize',measure);window.removeEventListener('resize',measure);};
+  },[optionsOpen,recording]);
   const recordingChanged = (value:boolean) => { setRecording(value); onRecordingChange(value); };
   const beginReply = (message:ChatMsg) => {
     if(muted || message.privateMedia)return;
