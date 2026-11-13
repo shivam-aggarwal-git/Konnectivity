@@ -1,45 +1,7 @@
-## 10.04 release validation
+# Konnectivity 10.06 Validation
 
-The production build, client sync tests, integration suite, and installer fixtures passed on macOS. Group tests cover private cookie copies, denied cross-room access, opt-in discovery before cookie setup, approval, and selected-room deletion. The screenshots use a separate demo instance with synthetic groups.
+Validated locally on 13 November 2026. The production build and TypeScript checks passed for the shipped application. Isolated regression suites passed for appearance, playlist import/arrangement, room administration, playback recovery, client synchronization, social features, co-hosts and saved settings.
 
-## Stable 10.03 validation
+Browser checks covered 390 × 844 mobile layouts, matching Settings typography, Back navigation, profile previews, People/Mood separation, poll draft retention and option removal, playlist access, activity closure and Leave Party confirmation. Screenshots use an isolated test room.
 
-The complete isolated integration suite passed after removing readiness holds. Regression checks prove slow, blocked and background listeners cannot stop the shared clock; uploads start without readiness acknowledgements; manual pause and replay remain authoritative. Uploaded audio uses native Range streaming instead of full-file Blob downloads. TypeScript and production builds are checked for this release. Camera switching and physical iOS permission prompts remain device-dependent and require real-device confirmation.
-
-The entries below document earlier versions; readiness-hold behavior described there is superseded in 10.03.
-
-# Validation record
-
-Validated on 6 November 2026 with Node 26 on macOS. This is a local validation record; the included GitHub Actions workflow has not been run on a hosted repository yet.
-
-- Production Next.js build completed, including its TypeScript validation.
-- Client synchronization tests passed: jitter-resistant calibration, delayed/asymmetric packets, recalibration, shared hold/deadline calculations and automatic 0.4/2/3/5-second drift correction.
-- Integration suites passed with isolated temporary storage and generated audio: shared controls, audio range delivery, upload errors, WAV/MP3/FLAC processing, durable library, playlist operations, duplicate prevention, large playlists, protected image chat and synchronized video controls.
-- Automatic synchronization integration passed: search-to-video selection, a five-second readiness stall, RTT-based shared resumption, manual pause, stale readiness rejection, disconnect, late join and bounded timeout recovery.
-- Desktop and 390 × 844 mobile browser views were inspected. Playlist controls, persistent search, neutral branding and mobile volume were visible. Eight fresh screenshots are included, including uploads, library, search, image chat and automatic synchronization.
-- Release tree scan passed: no runtime storage, music files, cookie exports, personal filesystem paths, tunnel addresses or recognized credential patterns. Screenshots contain fictional names and generated demo track metadata.
-- Upstream LICENSE retained byte for byte. No inherited Git history or configured publication remote is included.
-
-The preview was stopped after verification. This is not an independent security audit, a Docker build test or a physical phone/headphone latency certification. A fresh Internet-connected install still depends on package registries, font downloads and any selected media providers.
-
-## Moonlight interface review
-
-Production build and client synchronization checks passed after the interface redesign. All three theme buttons, local preference persistence, motion toggle and visualizer choices were checked in the browser. Lottie SVG output loaded from the local animation JSON. The 390 × 844 layout had no horizontal document overflow, and native audio continued playing during appearance checks. Updated room and appearance screenshots use only demonstration data. The ambient visualizer is decorative, not an audio spectrum measurement. No physical phone performance certification is claimed.
-
-## Security and interaction update — 7 November 2026
-
-- Next.js 16.4.5 production build and TypeScript validation passed in an isolated staging copy.
-- `npm audit --omit=dev` reported zero known vulnerabilities for the resolved dependency tree at validation time.
-- First-time setup rejects remote and forwarded requests even with a forged localhost Host header.
-- The security regression suite passed: invitation access, origin rejection, protected media/search/room creation, waiting-guest chat isolation, malformed messages, request-body limits, login rate limits and filesystem permissions.
-- All synchronization, media, library and shared-control suites passed, including a five-second buffering stall and generated WAV/MP3/FLAC uploads.
-- Real production routes passed login, room creation and authenticated YouTube search checks. Songs, albums, album tracks and artists were smoke-tested against the current search service after the dependency migration.
-- Browser checks confirmed Share and Search outside-click dismissal, removable recents, suggested songs, audio default and persistent lighting settings.
-- Docker configuration was hardened but no Docker image build or independent penetration test was performed. Optional paid AI-provider calls were not exercised.
-
-
-## 10.03-working call verification
-
-Two browser clients used the production call hook with generated audio and canvas video tracks in a temporary test harness. Cloudflare TURN was required with relay-only ICE transport. Both clients received playing remote audio and video (readyState 4 with advancing media time). Voice-only calls also delivered remote audio in both directions. Remote microphone mute status appeared on the other client. Host hangup immediately ended the receiver call and removed all remote media elements.
-
-The temporary harness, generated media, provider tokens and private server configuration are not included in this branch. This verifies application negotiation and relay transport; physical iOS/Android hardware and permission behavior require device testing. Automated tests also cover host call teardown, pre-capture ringing, shared media-status validation, replay clock reset, stale ended-event rejection and the existing 750 GB reported-usage guard.
+The release source scan checks for runtime data, credentials and personal media. Hosted GitHub Actions results are separate from these local checks. This is not a physical-phone latency certification, Docker image test or independent security audit.

@@ -1,5 +1,18 @@
 # Changelog
 
+## 10.06 — 2026-11-13
+
+- Mobile-first shared listening rooms with persistent playback controls, direct Playlists access, Home and confirmed Leave Party actions.
+- Consolidated Settings hierarchy with Back navigation; room identity, mood, co-hosts, synchronization, permissions and integrations live under Room management.
+- Inline timestamped lyrics, scrolling song comments and typed listener mentions.
+- Visible playlist import/create confirmations, retained playlist track views, media collection routing, and single-video link handling.
+- Profile/GIF avatar previews and 20 MB support, corrected chat avatars, emoji/emoticons, voice-note controls and icon-based recipient selection.
+- Expandable polls/plans, local drafts, per-option removal, location links and a closable Activity panel.
+- Opt-in saved profile, appearance, mood, group avatar, playlist and library references with device identity isolation.
+- Queue preparation, similar-song autoplay, reaction visibility, vertical mobile volume and short playback feedback.
+- Updated installation/deployment documentation, mobile screenshots, release metadata and regression coverage.
+
+
 ## 10.05
 
 - Revoke SuperAdmin sessions at logout, rotate them at login, and expire them after eight hours.

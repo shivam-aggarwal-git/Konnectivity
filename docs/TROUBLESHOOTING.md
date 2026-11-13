@@ -15,3 +15,12 @@
 | AI DJ does not respond | Verify provider endpoint, credentials, enabled toggle and a supported model; plain rooms work without AI |
 
 Collect redacted server logs and reproduction steps for bug reports. Do not include `.env`, cookies, `data/`, room tokens or personal screenshots. For sync bugs, include both browsers, their OS, whether local audio or YouTube, and whether one device was in the background. Network/output estimates are shown in Sound settings; no manual delay slider is required.
+
+## 10.06 navigation and saved state
+
+- **Cannot find permissions, co-hosts or device sync:** open Settings → Room management. Personal profile details are under the circular avatar.
+- **Playlist window used to disappear:** 10.06 retains the saved playlist and confirms the action. Use Playlists to reopen its songs. A watch-only URL imports one video; use `list=` for individual playlist entries.
+- **Lyrics do not follow the song:** line timing requires a timestamped provider result. Plain or unavailable lyrics cannot be precisely synchronized. Manual scrolling temporarily suspends auto-scroll.
+- **New room did not restore my profile:** check Save my settings across rooms, the server data directory and the browser/device identity. A different origin or cleared storage can create a different identity.
+- **Profile GIF fills the screen:** use the profile upload action and refresh to the 10.06 build. Selected files preview in a bounded avatar before Save.
+- **Old controls after deployment:** refresh the open room after restarting with the new build. Verify the tunnel/reverse proxy reaches that server.

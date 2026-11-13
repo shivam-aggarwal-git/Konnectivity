@@ -1,174 +1,134 @@
-# Konnectivity · 10.05
+# Konnectivity — Self-Hosted Music Listening Rooms
 
-![Konnectivity](public/konnectivity-logo-light.png)
+**Listen together with synchronized playback, shared playlists, video and live chat.**
 
-**One Beat. Two Hearts**
+Konnectivity runs on a computer or server you control. Create a listening room, share its invitation, and enjoy a shared queue with friends on mobile or desktop. Version **10.06** brings a mobile-first interface, organized Settings, inline lyrics and song comments, co-host controls, and clearer playlist navigation.
 
-Start a group, share one invitation, and listen together with synchronized playback, a shared queue, and live chat. Konnectivity also supports shared video, room calls, playlists, and custom room appearance. It runs on a computer you control.
+**One Beat. Two Hearts.**
 
-**New in 10.05.** SuperAdmin sessions now expire after eight hours and are revoked on sign-out. Room reconnection, media uploads, browser security headers, and TURN credential renewal have been hardened. The release includes the Groups page, room photo albums, and optional private photo and video sharing from 10.04.
+[Download 10.06](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.06.zip) · [Setup guide](docs/SETUP.md) · [User guide](docs/USER_GUIDE.md) · [Mobile screenshots](docs/SCREENSHOTS.md) · [Release notes](docs/RELEASE_10.06.md)
 
-> **License:** This is a modified distribution of [Syncwave](https://github.com/SAKMZ/syncwave), under **PolyForm Noncommercial 1.0.0**. It is source-available, not OSI open source. The inherited noncommercial restriction cannot be removed by renaming the project. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [release guidance](docs/RELEASING.md).
+![Konnectivity branding](public/konnectivity-logo-light.png)
 
-## Stable and development branches
+## Mobile screenshots
 
-| Branch | Purpose | Who should use it |
-| --- | --- | --- |
-| [`10.05`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.05) | Stable branch, based on the verified installer and source-validation checks. Receives reviewed fixes. | Personal installations and deployments. |
-| [`main`](https://github.com/shivam-aggarwal-git/Konnectivity/tree/main) | Development branch for new features and improvements. | Contributors and people testing upcoming changes. |
+Actual application screens captured at 390 × 844 using an isolated demonstration room and fictional content. No personal conversations, account credentials or public invitations are included.
 
-The previous [10.04](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.04) and [10.01](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.01) and [10.03](https://github.com/shivam-aggarwal-git/Konnectivity/tree/10.03) branches remain available. **This checkout is `10.05`.** Download links and guided installers below install this stable branch. Previous stable `10.02` remains available. A branch can receive fixes; use a commit SHA when you need an exact, reproducible version.
+| Mobile listening room | Organized room settings |
+| --- | --- |
+| ![Konnectivity 10.06 mobile music player with inline lyrics and persistent playback controls](docs/screenshots/10.06-mobile-player.png) | ![Konnectivity 10.06 mobile Settings with appearance, room management and saved preferences](docs/screenshots/10.06-mobile-settings.png) |
 
-```sh
-git clone --branch 10.05 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
-cd Konnectivity
-bash start.sh --local
-```
+See the [screenshot gallery](docs/SCREENSHOTS.md) for capture details.
 
-To update an existing stable checkout, stop the app, back up your private `data/` directory, then run `git fetch origin`, `git switch 10.05`, `git pull --ff-only origin 10.05`, and start it again. Keep runtime data and credentials out of Git.
+## What is new in 10.06?
 
-## Contribute
-
-Contributions normally target `main`; stable fixes target `10.05` only when agreed with the maintainer. See [CONTRIBUTING.md](CONTRIBUTING.md) for fork/clone and sync commands, branch naming, tests, pull requests and the review/merge process. Follow [SECURITY.md](SECURITY.md) for private vulnerability reports.
-
-## Credits and thanks to Syncwave
-
-**Konnectivity builds on [Syncwave](https://github.com/SAKMZ/syncwave). A heartfelt thank-you to the Syncwave team, its original creators, maintainers and every contributor for building and sharing the project that made this fork possible.**
-
-The original Syncwave codebase, interface and self-hosted listening-room architecture form the foundation of Konnectivity. Credit for that original work belongs to the Syncwave team and contributors. Konnectivity extends their work with the changes described in [CHANGELOG.md](CHANGELOG.md) and [NOTICE](NOTICE).
-
-Please visit the [original Syncwave repository](https://github.com/SAKMZ/syncwave), explore their work and give the team your support. You can also see the [upstream contributors](https://github.com/SAKMZ/syncwave/graphs/contributors).
-
-The upstream copyright notice and **PolyForm Noncommercial 1.0.0** license are preserved in [LICENSE](LICENSE) and [NOTICE](NOTICE). This fork is maintained separately; no affiliation with or endorsement by the Syncwave team is implied.
-
-![Konnectivity 10.02 — Pearl theme](docs/screenshots/home-pearl-10.02.png)
+- **Mobile-first navigation:** persistent player controls, direct Playlists access, Home and Leave Party actions, and a clear distinction between group and personal avatars.
+- **One Settings hierarchy:** Appearance, Room management, Sound & playback, AI DJ and keyboard shortcuts, with Back navigation. Personal details stay under the profile avatar.
+- **Inline lyrics and comments:** timed lyrics highlight and scroll with playback when the provider supplies timestamps. Song comments have their own scroll area and typed `@` listener suggestions.
+- **A clearer playlist flow:** successful creation/import keeps the playlist visible and shows confirmation. A single-video URL imports one video; a playlist URL needs its `list=` identifier to import individual entries.
+- **Shared room controls:** multiple hosts, visible listener counts, mood editing, permissions, group naming and avatars. New group names are limited to 15 characters.
+- **Chat and social features:** GIF search, emoji and basic emoticons, voice-note playback, media recipients, Buzz, calls, polls and plans. Drafts survive panel navigation; individual poll options can be removed.
+- **Opt-in saved preferences:** reuse appearance, mood, profile, group avatar, saved playlists and library references across rooms on the same server/device identity. Chats and access credentials are not copied.
 
 ## Features
 
-| Feature | What you can do |
+| Feature | How it helps |
 | --- | --- |
-| Private groups and random matching | Create a persistent group, share an invitation, or request to join a discoverable group. An online group admin approves random visitors. |
-| Synchronized playback | Play, pause, seek, adjust shared volume, and reorder the queue. Each device corrects playback drift automatically. |
-| YouTube audio and video | Search YouTube or paste a supported link. Audio is the default. Switch to video when you want to watch together. |
-| Local library and playlists | Upload supported audio and video, import YouTube playlists, rearrange saved tracks, and queue several playlists in order. |
-| Room photo albums | Upload images, browse shared photos with swipes or arrows, and share images or chat videos with selected members when the room admin allows it. |
-| Calls and collaboration | Use encrypted room calls, screen sharing, chat with images, reactions, plans, and polls. |
-| Shared appearance | Choose themes, room lights, and visualizers. Use photos or GIFs as a background, or hide artwork to see more of the scene. |
-| Mobile and PWA | Use responsive playback controls and install the web app from a compatible browser. |
-| Group administration | Approve and remove listeners, manage room permissions, and upload a separate YouTube cookie file for the group. |
-| SuperAdmin Console | Manage rooms, delete selected rooms, upload a logo or favicon, and configure Proxy Pool and TURN. |
-| Self-hosting | Use the desktop launcher on macOS or Windows, run the installer from a terminal, or deploy with Docker. |
+| Synchronized music playback | A shared server clock, readiness coordination and drift correction keep listeners aligned. |
+| Shared queue and playlists | Add, reorder, save and play songs together. Queue downloads are prepared in the background with bounded concurrency. |
+| Music and video | Search supported online music, import links, or upload your own audio and video. Uploaded video selections can open Video mode. |
+| Similar-song autoplay | Shuffle randomizes queued tracks and can add a similar song when the queue runs out. Recommendations depend on provider availability. |
+| Chat, GIFs and voice notes | Talk alongside the player, share media and react without leaving the listening room. |
+| Inline lyrics | Follow timestamped lyrics in the song panel; plain or unavailable results do not gain artificial timing. |
+| Polls and plans | Vote, coordinate an IST date/time and INR budget, or share a location after granting browser permission. |
+| Calls | Join room-scoped WebRTC voice/video calls with optional TURN relay configuration. |
+| Themes and accessibility | Shared themes, image/GIF backgrounds, artwork controls, keyboard access and reduced-motion support. |
+| Self-hosting | Use your own machine, a Docker deployment or an HTTPS reverse proxy; an optional quick tunnel supports invitations. |
 
-## One-click start
+## Quick start
 
-[**Download Konnectivity ZIP**](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.05.zip)
+Requirements for a source checkout: **Node.js 22+**, npm and the media tools described in [Setup](docs/SETUP.md). The guided launcher prepares supported desktop dependencies.
 
-Extract the ZIP, then open the launcher for your computer. It installs the required packages and media tools, builds the app, and opens localhost automatically. No personal playlists, songs, images, cookies or settings are included.
+```sh
+git clone --branch 10.06 --single-branch https://github.com/shivam-aggarwal-git/Konnectivity.git
+cd Konnectivity
+npm ci
+npm run launch -- --local
+```
 
-| Computer | Start here |
+Open `http://localhost:3000/setup`, create your own admin password, then create or open a group. Use **Share** to obtain the complete private invitation. Group creators may need to upload their own YouTube cookies before online playback or imports; local uploads, chat and calls do not require a YouTube Premium subscription.
+
+### Desktop launchers
+
+| Platform | Start the extracted release |
 | --- | --- |
 | macOS | Double-click `Start-Konnectivity.command`. |
 | Windows | Double-click `Start-Konnectivity.bat`. |
-| Linux | Open a terminal in the extracted folder and run `bash start.sh --local`. |
+| Linux | Run `bash start.sh --local`. |
 
-Prefer one command, without downloading/extracting manually?
-
-**macOS / Linux:**
+Guided installers:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.05/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.06/install.sh | bash
 ```
-
-**Windows PowerShell:**
 
 ```powershell
-& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.05/install.ps1)))
+& ([scriptblock]::Create((Invoke-RestMethod https://raw.githubusercontent.com/shivam-aggarwal-git/Konnectivity/10.06/install.ps1)))
 ```
 
-These commands install into your user folder’s `Konnectivity` directory and start locally. Re-running starts the existing installation without replacing its data. Node.js 22, npm dependencies, ffmpeg, Deno and a runnable downloader are set up automatically on supported desktop platforms. The standalone downloader avoids requiring a separate Python installation. Internet access is needed on first run; keep the terminal open while listening.
+The installers download this branch; existing installations retain their private data. Review downloaded scripts before running them. See [Setup](docs/SETUP.md) for supported systems and manual installation.
 
-Open **http://localhost:3000/setup**, set an admin password, then create a room. `--local` avoids a public tunnel. It binds to loopback by default. For LAN access set `BIND_HOST=0.0.0.0` and restrict access with your firewall.
-
-Already using port 3000? On macOS/Linux:
+### Production and shared invitations
 
 ```sh
-PORT=3001 npm run launch -- --local
-```
-
-For a public invitation, finish local admin setup, stop the local launcher, then run:
-
-```sh
-npm run launch
-```
-
-The launcher starts an HTTPS Cloudflare quick tunnel after setup. Visitors can create groups from **Groups** after setup. Invite-only groups require a complete invitation. Opted-in groups also accept random join requests while a group admin is online. Its address changes on restart. Use the room’s **Share** button for the current invitation. Keep the host running while listening.
-
-## Development and checks
-
-```sh
-npm run dev                 # custom Next.js + Socket.IO development server
-npm run typecheck
-npm test                    # deterministic client clock/drift tests
-npm run test:integration    # isolated shared controls, upload, playlist, media and sync tests
 npm run build
-npm start                   # production, after a build; no public tunnel
-npm run check:release       # checks source tree for private/runtime content
+npm start
 ```
 
-Use the custom server commands above rather than `next start`: realtime rooms and upload/audio routes need `server.mjs`. Integration tests create temporary fixtures, require ffmpeg and bind loopback sockets; they do not use your personal library.
+`npm start` runs the custom production server. It does not create a public tunnel. After completing setup, `npm run launch` can start the application with an HTTPS quick tunnel. Quick-tunnel addresses can change; a stable domain requires your own deployment configuration. Use [DEPLOY.md](DEPLOY.md) for Docker, reverse proxies, backups and upgrades. Use the custom server, rather than `next start`, for Socket.IO and media routes.
 
-## Docker
+## Media limits and playback expectations
 
-```sh
-cp .env.example .env
-# Edit PUBLIC_URL and optional settings for your deployment.
-docker compose up -d --build
-docker compose logs -f
-docker compose down
-```
-
-Complete `/setup` locally before exposing the server. Docker does not create a public tunnel. `data/` and `cache/` are persistent bind mounts. Never commit them.
-
-## Screenshots
-
-| Product showcase | Groups on mobile |
-| --- | --- |
-| ![Product showcase](docs/screenshots/showcase-10.05.png) | ![Groups page on mobile](docs/screenshots/groups-mobile-10.05.png) |
-
-![SuperAdmin room dashboard with demo groups](docs/screenshots/superadmin-10.05.png)
-
-![Room photo album and private media sharing](docs/screenshots/room-photos-10.05.png)
-
-See the [screenshot gallery](docs/SCREENSHOTS.md) for playback, video calls, and YouTube cookie setup.
+- Audio/video uploads: up to **100 MB per file**; supported video is converted for browser playback.
+- Profile images and GIF uploads: up to **20 MB**. Ordinary chat photos retain an **8 MB** limit; chat video and voice-note limits are documented in the [user guide](docs/USER_GUIDE.md).
+- Timed lyrics depend on the configured lyrics service. Browser autoplay restrictions, provider ads, network conditions and unreported headphone delay can affect synchronization.
+- Server-side YouTube cookies do not sign guests into YouTube or transfer Premium benefits. Spotify links are metadata imports matched to playable sources; Konnectivity does not stream Spotify audio.
+- Calls require browser permissions and HTTPS outside localhost. Chat and stored media are readable by the server operator; this is not an end-to-end encrypted messenger.
 
 ## Documentation
 
-- [Setup and commands](docs/SETUP.md)
-- [Using rooms, uploads, playlists and chat](docs/USER_GUIDE.md)
-- [Groups, cookies, SuperAdmin and room recovery](docs/ROOM_ADMINISTRATION.md)
-- [Configuration](docs/CONFIGURATION.md)
-- [Architecture and synchronization](docs/ARCHITECTURE.md)
-- [Deployment, backup and upgrades](DEPLOY.md)
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Security and deployment notes for 10.05](docs/SECURITY_10.05.md)
-- [Release and licensing checklist](docs/RELEASING.md)
-- [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Code of conduct](CODE_OF_CONDUCT.md)
+| Guide | Contents |
+| --- | --- |
+| [Setup](docs/SETUP.md) | Installation, launchers, required tools and local startup. |
+| [User guide](docs/USER_GUIDE.md) | Player, settings, profiles, playlists, chat, polls and plans. |
+| [Configuration](docs/CONFIGURATION.md) | Environment variables, provider setup and room permissions. |
+| [Room administration](docs/ROOM_ADMINISTRATION.md) | Group ownership, YouTube setup, hosts and moderation. |
+| [Social features](docs/ROOM_SOCIAL.md) | Comments, GIFs, voice notes, location sharing and calls. |
+| [Deployment](DEPLOY.md) | Production hosting, Docker, backups and upgrades. |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) · [FAQ](docs/FAQ.md) | Common setup, playback, lyrics and navigation questions. |
+| [Architecture](docs/ARCHITECTURE.md) | Server, synchronization, persistence and trust boundaries. |
+| [Validation](docs/VALIDATION.md) | What was checked and what remains environment-dependent. |
+| [Release notes](docs/RELEASE_10.06.md) · [Changelog](CHANGELOG.md) | Changes in 10.06 and earlier releases. |
 
-YouTube embeds use each listener’s own browser session. A server-side cookie does not transfer Premium to friends. Autoplay, ads, embedding restrictions and unreported headphone delay can limit synchronization. Use only content you have permission to upload or access.
+## Development
 
+```sh
+npm run dev
+npm run typecheck
+npm test
+npm run test:integration
+npm run build
+npm run check:release
+```
 
-## Legal
+Integration tests use disposable state and generated media. They require loopback sockets and ffmpeg. Run the release scan in a clean source checkout, not in a live instance containing private runtime data. See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md) and [release guidance](docs/RELEASING.md).
 
-Konnectivity is a self-host tool. You run it and are responsible for how it is used where you live, including compliance with applicable laws, copyright permissions and the terms of any services you access.
+## Versions
 
-Streaming audio from YouTube with unofficial tools may violate [YouTube’s Terms of Service](https://www.youtube.com/static?template=terms). Do not run a public or for-profit streaming service on top of it. A private invitation link is intended for listening with friends, not operating a public streaming platform. Only upload or access content you have permission to use and share.
+This branch is **10.06** (`package.json`: `10.6.0`). Earlier release branches remain available for existing installations. `main` is maintained separately; this branch does not change the repository’s default branch. Pin a commit SHA for reproducible deployments. Back up your private `data/` and configuration before upgrading; never add them to Git.
 
-Konnectivity and its upstream project, Syncwave, are not affiliated with, endorsed by or sponsored by Spotify or YouTube. Product names and trademarks belong to their respective owners.
+## Credits and license
 
-Konnectivity retains Syncwave’s **PolyForm Noncommercial 1.0.0** license and required copyright notice. See [LICENSE](LICENSE) for the full terms and warranty disclaimer, and [NOTICE](NOTICE) for upstream attribution. The software license does not grant rights to third-party music or videos.
+Konnectivity builds on [Syncwave](https://github.com/SAKMZ/syncwave). Thank you to its original creators, maintainers and contributors. Upstream notices and the **PolyForm Noncommercial 1.0.0** license are preserved in [LICENSE](LICENSE) and [NOTICE](NOTICE). This is a source-available, noncommercial distribution, not an OSI open-source license or an affiliation with the upstream project.
 
-## Rooms, privacy and playback
-
-Groups are private by default. The creator becomes the group admin. Group data stays on the server across restarts. Keep the private admin recovery link somewhere safe if you use a rotating tunnel address. New groups require their own YouTube cookie upload for YouTube playback and link imports. Group cookies are managed by the group admin. The server operator configures TURN and Proxy Pool in the SuperAdmin Console.
-
-[Room roles and setup](docs/ROOM_ADMINISTRATION.md) · [Calls and collaboration](docs/ROOM_SOCIAL.md) · [FAQ](docs/FAQ.md)
+Only upload and access media you are authorized to use. Optional services have their own terms and availability. No personal songs, cookies, API keys, room data or account credentials are included in this source release.

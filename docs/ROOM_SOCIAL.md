@@ -1,6 +1,6 @@
 # Plans, polls, clips, location pins and room calls
 
-Open **Plans & calls** from the room header after joining. Everything uses the existing theme and host-approved room membership.
+Open **Polls & Plans** from the dedicated tab; open **Call** from the header or chat. Everything uses the existing theme and host-approved room membership.
 
 ## Plans and polls
 
@@ -45,7 +45,7 @@ References: https://www.rfc-editor.org/rfc/rfc8827.html · https://webrtc.org/ge
 
 ## Call and playback update
 
-The interface uses professional English. Calls now have local camera/microphone preview, an incoming-call banner, accept/decline controls, unanswered-call expiry, a 30-second peer-connection deadline, and an explicit audio-unlock control for browsers that block autoplay. SDP/ICE operations are serialized; one peer initiates offers to avoid simultaneous negotiation. The user-supplied sounds are bundled under `public/sounds/`. The header sound toggle controls both call and chat notifications on this device. Browser gesture restrictions can still prevent unsolicited audio.
+The interface uses professional English. Calls now have local camera/microphone preview, an incoming-call banner, accept/decline controls, unanswered-call expiry, a 30-second peer-connection deadline, and an explicit audio-unlock control for browsers that block autoplay. SDP/ICE operations are serialized; one peer initiates offers to avoid simultaneous negotiation. The source release bundles original generated notification tones under `public/sounds/`. The Settings notification-sound toggle controls both call and chat notifications on this device. Browser gesture restrictions can still prevent unsolicited audio.
 
 **Player message** sends up to 100 characters plus a selected emoji to everyone in the current room. The message and floating particles appear over the player scene for the selected 15-second, 30-second, or permanent duration. Sending is restricted to admitted, unmuted members and rate-limited. Reduced-motion preferences suppress floating particles.
 
@@ -81,3 +81,7 @@ Player messages offer 15 seconds, 30 seconds, or Permanent. Permanent messages a
 The latest supplied SVG is the branding source. Optimized logo, PNG/PWA/touch icons, an ICO favicon and social-card assets are derived from it.
 
 The downloader now applies a verified CA bundle consistently on macOS and supported Linux installations. Certificate validation is never disabled. An explicitly configured missing `SSL_CERT_FILE` is rejected. Audio preparation failures pause on the selected track and preserve the remaining queue; Retry does not add a false skipped-history entry. Skip advances only when a room member chooses it. The exact reported YouTube track was downloaded successfully after the CA fix.
+
+## Navigation and drafts in 10.06
+
+Polls & Plans has expand, close and clear-draft controls. Local drafts survive navigation to Now/Home. Each poll option has a removal button, with the existing two-option minimum. Plan location sharing requests browser permission and inserts a map link. Comments use inline `@` suggestions; ordinary chat, comments and activity remain distinct. Media recipients is an icon before Buzz in the chat header when permitted. Profile actions remain under the personal avatar; host and moderation actions are in Settings → Room management.

@@ -10,7 +10,7 @@ Supported automatic targets: modern macOS on Apple Silicon/Intel, Windows 10+ on
 
 ## Developer requirements
 
-For manual development use Node 22+ and npm. Python 3 is only needed if choosing the Python-based yt-dlp binary rather than the automatic standalone alternative. Docker installs its own system media dependencies. The web build currently downloads the Sora font, so Internet access is required.
+For manual development use Node 22+ and npm. Python 3 is only needed if choosing the Python-based yt-dlp binary rather than the automatic standalone alternative. Docker installs its own system media dependencies. The web build currently uses DM Sans and Outfit fonts, so Internet access is required.
 
 ## Install from source
 

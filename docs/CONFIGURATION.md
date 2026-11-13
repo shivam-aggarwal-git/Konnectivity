@@ -36,6 +36,12 @@ Konnectivity uses [Lyrica](https://github.com/Wilooper/Lyrica) through its HTTP 
 
 New rooms require host approval by default. Existing rooms are upgraded once to require approval for future joins. Hosts can turn **Approve new joins** off in **People**; that choice persists. New requests open a popup, including above the expanded player. Dismissing it leaves the request waiting; use the waiting button to reopen. Approval does not expose room chat or media before acceptance.
 
-Open **People** to mute chat or remove a listener. Removal asks for confirmation inside the panel, disconnects that listener and blocks their IP temporarily (30 minutes). Other listeners sharing that IP may also be unable to rejoin during that period. Hosts can still reconnect. A host cannot remove themselves or another host. Restarting clears temporary blocks.
+Open **Settings → Room management → Hosts, listeners & requests** to mute chat or remove a listener. Removal asks for confirmation inside the panel, disconnects that listener and blocks their IP temporarily (30 minutes). Other listeners sharing that IP may also be unable to rejoin during that period. Hosts can still reconnect. A host cannot remove themselves or another host. Restarting clears temporary blocks.
 
 On phones, sheets fit the available visual viewport as the keyboard opens. Text fields use a 16px font to avoid iPhone focus zoom, and primary People/approval controls have 44px touch targets. Add the app to your home screen for its standalone app view.
+
+## 10.06 saved preferences and limits
+
+Settings → Save my settings across rooms is opt-in. Group preferences are keyed to the stable device identity on this server; legacy instance preferences remain supported. Profile and group-avatar references, mood, appearance, saved playlists and library metadata can be restored without copying chat or access credentials. Preserve both browser identity and the private server data directory.
+
+Profile/GIF uploads support 20 MB; ordinary chat photos retain their 8 MB limit. Chat video supports 50 MB and recorded voice notes 8 MB. Audio/video library uploads support 100 MB per file. Edited group names use a 15-character limit. The notification audio assets bundled with the release are original generated UI tones.

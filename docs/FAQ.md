@@ -1,89 +1,51 @@
-# Syncwave FAQ
+# Konnectivity FAQ: Listening Together, Hosting and Playlists
 
-[← Back to the README](../README.md)
+[README](../README.md) · [User guide](USER_GUIDE.md) · [Troubleshooting](TROUBLESHOOTING.md)
 
-- [Using it](#using-it)
-- [The AI DJ](#the-ai-dj)
-- [Hosting it](#hosting-it)
-- [Keyboard shortcuts](#keyboard-shortcuts)
-- [How it works](#how-it-works)
+## Is Konnectivity a self-hosted music player?
 
-## Using it
+Yes. It is a shared listening-room application with synchronized controls, queues, playlists, video and chat. You run the custom Node server and supply your own content and optional service credentials.
 
-**Does everyone need Spotify, or Spotify Premium?**
-No. Nobody needs an account with anything. Audio is fetched by your server and streamed from it, so listeners just open a link.
+## Do listeners need Spotify Premium?
 
-**Does it work on phones?**
-Yes, and it was designed for them first. Rooms have swipeable panes, lock-screen controls, and can be installed to the home screen, where they reopen straight into the same room.
+Konnectivity does not stream Spotify audio. Supported Spotify links provide metadata that can be matched to playable sources. YouTube playback may require the group owner’s own cookies; those cookies do not sign listeners into YouTube or transfer Premium benefits.
 
-**How many people can be in a room?**
-There's no built-in cap. The practical limit is your upload speed, since each listener streams the track from your machine. A group of friends on a home connection is comfortable.
+## Does it work on mobile?
 
-**Can I run it alongside Discord?**
-That's the most common setup: voice in Discord, music in a Syncwave room everyone has open. Unlike a music bot, everyone hears full quality and can queue, vote and see what's playing.
+The interface supports phone-sized screens, a persistent media player and an installable PWA. Microphone access, background audio, casting and autoplay remain browser/device dependent. Desktop browser testing is not a guarantee of every physical phone’s behavior.
 
-**Is it a Discord music bot, Watch2Gether, or Teleparty for music?**
-Same idea, different shape: a web room you host yourself, with a real queue and a real player instead of a bot's text commands.
+## Why did my playlist import as one song?
 
-**Can I bring my Spotify or YouTube playlists?**
-Yes. Paste the link into the search box. YouTube and YouTube Music songs, playlists and albums work directly. Spotify tracks, albums and playlists (up to 100 songs) are matched to the same songs on YouTube Music; anything that can't be matched confidently is listed instead of guessed. No Spotify account is needed.
+A URL with `watch?v=...` and no `list=` is one video. A long video may be titled “playlist” or “mix”; the importer does not split that recording into individual songs. Use the actual playlist link with a `list=` identifier for individual entries.
 
-**The music sounds a beat behind everyone else.**
-That's almost always Bluetooth: wireless headphones and speakers play sound 100–300 ms late. Open **Sound settings** (the sliders icon at the top of the room) and pick *Bluetooth*, or move the slider until you're together. It's saved on that device only.
+## Where are my saved playlists and Settings?
 
-**Where do the lyrics come from?**
-[LRCLIB](https://lrclib.net), a free community lyrics database. Tap **Lyrics** on the now-playing card. If a song has none yet, anyone can add them on LRCLIB.
+Playlists has a mobile tab and desktop entry point. Settings contains Appearance, Room management, Sound & playback and AI DJ information. Room management contains group identity, mood, hosts, permissions and YouTube integration. Your personal avatar contains profile details only.
 
-**Which browsers does it need?**
-Anything from 2023 onward: Chrome or Edge 111+, Safari 16.4+, Firefox 113+. Older browsers will load it, but some colours will be off.
+## Can a room have two hosts?
 
-## The AI DJ
+Yes. An existing host can promote an active listener through Settings → Room management → Hosts, listeners & requests. Ordinary listeners cannot promote themselves. Another active host keeps the room running when one host leaves.
 
-**Does the AI DJ have to be on?**
-No. It's off by default and everything else works without it. Syncwave never contacts an AI provider until you configure one, and your key stays on your server.
+## Why are lyrics unavailable or unsynchronized?
 
-**Do I have to pay for it?**
-No. Pick **Ollama** and it runs on your own machine with no key, or use a free **Google Gemini** key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey). The DJ speaks about once a track, so a room of friends is unlikely to leave the free tier. OpenAI and Anthropic are supported if you already pay for one.
+Lyrics depend on the configured Lyrica service and its providers. Timestamped results can highlight and scroll with playback. Plain lyrics cannot provide precise line timing. Instrumental tracks, missing entries and provider outages can produce no result without stopping music.
 
-**How do I talk to it?**
-Type `/dj` followed by what you want in chat, for example `/dj add 10 rainy day songs`. It queues the tracks and introduces them in the voice of the persona picked in `/admin`.
+## Will saved settings follow a new room code?
 
-## Hosting it
+Enable Save my settings across rooms as a host. Preferences and saved references can follow the same stable device identity on the same server. Different browser origins, cleared storage or a different server may require setup again. Chats, active sessions and login credentials are not copied.
 
-**Where does the music come from?**
-YouTube Music, fetched with yt-dlp and cached on your disk for 72 hours after its last play.
+## Does the AI DJ have to be enabled?
 
-**Tracks won't play. What now?**
-Start with [If tracks won't play](../DEPLOY.md#if-tracks-wont-play) in the deployment guide. The two usual causes are an outdated yt-dlp and a cloud server whose IP YouTube refuses.
+No. The room works without it. Configure a supported provider through the existing authorized platform administration. Provider availability, prices and quotas are separate from Konnectivity.
 
-**Can I run it on a VPS?**
-Yes, but YouTube refuses most datacenter IPs, so you'll need a proxy pool or a cookies file. Both are a single setting in `/admin`. See [DEPLOY.md](../DEPLOY.md).
+## Is chat end-to-end encrypted?
 
-**Where is my data?**
-Rooms and settings live in `./data`, cached audio in `./cache`. Back them up or delete them; nothing else on the machine is touched.
+No. The server operator can read stored chat and uploaded media. WebRTC calls use browser media encryption, but the signaling/application server remains trusted. See [Security](../SECURITY.md).
 
-**Can I use it commercially?**
-Not without a separate agreement. Syncwave is under the [PolyForm Noncommercial License](../LICENSE): free for personal, hobby and nonprofit use. Email hello@awetomiq.com about commercial licensing.
+## Can I use Konnectivity commercially?
 
-## Keyboard shortcuts
+The repository retains the upstream PolyForm Noncommercial 1.0.0 license. Read [LICENSE](../LICENSE) and [NOTICE](../NOTICE) for the actual terms and attribution. This release does not grant additional commercial rights.
 
-Press <kbd>?</kbd> in a room to see these at any time.
+## What should I back up?
 
-| Key | Action |
-| --- | --- |
-| <kbd>Space</kbd> | Play or pause *(host)* |
-| <kbd>J</kbd> / <kbd>L</kbd> | Back 10 seconds / next track *(host)* |
-| <kbd>M</kbd> | Mute |
-| <kbd>/</kbd> or <kbd>⌘K</kbd> | Search |
-| <kbd>Q</kbd> · <kbd>C</kbd> · <kbd>H</kbd> | Queue · chat · history |
-| <kbd>F</kbd> | Like the current track |
-| <kbd>Esc</kbd> | Close whatever is open |
-
-## How it works
-
-- A **Next.js** front end (App Router, React 19) is the room interface and the installable app.
-- A **Socket.io** server is the single source of truth for the playback clock, queue, chat, presence and reactions. Each browser positions its audio from the server's timestamps, which is what keeps everyone in sync.
-- An audio resolver fetches each track with **yt-dlp**, caches it to disk, measures its loudness, and serves it with HTTP range support. Search uses `ytmusic-api`.
-- State is stored in plain JSON files, with no database. Cached audio is removed 72 hours after its last play, under a disk cap.
-
-All of it runs in one process and one container.
+Privately back up `DATA_DIR`, deployment configuration and credentials. Online audio cache can be regenerated; durable uploads and room data require the data backup. Never add these directories or cookie exports to Git.

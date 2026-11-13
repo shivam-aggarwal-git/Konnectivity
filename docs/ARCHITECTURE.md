@@ -32,3 +32,11 @@ Room owner and upload tokens are capabilities. Admin authentication is a separat
 ## Tests
 
 `npm test` covers clock sampling, hold/deadline calculations and drift correction. `npm run test:integration` launches socket/media suites with separate temporary directories and synthetic audio, then cleans them up. These tests do not depend on a live personal room or a real YouTube account. Real browser/phone and provider playback need manual smoke tests too.
+
+## 10.06 interface and preferences
+
+Settings is the entry point for room administration; profile editing is independent. FeedbackToast presents transient errors and action confirmations above ordinary and expanded views. RoomTogether keeps poll/plan drafts in browser-local storage and uses one scroll surface. The collection window routes music, video, photos and playlists through existing room media capabilities.
+
+Personal-space state adds preferences indexed by a hashed stable device identity. A host opting in stores appearance, selected room settings, profile, avatar and saved references. A new group restores those preferences for that identity; unrelated device identities stay separate. Inherited image access is granted only for the saved image references. Room metadata includes the group avatar; host-role controls remain server-enforced.
+
+Queue preparation uses the existing bounded resolver pool. Similar-song autoplay requests metadata when a shuffled queue is empty and excludes recent tracks. Lyrics retain their shared clock and provider timestamps; responsive resizing recenters the active line. No synthetic lyric timing or audio spectrum claim is made.

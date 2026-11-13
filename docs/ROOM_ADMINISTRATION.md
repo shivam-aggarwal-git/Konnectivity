@@ -14,11 +14,11 @@ Choose **Create a group**, optionally name it, and enter the room with a display
 
 If you enable **Allow random matching** in room settings, visitors can request to join while a group admin is online. They see the room after approval. The group can receive requests before YouTube is set up. Disable matching to remove the group from the pool.
 
-Room settings and media references persist on the host. If a Cloudflare quick tunnel rotates, open the room on the host and send a fresh invitation. To recover group admin access across hostnames, use the private recovery link from **Settings → Room YouTube cookies** and replace the hostname. Anyone holding that link can administer the group. Keep it separate from the guest invitation.
+Room settings and media references persist on the host. If a Cloudflare quick tunnel rotates, open the room on the host and send a fresh invitation. To recover group admin access across hostnames, use the private recovery link from **Settings → Room management → YouTube integration** and replace the hostname. Anyone holding that link can administer the group. Keep it separate from the guest invitation.
 
 ## Set up YouTube
 
-As the group admin, open **Settings → Room YouTube cookies → Upload cookies.txt**. The setup prompt provides the same control. Use a Netscape-format export limited to YouTube rather than a full browser export. The upload is a live account session, so keep it private and upload it only to an instance you trust.
+As the group admin, open **Settings → Room management → YouTube integration → Upload cookies.txt**. The setup prompt provides the same control. Use a Netscape-format export limited to YouTube rather than a full browser export. The upload is a live account session, so keep it private and upload it only to an instance you trust.
 
 The in-app help links to the [Chrome Web Store extension](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc) and the [yt-dlp YouTube export guide](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies). New groups need this setup for YouTube playback and link imports. Local media, room calls, and chat are available during setup.
 
