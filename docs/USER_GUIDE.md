@@ -79,3 +79,14 @@ Call entry points open the existing room call flow. Microphone/camera/screen per
 ## Leave a party
 
 Leave Party opens a confirmation with Stay and Leave. Hosts can hand off to an available listener. Another active host keeps the room going; the last host leaving ends the live session. Room/group persistence and saved media are separate from the active session. Browser refresh and tab-close use the browser’s available leave-warning behavior, which mobile operating systems may bypass.
+
+## Player and appearance controls
+
+- Broadcast shares a playback message with the room. The @ icon opens the complete song thread; closing it restores the previous lyrics or artwork view. Lyrics are also available alongside video.
+- Drag the floating reaction button to reposition it, including in Focus mode. Keyboard users can focus it and use arrow keys. It hides when it overlaps an open volume control or dialog.
+- Settings → Continuous play queues recommendations when the queue ends. It starts enabled for rooms without a saved preference. Shuffle changes queue order independently. Recommendations still depend on provider availability.
+- Search → Select songs → Select all shown lets you save a batch into an existing or new playlist. The queue icon means a track is already queued; it is separate from selection checkboxes.
+- Terminal, Lavender, Espresso, Cherry and Arctic join the theme collection. Five new visualizers and five room-light effects respect reduced motion.
+- Reset appearance & playback restores defaults after confirmation and keeps songs, playlists, profile and chat.
+- Standard YouTube links open video; YouTube Music links keep the music flow. Portrait uploads and Shorts use a vertical layout; landscape video uses 16:9. Reels have a swipe rail and previous/next controls for navigating queued videos. The next queued video is prepared in advance: uploaded clips use a bounded buffer and YouTube reuses a prepared iframe. Provider and network limits still apply. Spotify public links import by matching tracks to YouTube; Spotify cookies and direct Spotify streaming are not supported.
+- The timeline shows actual buffered ranges. Pausing keeps audio preloading active; a bounded background download can complete supported-size audio even when browser range preloading stalls. Provider video buffering remains controlled by the provider. Network, decoding and device constraints can still cause delays.

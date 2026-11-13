@@ -146,3 +146,10 @@ Only upload and access media you are authorized to use. Optional services have t
 Search closes independently while room controls, the music player and bottom tabs stay visible.
 
 <img src="docs/screenshots/10.06-mobile-search-navigation.png" width="260" alt="Konnectivity mobile music search with persistent navigation and a close button" />
+
+### Continuous music playback and player controls
+
+Use Broadcast for room messages and @ for song comments. Movable reactions remain available in Focus mode, comments restore the previous lyrics/artwork view when closed, and video supports inline lyrics. Search supports playlist multi-select; Settings includes Continuous play, reset and expanded themes and ambient effects.
+
+<img src="docs/screenshots/10.06-mobile-terminal-player.png" width="260" alt="Konnectivity Terminal theme mobile music player with synchronized lyrics and buffered audio timeline" />
+<img src="docs/screenshots/10.06-mobile-video-lyrics.png" width="260" alt="Konnectivity mobile video player with inline scrolling lyrics and persistent navigation" />

@@ -7,6 +7,8 @@ import {handleChatMedia} from '../lib/chat-media.mjs';
 if(!process.env.DATA_DIR||!process.env.CACHE_DIR)throw Error('Use isolated DATA_DIR and CACHE_DIR');
 const server=createServer((req,res)=>handleChatMedia(req,res,getRoom)),io=new Server(server);registerRoomHandlers(io,{authorizeJoin:()=>true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url=`http://127.0.0.1:${server.address().port}`,room=createRoom('Media test',false),other=createRoom('Private room',false),sockets=[];
+// This suite checks explicit end-of-queue behavior; continuous play is covered separately.
+room.continuousPlay=false;
 const event=(socket,name,predicate=()=>true)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>{socket.off(name,fn);reject(Error(`Timeout ${name}`));},5000);function fn(data){if(predicate(data)){clearTimeout(timer);socket.off(name,fn);resolve(data);}}socket.on(name,fn);});
 const ack=(socket,name,data)=>new Promise((resolve,reject)=>socket.timeout(5000).emit(name,data,(err,result)=>err?reject(err):resolve(result)));
 async function join(nick,target=room,owner=false){const s=connect(url,{transports:['websocket']});sockets.push(s);const ready=event(s,'room:state');s.on('connect',()=>s.emit('join',{code:target.code,nick,ownerToken:owner?target.ownerToken:undefined}));return[s,await ready];}

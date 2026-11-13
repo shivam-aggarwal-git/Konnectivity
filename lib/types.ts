@@ -7,6 +7,8 @@ export type Status = { state: "cached" | "downloading" | "pending"; percent: num
 
 export type Track = {
   mediaType?:"audio"|"video";
+  isShort?:boolean;
+  aspectRatio?:number;
   hasAudio?:boolean;
   sourceName?:string;nameKey?:string;
   id?: string;
@@ -102,6 +104,8 @@ export type RoomPhoto = Pick<ChatMsg, "id" | "nick" | "text" | "ts" | "privateMe
 export type ReactionEvent = { id: string; emoji: string; nick?: string; ts: number };
 
 export type HistoryEntry = {
+  isShort?:boolean;
+  aspectRatio?:number;
   id: string;
   videoId: string;
   title: string;

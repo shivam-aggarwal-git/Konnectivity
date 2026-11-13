@@ -9,7 +9,7 @@ import AnimatedChatText from "./AnimatedChatText";
 type Comment = {id:string;trackId:string;text:string;nick:string;at:number;editedAt?:number;tags?:string[];
   canEdit?:boolean;likes:number;dislikes:number;myVote:number};
 
-export default function SongComments({socket, track, members, compact=false}: {compact?:boolean;socket:Socket|null;track:Track|null;members:Participant[]}) {
+export default function SongComments({socket, track, members, compact=false,onClose}: {onClose?:()=>void;compact?:boolean;socket:Socket|null;track:Track|null;members:Participant[]}) {
   const [collapsed,setCollapsed]=useState(false);
   useEffect(()=>{const show=()=>setCollapsed(false);window.addEventListener("konnectivity:show-comments",show);return()=>window.removeEventListener("konnectivity:show-comments",show);},[]);
   const [comments,setComments]=useState<Comment[]>([]);
@@ -46,7 +46,7 @@ export default function SongComments({socket, track, members, compact=false}: {c
     finally { setBusy(false); }
   }
   return <section className={`kn-song-comments ${compact?"kn-song-comments-inline":""}`} id={compact?"kn-song-comments-inline":"kn-song-comments"}>
-    <h3><MessageCircle size={16}/>Song comments <span>{shown.length}</span><button type="button" aria-label={collapsed?"Show song comments":"Hide song comments"} aria-expanded={!collapsed} onClick={()=>setCollapsed(v=>!v)}>{collapsed?<ChevronDown size={18}/>:<ChevronUp size={18}/>}</button></h3>
+    <h3><span className="song-comments-at" aria-hidden="true">@</span><span className="sr-only">Song comments</span><span>{shown.length}</span><button type="button" aria-label="Close song comments" title="Close comments" onClick={()=>onClose?onClose():setCollapsed(v=>!v)}><ChevronDown size={18}/></button></h3>
     <div className="kn-comment-content" hidden={collapsed}>
     {!compact&&<p>About “{track.title}” · shared with this room.</p>}
     <ul aria-label="Song comments">{shown.map(comment=><li key={comment.id}>

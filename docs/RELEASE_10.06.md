@@ -48,3 +48,7 @@ The release retains Syncwave attribution, the inherited LICENSE and NOTICE, and 
 - YouTube embeds set an origin-only referrer policy before loading to address error 153 without exposing invitation query strings. Provider embedding restrictions still apply.
 - Playback readiness shows the contiguous media buffered ahead instead of treating a percentage as a guarantee of uninterrupted playback. Physical iPhone foreground/background stalls still require device verification.
 - The room guide now covers comments, tags, lyrics, reactions, notifications, drafts and nested settings.
+
+### Player controls and continuous listening
+
+Added movable reactions that remain usable in Focus mode and avoid overlapping controls, icon-only collapsible comments with lyrics restoration, video lyrics, Broadcast naming, playlist multi-select, independent continuous play, preference reset, five themes, five visualizers and five lighting presets. Standard YouTube links retain video metadata and Shorts expose queue navigation. Audio preloading continues while paused; unknown-length downloads now retain a bounded fallback. Spotify integration accurately describes public-link matching without requesting unsupported cookies.

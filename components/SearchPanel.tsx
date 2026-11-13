@@ -9,6 +9,7 @@ import {
   Check,
   Clock3,
   Disc,
+  ListMusic,
   Link2,
   Loader2,
   Mic2,
@@ -70,7 +71,7 @@ type LinkInfo = { source: string; total: number; missing: string[] };
 
 function SearchPanel({
   roomCode,
-  playlists, onPlaylistAdd, onCreatePlaylist,
+  playlists, onPlaylistAdd, onCreatePlaylist, onSaveSelection,
   onPlayNow,
   onSearchActivity, onUpload,
   onAdd,
@@ -84,6 +85,7 @@ function SearchPanel({
 }: {
   roomCode: string;
   playlists?: Playlist[]; onPlaylistAdd?: (id: string, track: Track) => void; onCreatePlaylist?: (track?: Track) => void;
+  onSaveSelection?:(id:string,name:string,tracks:Track[])=>Promise<void>;
   onPlayNow?: (t: Track) => void;
   onSearchActivity?: () => void;
   onUpload?:()=>void;
@@ -100,6 +102,7 @@ function SearchPanel({
   openSignal?: number;
   className?: string;
 }) {
+  const [selectionMode,setSelectionMode]=useState(false),[chosen,setChosen]=useState<Record<string,Track>>({}),[targetList,setTargetList]=useState(""),[newListName,setNewListName]=useState(""),[savingSelection,setSavingSelection]=useState(false),[selectionError,setSelectionError]=useState("");
   const [refresh,setRefresh]=useState(0);
   const [q, setQ] = useState("");
   const [source, setSource] = useState<"all" | "local" | "youtube">("all");
@@ -486,6 +489,13 @@ function SearchPanel({
         </li>
       )}
 
+      {onSaveSelection&&rows.some(row=>"videoId" in row)&&<li className="kn-search-selection">
+        <button type="button" onClick={()=>setSelectionMode(v=>!v)} aria-expanded={selectionMode}>{selectionMode?"Done selecting":"Select songs"}{Object.keys(chosen).length?` · ${Object.keys(chosen).length}`:""}</button>
+        {selectionMode&&<><label><input type="checkbox" aria-label="Select all visible songs" checked={rows.filter(row=>"videoId" in row).every(row=>Boolean(chosen[(row as Track).videoId]))} onChange={event=>{const all=rows.filter(row=>"videoId" in row) as Track[];setChosen(prev=>{const next={...prev};for(const t of all){if(event.target.checked)next[t.videoId]=t;else delete next[t.videoId];}return next;});}}/>Select all shown</label>
+        <select aria-label="Playlist for selected songs" value={targetList} onChange={event=>setTargetList(event.target.value)}><option value="">Choose playlist</option>{playlists?.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}<option value="__new__">+ New playlist</option></select>
+        {targetList==="__new__"&&<input type="text" aria-label="New playlist name" placeholder="Playlist name" maxLength={80} value={newListName} onChange={event=>setNewListName(event.target.value)}/>}
+        <button type="button" disabled={savingSelection||!Object.keys(chosen).length||!targetList||(targetList==="__new__"&&!newListName.trim())} onClick={async()=>{setSavingSelection(true);setSelectionError("");try{await onSaveSelection(targetList,newListName,Object.values(chosen));setChosen({});setSelectionMode(false);setNewListName("");}catch(e){setSelectionError(e instanceof Error?e.message:"Could not save selected songs.");}finally{setSavingSelection(false);}}}>{savingSelection?"Saving…":"Save selected"}</button><button type="button" aria-label="Clear song selection" onClick={()=>setChosen({})}><X size={16}/></button>{selectionError&&<p role="alert">{selectionError}</p>}</>}
+      </li>}
       {rows.map((row, i) => {
         const selected = cursor === i;
 
@@ -502,14 +512,14 @@ function SearchPanel({
               active={selected}
               option
               className="scroll-mt-2"
-              trailing={<>{onPlaylistAdd && <PlaylistPicker track={t} playlists={playlists || []} onAdd={onPlaylistAdd} onCreate={() => onCreatePlaylist?.(t)} />}{onPlayNow ? <RowAction label={`Play ${t.title} now`} onClick={() => playResult(t)}><Play className="size-4" /></RowAction> : undefined}</>}
+              trailing={<>{selectionMode&&<input type="checkbox" aria-label={`Select ${t.title}`} checked={Boolean(chosen[t.videoId])} onClick={event=>event.stopPropagation()} onChange={event=>setChosen(prev=>{const next={...prev};if(event.target.checked)next[t.videoId]=t;else delete next[t.videoId];return next;})}/ >}{onPlaylistAdd && <PlaylistPicker track={t} playlists={playlists || []} onAdd={onPlaylistAdd} onCreate={() => onCreatePlaylist?.(t)} />}{onPlayNow ? <RowAction label={`Play ${t.title} now`} onClick={() => playResult(t)}><Play className="size-4" /></RowAction> : undefined}</>}
               actions={
                 inRoom ? (
                   <span
                     className="grid size-8 place-items-center rounded-full text-[var(--success)]"
                     title="Already in the room"
                   >
-                    <Check className="size-4" />
+                    <ListMusic className="size-4" aria-label="Already in queue"/>
                   </span>
                 ) : (
                   <RowAction label={`Add ${t.title}`} tone="accent" onClick={() => add(t)}>

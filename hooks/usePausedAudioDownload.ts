@@ -24,7 +24,7 @@ export function usePausedAudioDownload(source: string | undefined, paused: boole
       attempt.current = current;
       const response = await fetch(current.source, { signal: controller.signal, cache: "no-store" });
       const size = Number(response.headers.get("Content-Length"));
-      if (!response.ok || !size || size > maxBytes || !response.body) {
+      if (!response.ok || size > maxBytes || !response.body) {
         await response.body?.cancel();
         return;
       }
@@ -38,12 +38,12 @@ export function usePausedAudioDownload(source: string | undefined, paused: boole
         if (total > maxBytes) { await reader.cancel(); return; }
         chunks.push(new Uint8Array(value));
       }
-      if (controller.signal.aborted || total !== size) return;
+      if (controller.signal.aborted || (size > 0 && total !== size)) return;
       const url = URL.createObjectURL(new Blob(chunks, { type: response.headers.get("Content-Type") || "audio/mp4" }));
       current.url = url;
       setDownload({ source: current.source, url });
     }
-    const timer = setTimeout(() => { void preload().catch(() => {}); }, paused ? 0 : 3500);
+    const timer = setTimeout(() => { void preload().catch(() => { if(attempt.current===current)attempt.current=null; }); }, paused ? 0 : 3500);
     return () => clearTimeout(timer);
   }, [source, paused, buffering, fullyBuffered]);
 

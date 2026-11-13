@@ -25,3 +25,9 @@ Fresh 390 × 844 captures of the current 10.06 interface, using an isolated test
 ## Mobile search with persistent navigation
 
 ![Konnectivity mobile music search with close button and persistent room tabs](screenshots/10.06-mobile-search-navigation.png)
+
+## Expanded player controls
+
+![Terminal theme music room with lyrics and buffer timeline](screenshots/10.06-mobile-terminal-player.png)
+
+![Video playback with inline lyrics](screenshots/10.06-mobile-video-lyrics.png)

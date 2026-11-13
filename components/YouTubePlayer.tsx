@@ -5,6 +5,17 @@ import { Heart, Play, Video } from "lucide-react";
 type Player = { destroy():void; getCurrentTime():number; getPlayerState():number; getDuration():number; getVideoLoadedFraction?():number; getVideoData():{title?:string}; seekTo(t:number,a:boolean):void; playVideo():void; pauseVideo():void; setVolume(n:number):void; getIframe():HTMLIFrameElement };
 declare global { interface Window { YT?: { Player:new(element:HTMLElement, options:any)=>Player }; onYouTubeIframeAPIReady?:()=>void } }
 let loading:Promise<void>|undefined;
+const nextFrames=new Map<string,HTMLIFrameElement>();
+export function primeYouTubeFrame(videoId:string){
+ if(nextFrames.has(videoId))return ()=>{};
+ const frame=document.createElement('iframe');frame.referrerPolicy='strict-origin-when-cross-origin';frame.title='Preparing next video';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;
+ frame.style.cssText='position:fixed;left:-10000px;top:0;width:240px;height:240px;visibility:hidden;pointer-events:none';
+ frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
+ frame.src=`https://www.youtube.com/embed/${encodeURIComponent(videoId)}?enablejsapi=1&playsinline=1&controls=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`;
+ nextFrames.set(videoId,frame);document.body.appendChild(frame);
+ return()=>{queueMicrotask(()=>{if(nextFrames.get(videoId)===frame){nextFrames.delete(videoId);frame.remove();}});};
+}
+
 function loadApi() {
  if(window.YT?.Player)return Promise.resolve();
  if(!loading)loading=new Promise<void>((resolve,reject)=>{
@@ -39,12 +50,13 @@ export default function YouTubePlayer(props:Props) {
   let disposed=false;ready.current=false;reported.current=false;setLoaded(false);setError('');setBlocked(false);
   // Set referrer policy before the first embed request. onReady is too late
   // for YouTube client identification (error 153); never send room query tokens.
-  const element=document.createElement('iframe');
+  const preloaded=nextFrames.get(videoId);if(preloaded)nextFrames.delete(videoId);
+  const element=preloaded||document.createElement('iframe');element.removeAttribute('style');element.removeAttribute('aria-hidden');element.removeAttribute('tabindex');
   element.title=title || 'YouTube video';
   element.referrerPolicy='strict-origin-when-cross-origin';
   element.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
   element.allowFullscreen=true;
-  element.src=`https://www.youtube.com/embed/${encodeURIComponent(videoId)}?enablejsapi=1&playsinline=1&controls=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`;
+  if(!preloaded)element.src=`https://www.youtube.com/embed/${encodeURIComponent(videoId)}?enablejsapi=1&playsinline=1&controls=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`;
   mount.current?.replaceChildren(element);
   loadApi().then(()=>{
    if(disposed||!window.YT)return;

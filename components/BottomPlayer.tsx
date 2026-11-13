@@ -57,7 +57,7 @@ export default function BottomPlayer({
   onVoteSkip,
   onShuffle,
   onReplay,
-  onLyrics,
+  onLyrics, lyricsVisible=false,
   onRepeat,
   onReact,
   castSupported,
@@ -94,7 +94,7 @@ export default function BottomPlayer({
   onVoteSkip: () => void;
   onShuffle: () => void;
   onReplay?: () => void;
-  onLyrics?: () => void;
+  onLyrics?: () => void; lyricsVisible?:boolean;
   onRepeat: () => void;
   onReact: (emoji: string) => void;
   /** Chromecast/AirPlay via the browser's own Remote Playback API. Experimental. */
@@ -173,7 +173,7 @@ export default function BottomPlayer({
         <div className="kn-player-transport order-3 col-span-2 flex flex-col items-center gap-1 md:order-none md:col-span-1 md:w-[min(46vw,560px)] md:gap-2">
           <div className="studio-transport-controls flex items-center gap-2 sm:gap-3">
             <button type="button" aria-label="Replay current media" title="Replay from the beginning" disabled={!current||!isHost} onClick={onReplay||(()=>onSeek(0))} className="kn-player-replay grid size-10 place-items-center rounded-full disabled:opacity-30"><RotateCcw size={18}/></button>
-            <IconToggle active={shuffle} disabled={!isHost} onClick={onShuffle} label="Shuffle and autoplay similar songs">
+            <IconToggle active={shuffle} disabled={!isHost} onClick={onShuffle} label="Shuffle queue">
               <Shuffle className="size-4" />
             </IconToggle>
 
@@ -258,7 +258,7 @@ export default function BottomPlayer({
         </div>
 
         {/* ── right: reactions, cast and volume ── */}
-        <div className="kn-player-options flex items-center justify-end gap-2"><button type="button" className="persistent-player-lyrics" aria-label="Show lyrics" title="Lyrics" disabled={!current} onClick={onLyrics}><MicVocal size={18}/><span>Lyrics</span></button><button type="button" className="persistent-player-like" aria-label={liked?"Unlike this track":"Like this track"} title={liked?"Unlike this track":"Like this track"} aria-pressed={liked} disabled={!current} onClick={onLike}><Heart size={18} className={liked?"fill-current":""}/>{likes>0&&<span>{likes}</span>}</button>
+        <div className="kn-player-options flex items-center justify-end gap-2"><button type="button" className="persistent-player-lyrics" aria-label={lyricsVisible?"Hide lyrics":"Show lyrics"} aria-pressed={lyricsVisible} title="Lyrics" disabled={!current} onClick={onLyrics}><MicVocal size={18}/><span>Lyrics</span></button><button type="button" className="persistent-player-like" aria-label={liked?"Unlike this track":"Like this track"} title={liked?"Unlike this track":"Like this track"} aria-pressed={liked} disabled={!current} onClick={onLike}><Heart size={18} className={liked?"fill-current":""}/>{likes>0&&<span>{likes}</span>}</button>
           <ReactionBar onReact={onReact} className="kn-player-reactions hidden lg:flex" />
           <span className="hidden h-6 w-px bg-white/8 lg:block" aria-hidden />
           {castSupported && (

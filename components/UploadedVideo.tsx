@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {preparedVideo} from "@/lib/video-preload";
 import { hasStartupBuffer, readBuffered, type BufferedRange } from "@/lib/media-buffer";
 
 type Props = {
@@ -18,6 +19,8 @@ type Props = {
 
 export default function UploadedVideo(props: Props) {
   const { src, title, syncKey, onEnded, onElement } = props;
+  const [preparedSource,setPreparedSource]=useState(()=>preparedVideo(src)||src);
+  useEffect(()=>{setPreparedSource(preparedVideo(src)||src);const ready=()=>{if(ref.current?.paused)setPreparedSource(preparedVideo(src)||src);};window.addEventListener('konnectivity:video-preloaded',ready);return()=>window.removeEventListener('konnectivity:video-preloaded',ready);},[src]);
   const ref = useRef<HTMLVideoElement>(null);
   const latest = useRef(props);
   latest.current = props;
@@ -100,7 +103,7 @@ export default function UploadedVideo(props: Props) {
       media.pause();
       onElement(null);
     };
-  }, [src, syncKey, onElement]);
+  }, [preparedSource, src, syncKey, onElement]);
 
   async function enable() {
     const media = ref.current;
@@ -126,7 +129,7 @@ export default function UploadedVideo(props: Props) {
 
   return <section className="sw-watch-card">
     <h2 className="mb-3 truncate font-semibold">{title}</h2>
-    <video ref={ref} src={src} className="kn-uploaded-video" playsInline preload="auto" onEnded={onEnded}
+    <video ref={ref} src={preparedSource} className="kn-uploaded-video" playsInline preload="auto" onEnded={onEnded}
       onError={() => {
         setError("This device could not decode or load this video. Try an MP4 encoded with H.264 video and AAC audio.");
         props.onReadyChange(false, syncKey, true);
