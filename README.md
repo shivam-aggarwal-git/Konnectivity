@@ -12,13 +12,21 @@ Konnectivity runs on a computer or server you control. Create a listening room, 
 
 ## Mobile screenshots
 
-Actual application screens captured at 390 × 844 using an isolated demonstration room and fictional content. No personal conversations, account credentials or public invitations are included.
+Current Konnectivity 10.06 screens captured at 390 × 844 in an isolated demonstration room with fictional content.
 
-| Mobile listening room | Organized room settings |
+| Shared music player | Settings and appearance |
 | --- | --- |
-| ![Konnectivity 10.06 mobile music player with inline lyrics and persistent playback controls](docs/screenshots/10.06-mobile-listening-room.png) | ![Konnectivity 10.06 mobile Settings with appearance, room management and saved preferences](docs/screenshots/10.06-mobile-settings-navigation.png) |
+| ![Konnectivity mobile listening room with shared music playback and song comments](docs/screenshots/10.06-mobile-listening-room.png) | ![Konnectivity mobile Settings with appearance and playback preferences](docs/screenshots/10.06-mobile-settings-navigation.png) |
 
-See the [updated mobile screenshot gallery](docs/SCREENSHOTS.md) for room management, chat, voice notes, polls and plans.
+| Room management and co-hosts | Live chat and voice notes |
+| --- | --- |
+| ![Konnectivity room management with group avatars, co-hosts and listener permissions](docs/screenshots/10.06-mobile-room-management.png) | ![Konnectivity mobile live chat with voice notes, media recipients and emoji controls](docs/screenshots/10.06-mobile-chat-voice-notes.png) |
+
+### Polls, plans and location sharing
+
+<img src="docs/screenshots/10.06-mobile-polls-plans.png" alt="Konnectivity mobile polls and plans with event dates, budgets and location sharing" width="390" />
+
+[View screenshot details](docs/SCREENSHOTS.md).
 
 ## What is new in 10.06?
 
