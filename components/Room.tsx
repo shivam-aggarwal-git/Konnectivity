@@ -272,7 +272,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   const [watchVideo, setWatchVideo] = useState(false);
 
   const [videoControlsHidden,setVideoControlsHidden]=useState(false),[lastVideo,setLastVideo]=useState<Track|null>(null);
-  const localVideo=current?.mediaType==="video";
+  const localVideo=Boolean(current?.videoId.startsWith("local_") && current.mediaType==="video");
   const videoActive = Boolean(current && watchVideo && (localVideo || !current.videoId.startsWith("local_")));
   const youtubePlaybackSampler = useRef<(() => PlaybackSample) | null>(null);
   const setYouTubePlaybackSampler = useCallback((sample: (() => PlaybackSample) | null) => { youtubePlaybackSampler.current = sample; }, []);
@@ -761,7 +761,11 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       cancelCrossfade(); crossfadingRef.current = false;
       audioRef.current?.pause(); nextAudioRef.current?.pause(); setBuffering(false); return;
     }
-    if(!joined||roomEnded||!current||preparing){
+    if (preparing && joined && !roomEnded && current) {
+      cancelCrossfade(); crossfadingRef.current=false; crossfadeStartedRef.current=false;
+      active?.pause(); inactive?.pause(); setBuffering(false); return;
+    }
+    if(!joined||roomEnded||!current){
       cancelCrossfade();crossfadingRef.current=false;crossfadeStartedRef.current=false;
       stopMediaSlots(audioRef.current,nextAudioRef.current);setBuffering(false);return;
     }
@@ -828,7 +832,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
         audioPrimed.current = false;
         bufferAnchor.current = null;
       }
-      if (running && !active.paused && active.readyState < 3 && !active.seeking) {
+      if (running && !active.paused && active.readyState < 2 && !active.seeking) {
         audioPrimed.current = false;
         active.pause();
       }
@@ -992,13 +996,13 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     const activate = async (element: HTMLAudioElement | null) => {
       if (!element) return;
       if (element.hasAttribute("src")) {
-        if (element === active && playbackRef.current.isPlaying) {
+        if (element !== active || playbackRef.current.isPlaying) {
           // A user gesture unlocks this element even when it is still filling.
           const wasMuted = element.muted;
-          if (!audioPrimed.current) element.muted = true;
+          if (element !== active || !audioPrimed.current) element.muted = true;
           try {
             await element.play();
-            if (!audioPrimed.current) element.pause();
+            if (element !== active || !audioPrimed.current) element.pause();
           } finally { element.muted = wasMuted; }
         }
         return;
@@ -1030,6 +1034,18 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       setNeedsGesture(false);
     }).catch(() => setNeedsGesture(true));
   };
+
+  // Unlock the persistent media slots during the first real room interaction.
+  // Later tracks reuse those same elements, including while the page is hidden.
+  useEffect(() => {
+    if (!joined || audioSetupDone || videoActive) return;
+    const unlock = (event: Event) => { if (event.isTrusted) resumeAudio(); };
+    document.addEventListener("pointerdown", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
+    return () => { document.removeEventListener("pointerdown", unlock); document.removeEventListener("keydown", unlock); };
+    // Resume captures the current persistent slots; rerun when their role changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [joined, audioSetupDone, videoActive, activeSlot]);
 
   const onEnded = () => {
     if (detachedHostDevice.current) {
@@ -1626,7 +1642,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
           <button type="button" className="room-focus-toggle" aria-label={sceneOnly?"Restore song details":"Focus on background"} title={sceneOnly?"Restore song details":"Focus on background"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(value=>!value)}>{sceneOnly?<Minimize2 size={18}/>:<Scan size={18}/>}</button>
         </nav>
         {videoActive && current && <div className="sw-video-stage">
-          <PlaybackBoundary key={`video:${current.videoId}`} onMusic={()=>setVideoMode(false)}><VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={replayMedia} mediaKey={current.videoId} aspectRatio={current.aspectRatio} shorts={Boolean(current.isShort)} onNext={()=>emit(EVENTS.CONTROL_SKIP)} onPrevious={()=>{const previous=history.at(-1);if(previous)emit(EVENTS.CONTROL_PLAY_NOW,{track:{...previous,mediaType:"video"},preferVideo:true});else replayMedia();}}><>{localVideo?<UploadedVideo src={`/audio/${current.videoId}${mediaQuery}&token=${encodeURIComponent(uploadToken)}`} title={current.title} volume={deviceVolume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo} onBuffer={updateDeviceBuffer}/>:<YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={deviceVolume} title={current.title}
+          <PlaybackBoundary onMusic={()=>setVideoMode(false)}><VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={replayMedia} mediaKey={current.videoId} aspectRatio={current.aspectRatio} shorts={Boolean(current.isShort)} onNext={()=>emit(EVENTS.CONTROL_SKIP)} onPrevious={()=>{const previous=history.at(-1);if(previous)emit(EVENTS.CONTROL_PLAY_NOW,{track:{...previous,mediaType:"video"},preferVideo:true});else replayMedia();}}><>{localVideo?<UploadedVideo src={`/audio/${current.videoId}${mediaQuery}&token=${encodeURIComponent(uploadToken)}`} title={current.title} volume={deviceVolume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo} onBuffer={updateDeviceBuffer}/>:<YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={deviceVolume} title={current.title}
             onPlaying={(playing) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_PLAY_STATE, { playing }); }} onEnded={onEnded}
             onMetadata={(duration, title) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title }); }}
             getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} onPlaybackSampler={setYouTubePlaybackSampler} onBuffer={updateDeviceBuffer} />}</></VideoStage></PlaybackBoundary>

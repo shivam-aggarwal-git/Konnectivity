@@ -7,6 +7,6 @@ export function readBuffered(media: HTMLMediaElement): BufferedRange[] {
 
 export function hasStartupBuffer(ranges: BufferedRange[], position: number, duration: number) {
   if (!Number.isFinite(duration) || duration <= 0) return false;
-  const needed = Math.min(duration, position + 10);
+  const needed = Math.min(duration, position + 1.5);
   return ranges.some(([start, end]) => start <= position + .05 && end >= needed - .05);
 }

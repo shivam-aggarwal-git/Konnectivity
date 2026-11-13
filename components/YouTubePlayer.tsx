@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { BufferedRange } from "@/lib/media-buffer";
 import { Heart, Play, Video } from "lucide-react";
-type Player = { destroy():void; getCurrentTime():number; getPlayerState():number; getDuration():number; getVideoLoadedFraction?():number; getVideoData():{title?:string}; seekTo(t:number,a:boolean):void; playVideo():void; pauseVideo():void; setVolume(n:number):void; getIframe():HTMLIFrameElement };
+type Player = { loadVideoById(options:{videoId:string;startSeconds:number}):void; cueVideoById(options:{videoId:string;startSeconds:number}):void; destroy():void; getCurrentTime():number; getPlayerState():number; getDuration():number; getVideoLoadedFraction?():number; getVideoData():{title?:string;video_id?:string}; seekTo(t:number,a:boolean):void; playVideo():void; pauseVideo():void; setVolume(n:number):void; getIframe():HTMLIFrameElement };
 declare global { interface Window { YT?: { Player:new(element:HTMLElement, options:any)=>Player }; onYouTubeIframeAPIReady?:()=>void } }
 let loading:Promise<void>|undefined;
 const nextFrames=new Map<string,HTMLIFrameElement>();
@@ -61,7 +61,7 @@ export default function YouTubePlayer(props:Props) {
   loadApi().then(()=>{
    if(disposed||!window.YT)return;
    const p=new window.YT.Player(element,{videoId,host:'https://www.youtube.com',width:'100%',height:'100%',playerVars:{playsinline:1,controls:0,rel:0,origin:window.location.origin,enablejsapi:1},events:{
-    onReady:()=>{if(disposed)return;ready.current=true;setLoaded(true);p.getIframe().setAttribute('referrerpolicy','strict-origin-when-cross-origin');p.setVolume(0);p.seekTo(latest.current.getPosition(),true);lastSeek.current=performance.now();aligned.current=true;if(latest.current.desiredPlaying)p.playVideo();else p.pauseVideo();},
+    onReady:()=>{if(disposed)return;ready.current=true;setLoaded(true);p.getIframe().setAttribute('referrerpolicy','strict-origin-when-cross-origin');p.setVolume(0);p.seekTo(latest.current.getPosition(),true);lastSeek.current=performance.now();aligned.current=true;if(latest.current.videoId!==videoId){const next={videoId:latest.current.videoId,startSeconds:latest.current.getPosition()};if(latest.current.desiredPlaying)p.loadVideoById(next);else p.cueVideoById(next);}else if(latest.current.desiredPlaying)p.playVideo();else p.pauseVideo();},
     onAutoplayBlocked:()=>{setBlocked(true);localReady.current=false;latest.current.onReadyChange(false,latest.current.syncKey);},
     onStateChange:(e:{data:number})=>{
      if(!ready.current)return;
@@ -75,16 +75,27 @@ export default function YouTubePlayer(props:Props) {
    }});player.current=p;
   }).catch(e=>{if(!disposed)setError(e.message);});
   return()=>{disposed=true;ready.current=false;player.current?.destroy();player.current=null;};
+ // Keep this iframe alive across tracks so the initial playback permission survives.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[]);
+ useEffect(()=>{
+  const p=player.current;if(!p||!ready.current)return;
+  reported.current=false;localReady.current=false;aligned.current=false;previousTarget.current=null;
+  bufferSince.current=0;setError('');setBlocked(false);
+  p.getIframe().title=title || 'YouTube video';
+  const next={videoId,startSeconds:latest.current.getPosition()};
+  if(latest.current.desiredPlaying)p.loadVideoById(next);else p.cueVideoById(next);
+ // A title update for the same video must not reload playback.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
  },[videoId]);
  useEffect(()=>{
   const tick=()=>{
    const p=player.current;if(!p||!ready.current)return;
-   if(document.visibilityState!=="visible")return;
    const s=latest.current,state=p.getPlayerState(),now=performance.now(),target=s.getPosition(),running=s.getRunning();
    const duration = p.getDuration();
    const loaded = p.getVideoLoadedFraction?.() ?? 0;
    s.onBuffer(duration > 0 && loaded > 0 ? [[0, Math.min(1, loaded) * duration]] : []);
-   if(!reported.current&&p.getDuration()>0){reported.current=true;s.onMetadata(p.getDuration(),p.getVideoData().title||'YouTube video');}
+   if(!reported.current&&p.getDuration()>0&&p.getVideoData().video_id===s.videoId){reported.current=true;s.onMetadata(p.getDuration(),p.getVideoData().title||'YouTube video');}
    if(state===3&&bufferSince.current&&now-bufferSince.current>650){localReady.current=false;s.onReadyChange(false,s.syncKey);}
    if(state===1){bufferSince.current=0;localReady.current=true;}
    const prime=s.desiredPlaying&&!localReady.current;
@@ -95,7 +106,7 @@ export default function YouTubePlayer(props:Props) {
    const jumped=Boolean(before && Math.abs(target-before.position-(running?(now-before.time)/1000:0))>.6);
    previousTarget.current={position:target,time:now};
    const drift=p.getCurrentTime()-target;
-   if((jumped||!aligned.current||Math.abs(drift)>(running?1.25:.15))&&state!==3&&(jumped||now-lastSeek.current>3000)){p.seekTo(target,true);lastSeek.current=now;aligned.current=true;}
+   if(document.visibilityState==="visible"&&(jumped||!aligned.current||Math.abs(drift)>(running?1.25:.15))&&state!==3&&(jumped||now-lastSeek.current>3000)){p.seekTo(target,true);lastSeek.current=now;aligned.current=true;}
    if((running||prime)&&state!==1&&state!==3&&now-attempt.current>1500){attempt.current=now;p.playVideo();}
    if(!running&&!prime&&state!==2&&state!==5)p.pauseVideo();
    if(localReady.current)s.onReadyChange(true,s.syncKey);

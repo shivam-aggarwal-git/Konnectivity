@@ -153,3 +153,15 @@ Use Broadcast for room messages and @ for song comments. Movable reactions remai
 
 <img src="docs/screenshots/10.06-mobile-terminal-player.png" width="260" alt="Konnectivity Terminal theme mobile music player with synchronized lyrics and buffered audio timeline" />
 <img src="docs/screenshots/10.06-mobile-video-lyrics.png" width="260" alt="Konnectivity mobile video player with inline scrolling lyrics and persistent navigation" />
+
+
+### Redesigned Konnectivity home
+
+A responsive entry to private listening rooms, synchronized YouTube video, shared queues and live conversation.
+
+<p>
+  <img src="docs/screenshots/10.06-mobile-home.png" alt="Konnectivity mobile homepage with create or join listening room button" width="240" />
+  <img src="docs/screenshots/10.06-desktop-home.png" alt="Konnectivity desktop homepage and shared music room preview" width="640" />
+</p>
+
+AI DJ providers include Ollama, LM Studio, OpenCode, Gemini, OpenAI and Anthropic. See the [provider setup guide](docs/USER_GUIDE.md#lm-studio-and-opencode-ai-dj-providers).

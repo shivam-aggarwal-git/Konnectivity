@@ -90,3 +90,14 @@ Leave Party opens a confirmation with Stay and Leave. Hosts can hand off to an a
 - Reset appearance & playback restores defaults after confirmation and keeps songs, playlists, profile and chat.
 - Standard YouTube links open video; YouTube Music links keep the music flow. Portrait uploads and Shorts use a vertical layout; landscape video uses 16:9. Reels have a swipe rail and previous/next controls for navigating queued videos. The next queued video is prepared in advance: uploaded clips use a bounded buffer and YouTube reuses a prepared iframe. Provider and network limits still apply. Spotify public links import by matching tracks to YouTube; Spotify cookies and direct Spotify streaming are not supported.
 - The timeline shows actual buffered ranges. Pausing keeps audio preloading active; a bounded background download can complete supported-size audio even when browser range preloading stalls. Provider video buffering remains controlled by the provider. Network, decoding and device constraints can still cause delays.
+
+
+### LM Studio and OpenCode AI DJ providers
+
+In server AI DJ settings, choose **LM Studio**, start its local server, and enter the loaded model ID. The default base URL is `http://localhost:1234/v1`; use an address reachable from the Konnectivity server when hosting in Docker or on another machine. Authentication is optional unless enabled in LM Studio.
+
+Choose **OpenCode**, supply a Console API key, and use an OpenAI Chat Completions model. The default API base is `https://opencode.ai/inference/openai/v1`. Other model API families are not supported through this provider entry. OpenCode free chat models may reject third-party clients; use a paid model or Go subscription. Changing providers clears the previous key when saved, so keys are not forwarded to another provider.
+
+Provider references: [LM Studio compatibility](https://lmstudio.ai/docs/developer/openai-compat) and [OpenCode inference API](https://opencode.ai/docs/console/api/inference).
+
+SVG images can be uploaded as photos, avatars, or backgrounds. Konnectivity rasterizes them to PNG; use self-contained SVGs without scripts or external resource references.

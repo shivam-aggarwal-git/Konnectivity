@@ -516,14 +516,14 @@ function SearchPanel({
               actions={
                 inRoom ? (
                   <span
-                    className="grid size-8 place-items-center rounded-full text-[var(--success)]"
+                    className="kn-queue-action is-added grid size-8 place-items-center rounded-full"
                     title="Already in the room"
                   >
                     <ListMusic className="size-4" aria-label="Already in queue"/>
                   </span>
                 ) : (
-                  <RowAction label={`Add ${t.title}`} tone="accent" onClick={() => add(t)}>
-                    <Plus className="size-4" />
+                  <RowAction label={`Add ${t.title} to queue`} tone="accent" onClick={() => add(t)}>
+                    <ListMusic className="size-4" />
                   </RowAction>
                 )
               }

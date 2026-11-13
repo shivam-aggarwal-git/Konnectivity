@@ -120,7 +120,7 @@ export default function RoomPeople({socket, list, you, isHost, pending, inviteOn
       </div>
       <label className="kn-profile-file">
         <span>{profileDraft.file?"Choose another photo or GIF":"Upload photo or GIF"}</span><small>Up to 20 MB</small>
-        <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
+        <input className="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,image/svg+xml,.svg,.heic,.heif"
           onChange={event=>setProfileDraft({...profileDraft,file:event.target.files?.[0]})}/>
       </label>
       {profileDraft.file&&<p className="break-all text-xs text-muted">{profileDraft.file.name}</p>}

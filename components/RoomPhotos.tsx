@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/compone
 import MediaRecipients from "./MediaRecipients";
 import type { Participant, RoomPhoto } from "@/lib/types";
 
-export const ROOM_IMAGE_TYPES = "image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif";
+export const ROOM_IMAGE_TYPES = "image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,image/svg+xml,.svg,.heic,.heif";
 
 export default function RoomPhotos({ photos, selectedId, onSelect, onClose, returnFocus,
   mediaQuery, onUpload, uploading, error, members, canSharePrivately }: {

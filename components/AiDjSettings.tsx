@@ -44,13 +44,15 @@ const selectCls =
  */
 const PROVIDERS: Record<
   string,
-  { label: string; model: string; keyHint?: string; note?: React.ReactNode }
+  { label: string; model: string; keyHint?: string; baseUrl?: string; note?: React.ReactNode }
 > = {
   ollama: {
     label: "Ollama (local, no key)",
     model: "llama3.1",
     note: "Runs on this machine. Nothing leaves it, and there is nothing to pay for.",
   },
+  lmstudio: {label: "LM Studio (local)", model: "local-model", baseUrl: "http://localhost:1234/v1", keyHint: "Optional local server key", note: "Start the LM Studio local server and enter the loaded model ID. The address is reached from the Konnectivity server."},
+  opencode: {label: "OpenCode", model: "kimi-k3", baseUrl: "https://opencode.ai/inference/openai/v1", keyHint: "OpenCode Console API key", note: "Use an OpenAI Chat Completions model from OpenCode Console. Paid models or a Go subscription are required outside the OpenCode app."},
   google: {
     label: "Google Gemini (free tier)",
     // A *lite* model on purpose. The DJ writes two sentences between tracks, so
@@ -92,6 +94,7 @@ export default function AiDjSettings({
   const [s, setS] = useState<Settings | null>(null);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [apiKey, setApiKey] = useState("");
+  const [providerChanged, setProviderChanged] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -126,7 +129,7 @@ export default function AiDjSettings({
       personaId: s.personaId,
       djPrompt: s.djPrompt || "",
     };
-    if (apiKey.trim()) payload.llmApiKey = apiKey.trim();
+    if (apiKey.trim() || providerChanged) payload.llmApiKey = apiKey.trim();
     const res = await fetch("/api/settings", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -136,6 +139,7 @@ export default function AiDjSettings({
       const d = await res.json();
       setS(d.settings);
       setApiKey("");
+      setProviderChanged(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 1800);
       // Last result described the old settings; keeping it on screen next to
@@ -251,11 +255,14 @@ export default function AiDjSettings({
                 value={s.llmProvider}
                 onChange={(e) => {
                   const next = e.target.value;
+                  setProviderChanged(true); setApiKey("");
                   // Carry the model across only if it was never set for the old
                   // provider; "llama3.1" sent to Gemini is a confusing 404.
                   const wasDefault = Object.values(PROVIDERS).some((p) => p.model === s.llmModel);
                   set({
                     llmProvider: next,
+                    hasApiKey: false,
+                    llmBaseUrl: PROVIDERS[next].baseUrl || (next === "ollama" ? "http://localhost:11434" : ""),
                     llmModel: wasDefault || !s.llmModel ? PROVIDERS[next].model : s.llmModel,
                   });
                 }}
@@ -278,16 +285,17 @@ export default function AiDjSettings({
                 placeholder={provider.model}
               />
             </div>
-            {s.llmProvider === "ollama" ? (
+            {["ollama", "lmstudio", "opencode"].includes(s.llmProvider) && (
               <div>
                 <Label className="mb-1.5 block">Base URL</Label>
                 <Input
                   value={s.llmBaseUrl}
                   onChange={(e) => set({ llmBaseUrl: e.target.value })}
-                  placeholder="http://localhost:11434"
+                  placeholder={provider.baseUrl || "http://localhost:11434"}
                 />
               </div>
-            ) : (
+            )}
+            {s.llmProvider !== "ollama" && (
               <div>
                 <Label className="mb-1.5 block">
                   API key {s.hasApiKey && <span className="text-accent-2">· saved</span>}

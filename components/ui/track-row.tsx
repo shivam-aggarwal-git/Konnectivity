@@ -292,7 +292,7 @@ export function RowAction({
       aria-label={label}
       title={label}
       className={cn(
-        "grid size-8 place-items-center rounded-full border border-white/10 bg-white/5 text-ink/70",
+        "kn-row-action grid size-8 place-items-center rounded-full border border-white/10 bg-white/5 text-ink/70",
         "transition-[background-color,color,transform,box-shadow] duration-200 ease-[var(--ease)]",
         "hover:scale-110 active:scale-95",
         tone === "accent" &&

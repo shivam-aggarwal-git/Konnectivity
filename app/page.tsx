@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  Play,
   Activity,
   ArrowUpRight,
   Headphones,
@@ -24,26 +25,13 @@ const DOCUMENTATION_VERSION = "10.06";
 
 export const dynamic = "force-dynamic";
 
-/**
- * The public face of an instance.
- *
- * It has two jobs and they pull in opposite directions: explain what this is to
- * someone who arrived from a link and has never heard of it, and get someone
- * who already knows into a room in one click. So the room controls sit above
- * the fold and everything explanatory is below them — nobody who came here to
- * start a room has to read a word.
- *
- * Every surface, radius, glow and duration here comes from the design system.
- * There is no page-specific CSS.
- */
-
 const FEATURES = [
  {icon:Radio,title:"Music, perfectly together",body:"Search YouTube, upload your own songs, build a shared queue and keep playback in sync."},
  {icon:Activity,title:"Your shared screen",body:"Watch YouTube and uploaded videos together, with shared playback controls."},
  {icon:Users,title:"A call inside your room",body:"Voice, video and screen sharing for approved room members. Call media is encrypted using WebRTC."},
  {icon:MessageSquare,title:"More than a message",body:"Chat, share a location or video, and send floating messages with hearts and custom animations."},
  {icon:ListMusic,title:"Make plans. Decide together.",body:"Plan a celebration, suggest a venue, set a budget in rupees and vote in room polls."},
- {icon:Sparkles,title:"A space you both shape",body:"Explore eleven themes, personal backgrounds, ambient lights and visualizers. Save your appearance for everyone."},
+ {icon:Sparkles,title:"A space you both shape",body:"Explore sixteen themes, personal backgrounds, ambient lights and visualizers. Save your appearance for everyone."},
 ];
 
 const STEPS = [
@@ -80,10 +68,10 @@ export default function Home() {
             </Link>
           )}
 
-          <h1 id="landing-title" className="font-display">Press play <br className="studio-home-break"/>together.</h1>
+          <h1 id="landing-title" className="font-display">Your people.<br/>One soundtrack.</h1>
 
           <p className="kn-landing-summary">
-            A private room for the songs, videos, and conversations you want to share.
+            Listen together, watch together, and keep the conversation going. A private space that feels a little closer.
           </p>
 
           <div className="kn-landing-actions">
@@ -100,11 +88,12 @@ export default function Home() {
             <li>Invite-only rooms</li>
           </ul>
           </div>
-          <div className="kn-landing-art" aria-hidden="true">
-            <div className="kn-landing-record"><Logo size="lg" /></div>
-            <div className="kn-landing-art-label">
-              <Headphones size={20}/><MonitorPlay size={20}/><MessageSquare size={20}/>
-            </div>
+          <div className="kn-home-preview" aria-label="Preview of a shared listening room">
+            <div className="kn-preview-top"><span><Logo size="sm"/>Your listening room</span><span className="kn-preview-live"><Radio size={14}/> Together</span></div>
+            <div className="kn-preview-record"><div className="kn-preview-vinyl"><Logo size="lg"/></div><span className="kn-preview-sticker"><Headphones size={16}/> A little closer</span></div>
+            <div className="kn-preview-track"><div><span>Your shared soundtrack</span><strong>Good company. Great music.</strong></div><Link href="/groups" aria-label="Start a listening room"><Play size={23} fill="currentColor"/></Link></div>
+            <div className="kn-preview-progress"><i/></div>
+            <div className="kn-preview-bottom"><span><Users size={16}/> Listen in sync</span><span><MessageSquare size={16}/> Stay in the conversation</span></div>
           </div>
         </section>
 
@@ -118,7 +107,7 @@ export default function Home() {
             </h2>
             <p className="mt-4 max-w-2xl font-display text-3xl leading-tight font-bold tracking-tight sm:text-4xl">
               Everything you need to spend{" "}
-              <span className="sw-gradient-text">time together.</span>
+              <span>time together.</span>
             </p>
 
             <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

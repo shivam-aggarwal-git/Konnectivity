@@ -52,3 +52,14 @@ The release retains Syncwave attribution, the inherited LICENSE and NOTICE, and 
 ### Player controls and continuous listening
 
 Added movable reactions that remain usable in Focus mode and avoid overlapping controls, icon-only collapsible comments with lyrics restoration, video lyrics, Broadcast naming, playlist multi-select, independent continuous play, preference reset, five themes, five visualizers and five lighting presets. Standard YouTube links retain video metadata and Shorts expose queue navigation. Audio preloading continues while paused; unknown-length downloads now retain a bounded fallback. Spotify integration accurately describes public-link matching without requesting unsupported cookies.
+
+
+### YouTube video playback and room controls
+
+- YouTube videos use the YouTube player; only uploaded video files use the local file player.
+- Playback starts with 1.5 seconds of buffered media, or the remaining duration near the end, instead of requiring ten seconds. The app retains media sources during preparation and primes both persistent audio slots on the first room interaction. The YouTube iframe is also reused across tracks rather than recreated, and receives playback commands while hidden. Browser and provider autoplay policies still apply, especially after background suspension.
+- Queue actions are visible before adding a song and use the theme accent after confirmation. The mobile queue count sits above its tab with a contrasting foreground.
+- SVG photos, profile pictures and room backgrounds are converted to PNG before storage. Active content and external resource references are rejected.
+- The public homepage has a new responsive listening-room preview and clearer room entry.
+- AI DJ settings include LM Studio and OpenCode, with editable base URLs. LM Studio uses its local OpenAI-compatible API. OpenCode uses its Console Chat Completions API and requires a compatible model and API key.
+- The administrator room list supports selecting all filtered rooms across pages. Selection alone does not delete rooms; the existing confirmation remains required.

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, DoorOpen, Plus, Search, Trash2, Users } from "lucide-react";
+import { CheckCheck, ChevronDown, DoorOpen, Plus, Search, Trash2, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "./ui/button";
@@ -149,8 +149,12 @@ export default function AdminRooms({ rooms }: { rooms: AdminRoomSummary[] }) {
             onChange={event => { setQuery(event.target.value); setPage(0); }} />
         </label>
         <div className="kn-admin-actions">
+          {filtered.length > 0 && <Button type="button" variant="outline" disabled={busy || Boolean(bulk)} aria-pressed={filtered.every(room => selected.includes(room.code))} onClick={() => {
+            const allSelected = filtered.every(room => selected.includes(room.code));
+            setSelected(previous => allSelected ? previous.filter(code => !filtered.some(room => room.code === code)) : [...new Set([...previous, ...filtered.map(room => room.code)])]);
+          }}><CheckCheck size={16}/>{filtered.every(room => selected.includes(room.code)) ? "Clear selection" : query.trim() ? "Select all results" : "Select all"}</Button>}
           {selectedRooms.length > 0 && <>
-            <Button variant="outline" disabled={busy || Boolean(bulk)} onClick={() => setSelected([])}>Clear selection</Button>
+
             <Button variant="outline" className="kn-admin-danger-outline" disabled={busy} onClick={() => {
               setBulk({ all: false, rooms: selectedRooms });
               setBulkConfirm("");
