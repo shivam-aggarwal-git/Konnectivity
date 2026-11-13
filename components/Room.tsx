@@ -605,6 +605,8 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       if(s.appearance)receiveRoomAppearance(s.appearance);
       const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
       if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
+      const manifest=document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+      if(manifest){manifest.crossOrigin="use-credentials";manifest.href=`/api/room-manifest?code=${encodeURIComponent(code)}`;}
       setFlushOnHostLeave(Boolean(s.flushOnHostLeave));
       setRoomScoped(Boolean(s.roomScoped));
       setDiscoverable(Boolean(s.discoverable));

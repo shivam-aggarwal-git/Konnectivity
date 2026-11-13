@@ -13,7 +13,9 @@ export async function generateMetadata({
   const upper = code.toUpperCase();
   return {
     title: `Konnectivity — One Beat. Two Hearts`,
-    manifest: `/api/room-manifest?code=${upper}`,
+    // The browser fetches this before the listener has a membership cookie.
+    // Room switches to its private manifest after successful authorization.
+    manifest: "/manifest.webmanifest",
   };
 }
 

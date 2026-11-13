@@ -165,13 +165,13 @@ function ActivityFeed({
 
 function ActivityItem({ item, now }: { item: Item; now: number }) {
   const kind = item.type === "reaction" ? "reaction" : item.kind;
-  const Icon = ICON[kind];
+  const Icon = ICON[kind] ?? ActivityIcon;
   const actor = item.type === "reaction" ? item.reaction.nick : item.msg.actor;
 
   return (
     <li className="room-activity-row flex items-start gap-3 p-2">
       <span
-        className={cn("mt-0.5 grid size-7 shrink-0 place-items-center rounded-full", TONE[kind])}
+        className={cn("mt-0.5 grid size-7 shrink-0 place-items-center rounded-full", TONE[kind] ?? TONE.generic)}
         aria-hidden
       >
         <Icon className="size-3.5" />
