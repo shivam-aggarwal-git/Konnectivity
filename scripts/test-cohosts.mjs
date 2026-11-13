@@ -1,6 +1,6 @@
-import {tmpdir} from 'node:os';import {join} from 'node:path';
+import {tmpdir} from 'node:os';import {join as joinPath} from 'node:path';
 import assert from 'node:assert/strict';import{mkdtempSync,mkdirSync,rmSync}from'node:fs';import{createServer}from'node:http';import{Server}from'socket.io';import{io as connect}from'socket.io-client';
-const dir=mkdtempSync(join(tmpdir(), 'kn-cohosts-'));process.env.DATA_DIR=dir+'/data';process.env.CACHE_DIR=dir+'/cache';mkdirSync(process.env.DATA_DIR);mkdirSync(process.env.CACHE_DIR);
+const dir=mkdtempSync(joinPath(tmpdir(), 'kn-cohosts-'));process.env.DATA_DIR=dir+'/data';process.env.CACHE_DIR=dir+'/cache';mkdirSync(process.env.DATA_DIR);mkdirSync(process.env.CACHE_DIR);
 const {createOwnedGroup,registerRoomHandlers,getRoom}=await import('../lib/rooms.mjs');const server=createServer(),io=new Server(server);registerRoomHandlers(io,{authorizeJoin:()=>true});await new Promise(r=>server.listen(0,'127.0.0.1',r));const url=`http://127.0.0.1:${server.address().port}`,sockets=[];const {room,credential}=createOwnedGroup('Co-host fixture',false);
 const event=(s,n)=>new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error(n)),3000);s.once(n,v=>{clearTimeout(t);resolve(v);});});const request=(s,n,p={})=>s.timeout(3000).emitWithAck(n,p);
 async function join(nick,key,ownerToken){const s=connect(url,{transports:['websocket'],reconnection:false});sockets.push(s);await event(s,'connect');const ready=event(s,'room:state');s.emit('join',{code:room.code,nick,mediaKey:key,ownerToken});return [s,await ready];}
