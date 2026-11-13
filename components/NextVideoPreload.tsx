@@ -5,8 +5,8 @@ import {primeYouTubeFrame} from './YouTubePlayer';
 import type {Track} from '@/lib/types';
 export default function NextVideoPreload({track,room,token}:{track?:Track;room:string;token:string}){
  useEffect(()=>{
-  if(!track)return;
-  if(!track.videoId.startsWith('local_'))return primeYouTubeFrame(track.videoId);
+  if(!track||typeof track.videoId!=='string'||!track.videoId)return;
+  if(!track.videoId.startsWith('local_')){try{return primeYouTubeFrame(track.videoId);}catch{return;}}
   if(track.mediaType!=='video')return;
   const controller=new AbortController();
   void prepareVideo(`/audio/${track.videoId}?room=${encodeURIComponent(room)}&token=${encodeURIComponent(token)}`,controller.signal).catch(()=>{});

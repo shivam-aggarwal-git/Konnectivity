@@ -25,9 +25,9 @@ const buttonVariants = cva(
           "border border-ink bg-ink text-bg hover:opacity-85",
         // The one call to action on any given surface.
         primary:
-          "border border-transparent bg-[image:var(--accent-gradient)] text-white hover:shadow-[var(--glow-accent)]",
+          "border border-transparent bg-[image:var(--accent-gradient)] text-[color:var(--primary-foreground)] hover:shadow-[var(--glow-accent)]",
         accent:
-          "border border-transparent bg-[image:var(--accent-gradient)] text-white hover:shadow-[var(--glow-accent)]",
+          "border border-transparent bg-[image:var(--accent-gradient)] text-[color:var(--primary-foreground)] hover:shadow-[var(--glow-accent)]",
         secondary:
           "border border-[color:var(--separator-strong)] bg-secondary text-ink hover:bg-white/10",
         ghost:

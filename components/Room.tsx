@@ -102,6 +102,7 @@ import {useRoomExit} from '@/hooks/useRoomExit';
 import {PlayerMessageComposer,PlayerMessageOverlay,type PlayerMessage} from './PlayerMessage';
 import {unlockSounds,messageSound,setSoundEnabled,soundEnabled} from '@/lib/notification-sounds';
 import RoomTogether from "@/components/RoomTogether";
+import PlaybackBoundary from "@/components/PlaybackBoundary";
 import NextVideoPreload from "@/components/NextVideoPreload";
 import FloatingReactions from "@/components/FloatingReactions";
 import Reactions, { type IncomingReaction } from "@/components/Reactions";
@@ -1411,7 +1412,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
         {videoActive&&current&&(commentsOpen||lyricsOpen)&&<section className="kn-video-detail-panel" aria-label={commentsOpen?"Video comments":"Video lyrics"}>{commentsOpen?<SongComments compact onClose={()=>setCommentsOpen(false)} socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:<Lyrics track={current} position={position} playing={isPlaying&&!syncHolding&&!preparing}/>}</section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
             <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
-          <NowPlaying lyricsVisible={lyricsOpen&&!commentsOpen} mediaQuery={mediaQuery} comments={current&&commentsOpen?<SongComments onClose={()=>setCommentsOpen(false)} compact socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:undefined} current={current} isPlaying={isPlaying&&!syncHolding} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className={cn("kn-expanded-artwork flex-1",sceneOnly&&"!hidden")}/>
+          <PlaybackBoundary key={`expanded:${current?.videoId||"empty"}`}><NowPlaying lyricsVisible={lyricsOpen&&!commentsOpen} mediaQuery={mediaQuery} comments={current&&commentsOpen?<SongComments onClose={()=>setCommentsOpen(false)} compact socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:undefined} current={current} isPlaying={isPlaying&&!syncHolding} preparing={preparing} cachePct={curDl??0} buffering={buffering} participants={participants} position={position} likes={currentLikes} liked={youLikeCurrent} onLike={likeCurrent} canSeek={canControl&&!preparing&&(current?.duration??0)>0} onSeek={seekTo} className={cn("kn-expanded-artwork flex-1",sceneOnly&&"!hidden")}/></PlaybackBoundary>
           </div>
           <div className="expanded-room-actions" aria-label="Player messages and emoji reactions"><button type="button" onClick={()=>setMessageComposerOpen(true)}><MessageSquare size={17}/>Broadcast</button><button type="button" aria-label="Song comments and tags" onClick={openSongComments}><span className="song-comments-at" aria-hidden="true">@</span><span className="sr-only">Comments</span></button><ReactionBar onReact={react}/></div>
           {renderPlayer(true)}
@@ -1441,7 +1442,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       />
 
       <Reactions incoming={lastReaction} />
-      {videoActive&&<NextVideoPreload track={queue[0]} room={code} token={uploadToken}/>}
+      {videoActive&&<PlaybackBoundary key={`preload:${queue[0]?.videoId||"none"}`} silent><NextVideoPreload track={queue[0]} room={code} token={uploadToken}/></PlaybackBoundary>}
       <PlayerMessageOverlay message={playerMessage} expanded={playerExpanded}/>
 
 
@@ -1623,10 +1624,10 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
           <button type="button" className="room-focus-toggle" aria-label={sceneOnly?"Restore song details":"Focus on background"} title={sceneOnly?"Restore song details":"Focus on background"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(value=>!value)}>{sceneOnly?<Minimize2 size={18}/>:<Scan size={18}/>}</button>
         </nav>
         {videoActive && current && <div className="sw-video-stage">
-          <VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={replayMedia} mediaKey={current.videoId} aspectRatio={current.aspectRatio} shorts={Boolean(current.isShort)} onNext={()=>emit(EVENTS.CONTROL_SKIP)} onPrevious={()=>{const previous=history.at(-1);if(previous)emit(EVENTS.CONTROL_PLAY_NOW,{track:{...previous,mediaType:"video"},preferVideo:true});else replayMedia();}}><>{localVideo?<UploadedVideo src={`/audio/${current.videoId}${mediaQuery}&token=${encodeURIComponent(uploadToken)}`} title={current.title} volume={deviceVolume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo} onBuffer={updateDeviceBuffer}/>:<YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={deviceVolume} title={current.title}
+          <PlaybackBoundary key={`video:${current.videoId}`} onMusic={()=>setVideoMode(false)}><VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={replayMedia} mediaKey={current.videoId} aspectRatio={current.aspectRatio} shorts={Boolean(current.isShort)} onNext={()=>emit(EVENTS.CONTROL_SKIP)} onPrevious={()=>{const previous=history.at(-1);if(previous)emit(EVENTS.CONTROL_PLAY_NOW,{track:{...previous,mediaType:"video"},preferVideo:true});else replayMedia();}}><>{localVideo?<UploadedVideo src={`/audio/${current.videoId}${mediaQuery}&token=${encodeURIComponent(uploadToken)}`} title={current.title} volume={deviceVolume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo} onBuffer={updateDeviceBuffer}/>:<YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={deviceVolume} title={current.title}
             onPlaying={(playing) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_PLAY_STATE, { playing }); }} onEnded={onEnded}
             onMetadata={(duration, title) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title }); }}
-            getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} onPlaybackSampler={setYouTubePlaybackSampler} onBuffer={updateDeviceBuffer} />}</></VideoStage>
+            getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} onPlaybackSampler={setYouTubePlaybackSampler} onBuffer={updateDeviceBuffer} />}</></VideoStage></PlaybackBoundary>
         </div>}
         {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
         {videoActive&&current&&(commentsOpen||lyricsOpen)&&<section className="kn-video-detail-panel" aria-label={commentsOpen?"Video comments":"Video lyrics"}>{commentsOpen?<SongComments compact onClose={()=>setCommentsOpen(false)} socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:<Lyrics track={current} position={position} playing={isPlaying&&!syncHolding&&!preparing}/>}</section>}
@@ -1638,7 +1639,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
             whatever the panel ends with. */}
         <div className={cn(sceneOnly&&"!hidden","studio-stage-grid kn-listening-layout flex min-h-0 w-full flex-1 flex-col")}>
           {/* ── column 1: the hero ── */}
-          <NowPlaying
+          <PlaybackBoundary key={`details:${current?.videoId||"empty"}`}><NowPlaying
             lyricsVisible={lyricsOpen&&!commentsOpen} mediaQuery={mediaQuery}
             comments={current&&commentsOpen?<SongComments onClose={()=>setCommentsOpen(false)} compact socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:undefined}
 
@@ -1659,7 +1660,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
               tab === "now" ? "flex flex-1" : "hidden",
               videoActive && "!hidden"
             )}
-          />
+          /></PlaybackBoundary>
 
           {/* ── column 2: what the room is about to hear, and what it has ── */}
           <div
@@ -1808,7 +1809,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
           way to react at all, the player's own bar not starting until lg.
           Zero-height and absolutely positioned so it overlays whatever is
           above it rather than taking a row of the height a phone hasn't got. */}
-      <FloatingReactions onReact={react}/>
+      <PlaybackBoundary silent><FloatingReactions onReact={react}/></PlaybackBoundary>
 
       </div>
       </div>
@@ -1899,7 +1900,7 @@ function TabBar({
       {label}
       {badge ? (
         <span
-          className="grid min-w-4 place-items-center rounded-full bg-[image:var(--accent-gradient)] px-1 text-[10px] font-bold text-white"
+          className="kn-room-tab-badge grid place-items-center rounded-full bg-[image:var(--accent-gradient)] font-bold"
           aria-label={`${badge} ${id === "chat" ? "unread" : "queued"}`}
         >
           {badge}

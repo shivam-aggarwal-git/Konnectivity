@@ -762,3 +762,11 @@ body:has(.kn-expanded-player) .kn-message-restore { visibility:visible; }
 .kn-video-stage[data-portrait=true] .kn-uploaded-video { aspect-ratio:9/16; width:auto; max-width:100%; max-height:60dvh; margin-inline:auto; object-fit:contain; }
 .kn-video-stage[data-portrait=false] .kn-uploaded-video { aspect-ratio:16/9; object-fit:contain; }
 .kn-video-stage video { touch-action:pan-x; }
+/* Semantic foreground keeps text legible on bright theme actions. */
+.kn-save-actions button:last-child { color:var(--primary-foreground)!important; font-weight:650; }
+.kn-save-actions > button { min-width:0; min-height:44px; white-space:normal; overflow-wrap:anywhere; }
+@media(max-width:767px){.kn-appearance-dialog > .kn-save-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }.kn-appearance-dialog .kn-save-actions > span { grid-column:1/-1; order:-1; }.kn-appearance-dialog .kn-save-actions > button:first-child { grid-column:1/-1; }}
+.kn-room-dock .sw-seg-item .kn-room-tab-badge { display:inline-flex!important; align-items:center; justify-content:center; min-width:26px; min-height:22px; padding:2px 7px; margin-top:3px; font-size:13px!important; line-height:18px; font-weight:750; color:var(--primary-foreground)!important; flex-shrink:0; }
+.kn-player-recovery { position:relative; z-index:1; padding:18px; color:var(--ink); background:var(--kn-panel-a); border:1px solid var(--input); border-radius:14px; font-size:14px; }
+.kn-player-recovery > div { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.kn-player-recovery button { min-height:44px; padding:8px 12px; border-radius:10px; border:1px solid var(--input); }
