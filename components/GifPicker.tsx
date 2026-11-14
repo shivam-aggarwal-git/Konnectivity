@@ -8,8 +8,6 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dial
 import { giphyMediaUrl } from "@/lib/giphy.mjs";
 import type { RoomGif } from "@/lib/types";
 
-const key = process.env.NEXT_PUBLIC_GIPHY_API_KEY?.trim();
-const giphy = key ? new GiphyFetch(key) : null;
 const limit = 18;
 
 type GifResult = Awaited<ReturnType<GiphyFetch["trending"]>>["data"][number];
@@ -23,11 +21,8 @@ function GifResults({ term, onSelect }: { term: string; onSelect: (gif: RoomGif)
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
   useEffect(() => {
-    if (!giphy) return;
     let active = true;
-    const options = { limit, offset: page.offset, rating: "pg-13" as const };
-    const request = term ? giphy.search(term, options) : giphy.trending(options);
-    request.then(({ data, pagination }) => {
+    fetch(`/api/gifs?q=${encodeURIComponent(term)}&offset=${page.offset}`).then(async response=>{const result=await response.json();if(!response.ok)throw Error(result.error);return {data:result.gifs as GifResult[],pagination:{total_count:result.total}};}).then(({ data, pagination }) => {
       if (!active) return;
       setGifs(previous => page.offset ? [...previous, ...data] : data);
       setOffset(page.offset + data.length);
@@ -39,7 +34,6 @@ function GifResults({ term, onSelect }: { term: string; onSelect: (gif: RoomGif)
     return () => { active = false; };
   }, [term, page]);
 
-  if (!giphy) return <p role="status" className="text-sm text-muted">GIF search is unavailable until the server owner configures GIPHY.</p>;
 
   const visible = gifs.filter(gif => !unavailable.has(gif.id));
 
@@ -52,12 +46,11 @@ function GifResults({ term, onSelect }: { term: string; onSelect: (gif: RoomGif)
         return <button key={gif.id} type="button" aria-label={`Select GIF: ${title}`} className="min-w-0 overflow-hidden rounded-xl border border-input bg-field text-left"
           onErrorCapture={() => setUnavailable(previous => new Set(previous).add(gif.id))}
           onClick={event => {
-            const image = event.currentTarget.querySelector("img");
-            if (!image?.naturalWidth || typeof gif.id !== "string") return;
-            const media = giphyMediaUrl(image.currentSrc, gif.id);
+            if (typeof gif.id !== "string") return;
+            const media = giphyMediaUrl(url, gif.id);
             if (media) onSelect({ id: gif.id, url: media, title, creator: gif.username || "", source: gif.url, license: "GIPHY" });
           }}>
-          <Gif gif={gif} width={160} height={118} percentWidth="100%" noLink hideAttribution />
+          <img src={url} alt={title} loading="lazy" className="h-[118px] w-full object-cover"/>
           <span className="block truncate px-2 py-1.5 text-xs text-ink-soft">{gif.username ? `@${gif.username}` : title}</span>
         </button>;
       })}

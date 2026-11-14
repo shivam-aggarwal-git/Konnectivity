@@ -23,7 +23,9 @@ try{
  const messages=[event(a,'chat:new',m=>m.image?.id===image.id),event(b,'chat:new',m=>m.image?.id===image.id)];assert.equal((await ack(b,'chat:send',{text:'For you ♡',imageId:image.id})).ok,true);for(const m of await Promise.all(messages)){assert.equal(m.text,'For you ♡');assert.equal(m.nick,'Listener');}
  assert.ok((await ack(c,'chat:send',{text:'No',imageId:image.id})).error);
  assert.equal((await ack(b,'chat:send',{imageId:image.id})).ok,true);
- assert.equal((await fetch(url+'/chat-media',{method:'POST',headers,body:'<svg>no</svg>'})).status,415);
+ assert.equal((await fetch(url+'/chat-media',{method:'POST',headers,body:'<svg>no</svg>'})).status,400);
+ const svgUpload=await fetch(url+'/chat-media',{method:'POST',headers,body:'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><rect width="16" height="16" fill="red"/></svg>'});assert.equal(svgUpload.status,201);const svgImage=(await svgUpload.json()).image;assert.equal((await fetch(`${url}${svgImage.url}?room=${room.code}&token=${sa.uploadToken}`)).headers.get('content-type'),'image/png');
+ assert.equal((await fetch(url+'/chat-media',{method:'POST',headers,body:'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'})).status,400);
  assert.equal((await fetch(url+'/chat-media',{method:'POST',headers,body:Buffer.alloc(8*1024*1024+1)})).status,413);
  let changed=event(b,'participants:update',s=>s.participants.find(p=>p.id===sb.you)?.muted);a.emit('host:mute',{id:sb.you,muted:true});await changed;
  assert.equal((await fetch(url+'/chat-media',{method:'POST',headers,body:png})).status,403);assert.ok((await ack(b,'chat:send',{imageId:image.id})).error);

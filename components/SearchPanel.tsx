@@ -72,7 +72,7 @@ function looksLikeLink(s: string) {
 type LinkInfo = { source: string; total: number; missing: string[] };
 
 function SearchPanel({
-  roomCode,
+  roomCode, suggestionSeed,
   playlists, onPlaylistAdd, onCreatePlaylist, onSaveSelection,
   onPlayNow,
   onSearchActivity, onUpload,
@@ -86,6 +86,7 @@ function SearchPanel({
   className,
 }: {
   roomCode: string;
+  suggestionSeed?: Track|null;
   playlists?: Playlist[]; onPlaylistAdd?: (id: string, track: Track) => void; onCreatePlaylist?: (track?: Track) => void;
   onSaveSelection?:(id:string,name:string,tracks:Track[])=>Promise<void>;
   onPlayNow?: (t: Track) => void;
@@ -239,12 +240,15 @@ function SearchPanel({
     if (q.trim().length < 2) {
       setResults([]);
       setLoading(false);
-      if (open || variant === "panel") { const suggested=setTimeout(()=>run(["soft acoustic love songs","Hindi indie evening songs","classic romantic duets","relaxing piano favourites","Bollywood unplugged music","feel good road trip songs"][refresh%6],"songs"),DEBOUNCE_MS);return()=>clearTimeout(suggested); }
+      if (open || variant === "panel") {
+        const id=++runId.current;const abort=new AbortController();setLoading(true);
+        const suggested=setTimeout(async()=>{try{if(!suggestionSeed?.title){setResults([]);return;}const query=new URLSearchParams({title:suggestionSeed.title,artist:suggestionSeed.artist||'',videoId:suggestionSeed.videoId,page:String(refresh),limit:'8'});const response=await fetch(`/api/recommend?${query}`,{signal:abort.signal,cache:'no-store'});const data=await response.json();if(runId.current===id)setResults(data.results||[]);}catch{if(runId.current===id)setResults([]);}finally{if(runId.current===id)setLoading(false);}},DEBOUNCE_MS);return()=>{clearTimeout(suggested);abort.abort();};
+      }
       return;
     }
     const id = setTimeout(() => run(q, tab), DEBOUNCE_MS);
     return () => clearTimeout(id);
-  }, [q, tab, album, source, run, runLink, open, variant,refresh]);
+  }, [q, tab, album, source, run, runLink, open, variant,refresh,suggestionSeed?.videoId,suggestionSeed?.title,suggestionSeed?.artist]);
 
   // Overlay only: close on outside click.
   useEffect(() => {
@@ -469,7 +473,7 @@ function SearchPanel({
       )}
 
       {!album && recent.length > 0 && <li className="px-1 pb-2 pt-2"><div className="sw-label mb-2 text-[10px]"><Clock3 className="size-3"/>Recent searches<button type="button" aria-label="Clear all recent searches" className="ml-auto" onClick={()=>{setRecent([]);try{localStorage.removeItem(RECENT_KEY);}catch{}}}>Clear all</button></div><div className="flex flex-wrap gap-2">{recent.map(term=><div key={term} className="flex max-w-full items-center rounded-full border border-white/10 bg-white/5"><button type="button" className="truncate py-2 pl-3 pr-2 text-xs text-ink-soft" onClick={()=>{setQ(term);setAlbum(null);inputRef.current?.focus();}}>{term}</button><button type="button" aria-label={`Remove ${term} from search history`} title="Remove from history" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/10" onClick={()=>setRecent(prev=>{const next=prev.filter(v=>v!==term);try{localStorage.setItem(RECENT_KEY,JSON.stringify(next));}catch{}return next;})}><X size={12}/></button></div>)}</div></li>}
-      {!album && isEmptyQuery && rows.length>0 && <li className="sw-label kn-suggestion-heading px-1 pb-1 pt-2 text-[10px]"><span>Suggestions for your next moment</span><button type="button" className="kn-suggestion-refresh" aria-label="Refresh suggestions" title="Show different suggestions" disabled={loading} onClick={()=>setRefresh(n=>n+1)}><RefreshCw size={15} className={loading?"animate-spin":""}/><span>Refresh</span></button></li>}
+      {!album && isEmptyQuery && rows.length>0 && <li className="sw-label kn-suggestion-heading px-1 pb-1 pt-2 text-[10px]"><span>Based on your listening</span><button type="button" className="kn-suggestion-refresh" aria-label="Refresh suggestions" title="Show different suggestions" disabled={loading} onClick={()=>setRefresh(n=>n+1)}><RefreshCw size={15} className={loading?"animate-spin":""}/><span>Refresh</span></button></li>}
 
       {!album && isEmptyQuery && recent.length === 0 && rows.length === 0 && (
         <li className="flex flex-1">

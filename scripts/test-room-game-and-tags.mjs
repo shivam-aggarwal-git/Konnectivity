@@ -1,0 +1,35 @@
+import assert from 'node:assert/strict';
+import {mkdtempSync,mkdirSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join as pathJoin} from 'node:path';
+import {createServer} from 'node:http';
+import {Server} from 'socket.io';
+import {io as connect} from 'socket.io-client';
+const dir=mkdtempSync(pathJoin(tmpdir(),'kn-game-tags-'));process.env.DATA_DIR=dir+'/data';process.env.CACHE_DIR=dir+'/cache';mkdirSync(process.env.DATA_DIR);mkdirSync(process.env.CACHE_DIR);
+const {createOwnedGroup,registerRoomHandlers}=await import('../lib/rooms.mjs');
+const {flushStore}=await import('../lib/store.mjs');
+const http=createServer(),io=new Server(http);registerRoomHandlers(io,{authorizeJoin:()=>true});await new Promise(r=>http.listen(0,'127.0.0.1',r));const sockets=[];
+const once=(socket,name)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error(name)),3000);socket.once(name,value=>{clearTimeout(timer);resolve(value);});});
+const request=(s,event,data={})=>s.timeout(3000).emitWithAck(event,data);
+const group=createOwnedGroup('Games',false);
+async function join(nick,owner=false){const socket=connect(`http://127.0.0.1:${http.address().port}`,{transports:['websocket'],reconnection:false});sockets.push(socket);await once(socket,'connect');const ready=once(socket,'room:state');socket.emit('join',{code:group.room.code,nick,mediaKey:`fixture-personal-${nick}-123456789`,ownerToken:owner?group.credential:undefined});await ready;return socket;}
+try{
+ const a=await join('Alice',true),b=await join('Partner');
+ assert.equal((await request(a,'game:start')).ok,true);assert.equal((await request(b,'game:get')).you,null);const invitation=once(b,'social:notification');assert.equal((await request(a,'game:invite',{memberId:b.id})).ok,true);const invite=await invitation;assert.equal(invite.kind,'game');assert.equal(invite.invitation,true);assert.equal((await request(b,'game:accept',{gameId:invite.gameId})).ok,true);assert.equal((await request(b,'game:get')).you,'O');
+ const {visibleRooms}=await import('../lib/rooms.mjs');const privateGroup=createOwnedGroup('Private fixture',false);group.room.discoverable=true;assert.ok(visibleRooms().some(r=>r.code===group.room.code));assert.ok(!visibleRooms().some(r=>r.code===privateGroup.room.code));assert.ok(!visibleRooms(group.room.code).some(r=>r.code===group.room.code));
+ const oldInvite=group.room.inviteToken;assert.ok((await request(b,'room:invite-refresh')).error);const rotated=await request(a,'room:invite-refresh');assert.equal(rotated.ok,true);assert.notEqual(rotated.invite,oldInvite);assert.equal(group.room.inviteToken,rotated.invite);
+ group.room.discoverable=false;const c=await join('Observer');const turnNotice=once(b,'social:notification');
+ assert.equal((await request(a,'game:move',{cell:0})).ok,true);assert.match((await turnNotice).text,/turn/);
+ assert.match((await request(a,'game:move',{cell:1})).error,/turn/);
+ assert.equal((await request(b,'game:move',{cell:3})).ok,true);
+ assert.ok((await request(c,'game:move',{cell:2})).error);
+ assert.ok((await request(b,'game:move',{cell:0})).error);
+ await request(a,'game:move',{cell:1});await request(b,'game:move',{cell:4});await request(a,'game:move',{cell:2});
+ const game=await request(b,'game:get');assert.equal(game.winner,'X');assert.equal(game.players.X.name,'Alice');assert.equal(game.players.X.id,undefined);
+ assert.ok((await request(c,'game:reset')).error);assert.equal((await request(b,'game:reset')).ok,true);assert.deepEqual((await request(a,'game:get')).board,Array(9).fill(null));
+ const {storePersonalCookies,needsYoutubeCookie}=await import('../lib/room-credentials.mjs');group.room.requireYoutubeCookie=true;const owner=group.room.participants.get(a.id),partner=group.room.participants.get(b.id);storePersonalCookies(group.room,owner,'# synthetic fixture\n.youtube.com\tTRUE\t/\tTRUE\t2147483647\tSID\tfixture-not-real\n');assert.equal(needsYoutubeCookie(group.room,'abcdefghijk',owner),false);assert.equal(needsYoutubeCookie(group.room,'abcdefghijk',partner),true);group.room.continuousPlay=false;assert.equal((await request(a,'control:video-play',{url:'https://www.youtube.com/watch?v=abcdefghijk'})).ok,true);await new Promise(r=>setTimeout(r,30));assert.equal(group.room.playbackError,null);assert.equal(group.room.watchVideo,true);assert.equal(group.room.isPlaying,true);
+ const mention=once(b,'social:notification');await request(a,'chat:send',{text:'Hello @Partner 👋'});assert.equal((await mention).kind,'chat');
+ group.room.current={id:'liked-fixture',videoId:'abcdefghijk',title:'Liked fixture',artist:'Artist',duration:120,likes:[]};const liked=once(a,'library:liked');a.emit('queue:like',{id:'liked-fixture'});assert.equal((await liked)[0].videoId,'abcdefghijk');assert.equal((await request(a,'library:liked-get')).length,1);
+ assert.ok((await request(c,'game:leave')).error);assert.equal((await request(b,'game:leave')).ok,true);assert.equal((await request(b,'game:get')).you,null);assert.equal((await request(a,'game:get')).winner,'X');
+ console.log('PASS: two-player turns, occupied cells, win, spectator protection, reset, private player IDs, chat mention notification and persistent liked collection');
+}finally{for(const s of sockets)s.disconnect();await new Promise(r=>io.close(r));await flushStore();http.close();rmSync(dir,{recursive:true,force:true});}process.exit(0);

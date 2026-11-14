@@ -125,7 +125,7 @@ function QueuePanel({
                 art={t.thumbnail}
                 title={t.title}
                 artist={t.artist}
-                addedBy={t.addedBy}
+                addedBy={t.autoplay||t.addedBy==="Autoplay"?"Autoplay · similar song":t.addedBy}
                 addedAt={t.addedAt}
                 now={now}
                 exiting={exiting}

@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const body = await limitedJson(req);
     assignLater = body?.assignLater === true;
     discoverable = body?.discoverable === true;
-    name = typeof body?.name === "string" ? body.name.trim().slice(0, 80) : undefined;
+    name = typeof body?.name === "string" ? body.name.trim().slice(0, 15) : undefined;
     inviteOnly = typeof body?.inviteOnly === "boolean" ? body.inviteOnly : undefined;
   } catch {
     return NextResponse.json({ error: "Invalid room details." }, { status: 400 });

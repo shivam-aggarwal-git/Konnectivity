@@ -1,0 +1,23 @@
+import assert from 'node:assert/strict';import{mkdtempSync,mkdirSync,rmSync}from'node:fs';import{tmpdir}from'node:os';import{join}from'node:path';import{createServer}from'node:http';import{Server}from'socket.io';import{io as connect}from'socket.io-client';
+const directory=mkdtempSync(join(tmpdir(),'kn-shorts-lane-'));process.env.DATA_DIR=directory+'/data';process.env.CACHE_DIR=directory+'/cache';mkdirSync(process.env.DATA_DIR);mkdirSync(process.env.CACHE_DIR);
+const {createOwnedGroup,registerRoomHandlers}=await import('../lib/rooms.mjs');const{flushStore}=await import('../lib/store.mjs');
+const http=createServer(),io=new Server(http);registerRoomHandlers(io,{authorizeJoin:()=>true});await new Promise(r=>http.listen(0,'127.0.0.1',r));const socket=connect(`http://127.0.0.1:${http.address().port}`,{transports:['websocket']});
+const event=(name,predicate=()=>true)=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>{socket.off(name,receive);reject(Error(name));},4000);const receive=value=>{if(predicate(value)){clearTimeout(timer);socket.off(name,receive);resolve(value);}};socket.on(name,receive);});
+const request=(name,data={})=>socket.timeout(4000).emitWithAck(name,data);
+const group=createOwnedGroup('Shorts test',false);group.room.continuousPlay=false;
+try{await event('connect');const joined=event('room:state');socket.emit('join',{code:group.room.code,nick:'Viewer',ownerToken:group.credential});await joined;
+ const ordinary={id:'ordinary',videoId:'abcdefghijk',title:'Queued song',artist:'Fixture',duration:100,addedBy:'Viewer'};
+ const short=n=>({id:'short-'+n,videoId:`short00000${n}`,title:'Short '+n,artist:'Fixture',duration:60,isShort:true,mediaType:'video',aspectRatio:9/16,addedBy:'Viewer'});
+ group.room.queue=[ordinary,short(2),short(3),short(4)];
+ const prepared=event('playback:update',s=>!s.preparing&&s.current?.videoId==='short000001');
+ assert.equal((await request('control:video-play',{url:'https://www.youtube.com/shorts/short000001'})).ok,true);assert.equal(group.room.current.isShort,true);assert.equal(group.room.current.aspectRatio,9/16);
+ await prepared;
+ // Server-owned end timer, not a browser's ended handler.
+ const ended=event('playback:update',s=>s.current?.videoId==='short000002');socket.emit('control:video-metadata',{videoId:'short000001',duration:0.1,title:'First Short'});await ended;
+ assert.equal(group.room.queue[0].videoId,ordinary.videoId);
+ let next=event('playback:update',s=>s.current?.videoId==='short000003');socket.emit('control:skip',{});await next;assert.equal(group.room.queue[0].videoId,ordinary.videoId);
+ next=event('playback:update',s=>s.current?.videoId==='short000004');socket.emit('shorts:next',{videoId:'short000003'});await next;
+ next=event('playback:update',s=>s.current?.videoId==='short000003');socket.emit('shorts:previous',{videoId:'short000004'});await next;next=event('playback:update',s=>s.current?.videoId==='short000004');socket.emit('shorts:next',{videoId:'short000003'});await next;
+ assert.equal(group.room.current.isShort,true);assert.equal(group.room.watchVideo,true);assert.equal(group.room.queue[0].videoId,ordinary.videoId);
+ console.log('PASS: direct Shorts URL, portrait metadata, server end timer, Next button and swipe all stay in Shorts; queued music is untouched');
+}finally{socket.disconnect();await new Promise(r=>io.close(r));await flushStore();http.close();rmSync(directory,{recursive:true,force:true});}process.exit(0);

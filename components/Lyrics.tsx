@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, MicVocal } from "lucide-react";
+import { Loader2, MicVocal, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { Track } from "@/lib/types";
 
@@ -33,6 +33,7 @@ export default function Lyrics({
   className?: string;
 }) {
   const [data, setData] = useState<LyricsData | undefined>(undefined);
+  const [retry,setRetry]=useState(0);
   const [failed, setFailed] = useState(false);
   const [active, setActive] = useState(-1);
 
@@ -56,7 +57,9 @@ export default function Lyrics({
       artist: track.artist,
       duration: String(Math.round(track.duration || 0)),
     });
-    fetch(`/api/lyrics?${params}`)
+    if(retry)params.set("retry",String(retry));
+    const controller=new AbortController();
+    fetch(`/api/lyrics?${params}`,{signal:controller.signal,cache:"no-store"})
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d) => !cancelled && setData(d.lyrics ?? null))
       .catch(() => {
@@ -66,9 +69,9 @@ export default function Lyrics({
         }
       });
     return () => {
-      cancelled = true;
+      cancelled = true;controller.abort();
     };
-  }, [track.videoId, track.title, track.artist, track.duration]);
+  }, [track.videoId, track.title, track.artist, track.duration, retry]);
 
   // Follow the music.
   const lines = data?.synced ?? null;
@@ -149,24 +152,7 @@ export default function Lyrics({
       </div>
     );
   } else {
-    body = (
-      <Empty
-        title={failed ? "Couldn't load lyrics" : "Hindi or English lyrics unavailable"}
-        hint={
-          failed ? (
-            "The lyrics service didn't answer. Try again on the next track."
-          ) : (
-            <>
-              Lyrics come from{" "}
-              <a href="https://github.com/Wilooper/Lyrica" target="_blank" rel="noopener noreferrer" className="text-[var(--accent-2)] hover:underline">
-                Lyrica
-              </a>
-              , a multi-provider lyrics service. Only Hindi or English script is displayed.
-            </>
-          )
-        }
-      />
-    );
+    body = <div className="kn-lyrics-retry"><Empty title={failed?"Lyrics couldn’t load":"No lyrics returned yet"} hint="Try the lyrics sources again for this song."/><button type="button" className="kn-background-upload" onClick={()=>setRetry(value=>value+1)}><RefreshCw size={16}/>Retry lyrics</button></div>;
   }
 
   return (

@@ -1,4 +1,5 @@
 "use client";
+import EmojiMenuButton from "./EmojiMenuButton";
 import type { BufferedRange } from "@/lib/media-buffer";
 
 import {usePlayerSwipe} from "@/hooks/usePlayerSwipe";
@@ -301,6 +302,7 @@ export function ReactionBar({
 }) {
   return (
     <div className={cn("flex items-center gap-0.5", className)}>
+      <EmojiMenuButton onSelect={onReact} label="All emoji reactions"/>
       {REACTIONS.map(({ emoji, label }: { emoji: string; label: string }) => (
         <button
           key={emoji}

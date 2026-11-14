@@ -1,5 +1,6 @@
 "use client";
 
+import GiphySettings from "./GiphySettings";
 import CallSettings from "./CallSettings";
 import AdminBranding from "./AdminBranding";
 import Link from "next/link";
@@ -97,6 +98,7 @@ export default function AdminConsole({ children, view, stats }: {
         <StoragePanel />
       </section>
 
+      <GiphySettings/>
       <div id="admin-dj"><AiDjSettings /></div>
       </>}
       </div>

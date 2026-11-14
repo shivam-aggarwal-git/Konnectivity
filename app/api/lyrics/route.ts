@@ -16,16 +16,16 @@ export async function GET(req: NextRequest) {
       title: title.slice(0, 200),
       artist: artist.slice(0, 200),
       duration: Number(p.get("duration")) || 0,
-    });
+    }, {refresh:p.has("retry")});
     return NextResponse.json(
       { lyrics },
       // Lyrics for a song don't change; let the browser keep them for a while.
-      { headers: { "Cache-Control": "private, max-age=3600" } }
+      { headers: { "Cache-Control": lyrics ? "private, max-age=3600" : "private, no-store" } }
     );
   } catch (err) {
     return NextResponse.json(
       { error: "lyrics_failed" },
-      { status: 502 }
+      { status: 502,headers:{"Cache-Control":"no-store"} }
     );
   }
 }

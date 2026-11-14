@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Upload } from "lucide-react";
+import {notify} from "./FeedbackToast";
 import CookieExportHelp from "./CookieExportHelp";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "./ui/dialog";
@@ -31,7 +32,7 @@ export default function RoomCookies({ code, recovery = false, onboarding = false
   async function change(method: string, file?: File) {
     setBusy(true);
     setError("");
-    try { await request(method, file); }
+    try { await request(method, file); notify(method === "DELETE" ? "YouTube cookies deleted." : "YouTube cookies added."); if(method === "POST")window.dispatchEvent(new Event("konnectivity:cookies-changed")); }
     catch (error) { setError(error instanceof Error ? error.message : "Cookie update failed."); }
     finally { setBusy(false); }
   }

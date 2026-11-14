@@ -61,7 +61,7 @@ function Recommendations({
     let cancelled = false;
     setLoading(true);
 
-    const params = new URLSearchParams({ title, artist, limit: String(limit), page:String(nonce) });
+    const params = new URLSearchParams({ videoId:seed?.videoId||"", title, artist, limit: String(limit), page:String(nonce) });
     if (moodId) params.set("mood", moodId);
 
     fetch(`/api/recommend?${params}`)
@@ -84,7 +84,7 @@ function Recommendations({
     return () => {
       cancelled = true;
     };
-  }, [title, artist, moodId, limit, nonce]);
+  }, [title, artist, seed?.videoId, moodId, limit, nonce]);
 
   const shown = results.filter((t) => !excludeIds.has(t.videoId)).slice(0, limit);
 
@@ -96,7 +96,7 @@ function Recommendations({
     source === "dj" && dj
       ? `${dj}'s pick${mood ? ` · ${mood.label.toLowerCase()}` : ""}`
       : seed
-        ? `from ${seed.artist}`
+        ? seed.artist&&seed.artist!=="Unknown"?`from ${seed.artist}`:`Based on ${seed.title}`
         : null;
 
   return (

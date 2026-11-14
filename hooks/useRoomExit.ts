@@ -12,5 +12,5 @@ export function useRoomExit(enabled:boolean,onLeave:(nextHostId?:string)=>Promis
   return()=>{window.removeEventListener('beforeunload',unload);window.removeEventListener('popstate',back);document.removeEventListener('click',click,true);};
  },[enabled]);
  const confirm=useCallback(async(nextHostId?:string)=>{if(leaving)return;setLeaving(true);setError('');try{await callback.current(nextHostId);allow.current=true;window.location.assign(target||'/');}catch(e){setError(e instanceof Error?e.message:'Could not leave the room. Please try again.');setLeaving(false);}},[target,leaving]);
- return {open:target!==null,leaving,error,request:()=>setTarget('/'),cancel:()=>{if(!leaving){setTarget(null);setError('');}},confirm};
+ return {open:target!==null,leaving,error,request:(destination='/')=>setTarget(destination),cancel:()=>{if(!leaving){setTarget(null);setError('');}},confirm};
 }

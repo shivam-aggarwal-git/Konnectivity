@@ -1,6 +1,10 @@
 "use client";
+import RoomGame from "./RoomGame";
+import VideoSuggestions from "./VideoSuggestions";
 
-import FeedbackToast from "./FeedbackToast";
+import FeedbackToast, {notify} from "./FeedbackToast";
+import SettingsSearch from "./SettingsSearch";
+import SwitchRoom from "./SwitchRoom";
 import PersonalCookies from "./PersonalCookies";
 import RoomCookies from "./RoomCookies";
 import Lyrics from "./Lyrics";
@@ -44,6 +48,7 @@ import {
   Play,
   Radio,
   Search as SearchIcon,
+  Gamepad2,
   SlidersHorizontal,
   Users,
   X,
@@ -181,6 +186,9 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   const [you, setYou] = useState<string | null>(null);
   const [isRoomOwner,setIsRoomOwner]=useState(false);
   const [nextHostId,setNextHostId]=useState("");
+  const [recommendationTrack,setRecommendationTrack]=useState<Track|null>(null);
+  const [gameTurn,setGameTurn]=useState(false);
+  const openGame=()=>window.dispatchEvent(new Event("konnectivity:open-game"));
   const [current, setCurrent] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
@@ -217,6 +225,9 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   const [dl, setDl] = useState<Record<string, number>>({});
   const [tab, setTab] = useState<Tab>("now");
   const [roomActionsOpen, setRoomActionsOpen] = useState(false);
+  const [sidebarCollapsed,setSidebarCollapsed]=useState(false);
+  useEffect(()=>{try{setSidebarCollapsed(localStorage.getItem('kn_sidebar_collapsed')==='1');}catch{}},[]);
+  const toggleSidebar=()=>setSidebarCollapsed(value=>{try{localStorage.setItem('kn_sidebar_collapsed',value?'0':'1');}catch{}return !value;});
   const [companionOpen, setCompanionOpen] = useState(true);
   const [playerExpanded,setPlayerExpanded]=useState(false);
   const goHome = useCallback(() => {
@@ -251,6 +262,8 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   const [guideOpen, setGuideOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [searchSignal, setSearchSignal] = useState(0);
+  const [nextShort,setNextShort]=useState<Track|undefined>(undefined);
+  useEffect(()=>{setNextShort(undefined);if(!current?.isShort||!socketRef.current)return;let active=true;socketRef.current.emit("shorts:prepare",{},(result:{track?:Track})=>{if(active)setNextShort(result?.track);});return()=>{active=false;};},[current?.videoId,current?.isShort,current?.title,current?.artist]);
   const [library, setLibrary] = useState<Track[]>([]);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [librarySection, setLibrarySection] = useState<LibrarySection>("songs");
@@ -355,6 +368,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     const s=socketRef.current;if(!s?.connected){if(successor)reject(Error("Reconnect before handing off the party."));else resolve();return;}s.timeout(5000).emit(EVENTS.ROOM_LEAVE,successor?{nextHostId:successor}:{},(err:Error|null,result:any)=>{if(err||result?.error)reject(Error(result?.error||'Could not leave the room. Please try again.'));else{audioRef.current?.pause();nextAudioRef.current?.pause();resolve();}});
   }));
   useEffect(()=>{if(!exit.open)setNextHostId("");},[exit.open]);
+  useEffect(()=>{const retry=()=>{if(playbackError)emit(EVENTS.CONTROL_RETRY);};window.addEventListener("konnectivity:cookies-changed",retry);return()=>window.removeEventListener("konnectivity:cookies-changed",retry);},[playbackError,emit]);
   useEffect(() => {
     if(!joined)return;
     let pending:Record<string,unknown>={},timer:ReturnType<typeof setTimeout>|undefined;
@@ -480,7 +494,11 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
 
   const playbackTrack=useRef<string|null>(null);
   const latestRoomPlayback = useRef<any>(null);
+  const lastPlaybackError=useRef("");
   function applyPlayback(s: any, force = false) {
+    if(s.playbackError && s.playbackError!==lastPlaybackError.current)notify(`Playback paused${s.current?.title?` · ${s.current.title}`:""}: ${s.playbackError} Retry or skip this track.`);
+    lastPlaybackError.current=s.playbackError||"";
+    if("recommendationSeed" in s)setRecommendationTrack(s.recommendationSeed||null);
     latestRoomPlayback.current = s;
     if (detachedHostDevice.current) return;
     if(!force&&!syncPolicy.current&&s.current?.videoId===playbackTrack.current&&s.current)return;
@@ -575,11 +593,14 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     }
     const ownerToken = localStorage.getItem(key);
     const mediaStorageKey = `kn_media_${code}`;
-    let mediaKey = localStorage.getItem(mediaStorageKey);
+    // Keep existing room identities (and their permissions), while reusing one
+    // personal identity for newly joined rooms on this browser origin.
+    let mediaKey = localStorage.getItem(mediaStorageKey) || localStorage.getItem("kn_personal_key");
     if (!mediaKey) {
       mediaKey = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, "0")).join("");
-      localStorage.setItem(mediaStorageKey, mediaKey);
-    }
+      }
+    localStorage.setItem(mediaStorageKey, mediaKey);
+    if (!localStorage.getItem("kn_personal_key")) localStorage.setItem("kn_personal_key", mediaKey);
 
     const socket = io({ path: "/socket.io", auth: { code, ownerToken } });
     socket.on("connect_error", (e: Error) => setError(e.message));
@@ -610,10 +631,9 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       hostSocketRef.current=s.participants?.find((p:any)=>p.isHost)?.id;ownHostRole.current=Boolean(s.participants?.find((p:any)=>p.id===s.you)?.isHost);
       setPermissions(s.permissions||{});syncPermission.current=s.permissions?.sync!==false;syncPolicy.current=syncPermission.current||Boolean(s.participants?.find((p:any)=>p.id===s.you)?.isHost);
       if(s.appearance)receiveRoomAppearance(s.appearance);
-      const access = await fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})});
-      if(!access.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
-      const manifest=document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-      if(manifest){manifest.crossOrigin="use-credentials";manifest.href=`/api/room-manifest?code=${encodeURIComponent(code)}`;}
+      // Apply this ordered socket snapshot synchronously. Waiting for the HTTP
+      // membership cookie here let an older snapshot overwrite newer playback.
+      const accessPromise=fetch("/api/room-access", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,token:s.uploadToken})}).catch(()=>null);
       setFlushOnHostLeave(Boolean(s.flushOnHostLeave));
       setRoomScoped(Boolean(s.roomScoped));
       setDiscoverable(Boolean(s.discoverable));
@@ -645,6 +665,10 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       } else {
         applyPlayback(s);
       }
+      const access=await accessPromise;
+      if(!access?.ok){setError("Could not authorize this room. Reopen your invitation.");return;}
+      const manifest=document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+      if(manifest){manifest.crossOrigin="use-credentials";manifest.href=`/api/room-manifest?code=${encodeURIComponent(code)}`;}
       // Only a real seat (not a pending request) reaches this handler at all —
       // an invite-only room's non-host joiners get JOIN_PENDING instead.
       setAwaitingApproval(false);
@@ -776,7 +800,11 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     const inactive = activeSlot === "A" ? nextAudioRef.current : audioRef.current;
     if (videoActive) {
       cancelCrossfade(); crossfadingRef.current = false;
-      audioRef.current?.pause(); nextAudioRef.current?.pause(); setBuffering(false); return;
+      audioRef.current?.pause(); nextAudioRef.current?.pause();
+      // Prepare the audio in the same persistent element that Music mode adopts.
+      // It stays paused: failures here must never interrupt the video.
+      if(joined&&!roomEnded&&current&&uploadToken&&current.hasAudio!==false&&active){const url=`/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}&account=${personalCookieRevision}`;if(!active.src.endsWith(url)){active.preload='auto';active.src=url;active.load();}}
+      setBuffering(false); return;
     }
     if (preparing && joined && !roomEnded && current) {
       cancelCrossfade(); crossfadingRef.current=false; crossfadeStartedRef.current=false;
@@ -1074,6 +1102,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   const onAudioError = () => {
     // Wired to whichever <audio> tag is currently active (see the JSX below),
     // so this is only ever called for the one the sync loop is governing.
+    if(videoActive)return;
     const audio = activeSlot === "A" ? audioRef.current : nextAudioRef.current;
     if (!audio || !current || retryRef.current >= 6) return;
     retryRef.current += 1;
@@ -1203,7 +1232,8 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     const socket=socketRef.current;
     if(!socket?.connected)throw Error("Reconnect to the room first.");
     const result=await socket.timeout(5000).emitWithAck(event,payload);
-    if(result?.error)throw Error(result.error);
+    if(result?.error){notify(result.error);throw Error(result.error);}
+    notify(/delete|remove/.test(event)?"Removed.":/invite/.test(event)?"Invitation sent.":"Saved.");
     return result;
   },[]);
   const saveSearchSelection=useCallback(async(id:string,name:string,tracks:Track[])=>{
@@ -1441,10 +1471,11 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
         <DialogContent fullscreen {...playerSwipe} className="kn-expanded-player sw-couple" data-room-background={appearance.background} aria-describedby="expanded-player-description">
           <div className="kn-expanded-heading"><button type="button" onClick={()=>setPlayerExpanded(false)} aria-label="Collapse player to bottom bar"><ChevronDown size={24}/></button><div><DialogTitle>Now playing <RoomClock/></DialogTitle><DialogDescription id="expanded-player-description">Your shared soundtrack. Collapse to keep listening below.</DialogDescription></div></div>
-          <div className="expanded-view-controls"><button type="button" aria-label={appearance.showArtwork?"Hide artwork":"Show artwork"} aria-pressed={appearance.showArtwork} onClick={()=>appearance.update({showArtwork:!appearance.showArtwork})}>{appearance.showArtwork?<Eye size={17}/>:<EyeOff size={17}/>}<span>Artwork</span></button><button type="button" aria-label={sceneOnly?"Restore song details":"Focus on background"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(v=>!v)}>{sceneOnly?<Minimize2 size={17}/>:<Scan size={17}/>}<span>{sceneOnly?"Details":"Focus"}</span></button></div>
+          <div className="expanded-view-controls"><button type="button" aria-label="Open games" onClick={openGame}><Gamepad2 size={18}/><span>Games</span>{gameTurn&&<b className="kn-game-turn-dot"/>}</button><button type="button" aria-label="Open chat from Focus mode" onClick={openChatNotice}><MessageSquare size={17}/><span>Chat</span></button><button type="button" aria-label={appearance.showArtwork?"Hide artwork":"Show artwork"} aria-pressed={appearance.showArtwork} onClick={()=>appearance.update({showArtwork:!appearance.showArtwork})}>{appearance.showArtwork?<Eye size={17}/>:<EyeOff size={17}/>}<span>Artwork</span></button><button type="button" aria-label={sceneOnly?"Restore song details":"Focus on background"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(v=>!v)}>{sceneOnly?<Minimize2 size={17}/>:<Scan size={17}/>}<span>{sceneOnly?"Details":"Focus"}</span></button></div>
           {renderChatNotice()}
           <div className="kn-expanded-scene">
-            {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
+            {videoActive&&current&&!current.isShort&&<VideoSuggestions track={current} onPlay={track=>emit(EVENTS.CONTROL_PLAY_NOW,{track,preferVideo:true})}/>}
+        {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
         {videoActive&&current&&(commentsOpen||lyricsOpen)&&<section className="kn-video-detail-panel" aria-label={commentsOpen?"Video comments":"Video lyrics"}>{commentsOpen?<SongComments compact onClose={()=>setCommentsOpen(false)} socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:<Lyrics track={current} position={position} playing={isPlaying&&!syncHolding&&!preparing}/>}</section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art||current?.thumbnail}/>
             <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&!(lyricsOpen&&!commentsOpen)&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
@@ -1479,12 +1510,13 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       />
 
       <Reactions incoming={lastReaction} />
-      {videoActive&&<PlaybackBoundary key={`preload:${queue[0]?.videoId||"none"}`} silent><NextVideoPreload track={queue[0]} room={code} token={uploadToken}/></PlaybackBoundary>}
+      {videoActive&&<PlaybackBoundary key={`preload:${queue[0]?.videoId||"none"}`} silent><NextVideoPreload track={current?.isShort?nextShort:queue[0]} room={code} token={uploadToken}/></PlaybackBoundary>}
       <PlayerMessageOverlay message={playerMessage} expanded={playerExpanded}/>
 
 
 
       <Dialog open={messageComposerOpen} onOpenChange={setMessageComposerOpen}><DialogContent className="!max-w-md"><DialogTitle>Playback message</DialogTitle><DialogDescription>Share a message alongside the artwork.</DialogDescription><PlayerMessageComposer disabled={Boolean(participants.find(p=>p.id===you)?.muted)} onClear={()=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{clear:true},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))} onSent={()=>setMessageComposerOpen(false)} onSend={(text,emoji,duration,animation)=>new Promise<void>((resolve,reject)=>socketRef.current?.timeout(5000).emit(EVENTS.PLAYER_MESSAGE,{text,emoji,duration,animation},(err:any,r:any)=>err||r?.error?reject(Error(r?.error||"Message could not be saved.")):resolve()))}/></DialogContent></Dialog>
+      <RoomGame socket={socketRef.current} onTurnChange={setGameTurn}/>
       <LibraryPanel photos={photos} mediaQuery={mediaQuery} onUploadPhoto={async file=>{const image=await uploadChatImage(file);await sendChat("",image.id);return image;}} open={libraryOpen} section={librarySection} onSection={setLibrarySection} onClose={() => setLibraryOpen(false)}
         code={code} uploadToken={uploadToken} playlists={playlists} library={library} seed={playlistSeed}
         tracks={[...(current ? [current] : []), ...queue]} onAdd={addTrack} onAddMany={addTracks} onPlayNow={track=>{playNow(track);setLibraryOpen(false);}} onPlaylistAdd={addToPlaylist} emit={emit} />
@@ -1543,11 +1575,28 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       </Dialog>
       <Dialog open={resetRequested} onOpenChange={setResetRequested}><DialogContent><DialogTitle>Reset room preferences?</DialogTitle><DialogDescription>Restore the default appearance, volume, repeat, shuffle and continuous play settings. Your profile, playlists, songs and chat are kept.</DialogDescription><div className="flex justify-end gap-2"><Button variant="outline" disabled={resetting} onClick={()=>setResetRequested(false)}>Cancel</Button><Button disabled={resetting} onClick={()=>{setResetting(true);void roomAction("settings:reset",{}).then(()=>{setResetRequested(false);setCommentsOpen(false);setLyricsOpen(false);window.dispatchEvent(new Event("konnectivity:reset-reaction-position"));setNotice("Room preferences reset.");}).catch(e=>setNotice(e.message)).finally(()=>setResetting(false));}}>{resetting?"Resetting…":"Reset preferences"}</Button></div></DialogContent></Dialog>
       <Dialog open={toolsOpen} onOpenChange={setToolsOpen}><DialogContent className="studio-settings kn-settings-dialog !max-w-xl"><DialogTitle>Settings</DialogTitle><DialogDescription>{adminSettingsMode?"Room management":"Your listening space"}</DialogDescription>
+      <SettingsSearch host={Boolean(isHost)} owner={Boolean(isRoomOwner)} scoped={Boolean(roomScoped)} onSelect={id=>{
+        if(["identity","sync","permissions","integrations","discovery","dj"].includes(id)){setAdminSettingsMode(true);setSettingsSection(id);if(id==="identity"){setGroupNameDraft(roomName.slice(0,15));setGroupAvatarDraft(null);}return;}
+        if(id==="hosts"||id==="mood"){setToolsOpen(false);openPeople(id==="hosts"?"admin":"mood");return;}
+        if(id==="games"){setToolsOpen(false);openGame();return;}
+        if(id==="sound"){setSoundOpen(true);return;}if(id==="shortcuts"){setHelpOpen(true);return;}
+        if(id==="guide"){setToolsOpen(false);setGuideOpen(true);return;}if(id==="reset"){setToolsOpen(false);setResetRequested(true);return;}
+        setAdminSettingsMode(false);
+        setTimeout(()=>{
+          if(id==="appearance"){document.querySelector<HTMLButtonElement>('.studio-settings .kn-appearance-button')?.click();return;}
+          const nav=document.querySelector('.settings-personal-options');
+          if(id==="switch"){Array.from(nav?.querySelectorAll('button')||[]).find(el=>el.textContent?.trim()==="Switch room")?.click();return;}
+          if(id==="personal-cookies"){const el=nav?.querySelector<HTMLDetailsElement>('.kn-personal-cookies');if(el){el.open=true;el.scrollIntoView({block:'nearest'});el.querySelector('summary')?.focus();}return;}
+          const label=id==="continuous"?'Continuous play':id==="saved"?'Save my settings across rooms':'Notification sounds';
+          const el=Array.from(nav?.querySelectorAll<HTMLElement>('label,button')||[]).find(el=>el.textContent?.includes(label));el?.scrollIntoView({block:'center'});(el?.querySelector<HTMLElement>('input')||el)?.focus();
+        },0);
+      }}/>
       {adminSettingsMode&&<button type="button" className="settings-back" onClick={()=>settingsSection==="overview"?setAdminSettingsMode(false):setSettingsSection("overview")}><ArrowLeft size={18}/>Back</button>}
-      {!adminSettingsMode?<nav className="settings-personal-options" aria-label="Settings sections"><AppearanceSettings onSaved={()=>{setNotice("Appearance saved for everyone.");}} onSave={patch=>new Promise((resolve,reject)=>{socketRef.current?.timeout(5000).emit(EVENTS.APPEARANCE_SET,patch,(err:any,result:any)=>err||result?.error?reject(Error(result?.error||"Could not save. Try again.")):(result?.appearance&&receiveRoomAppearance(result.appearance),resolve()));})} persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.videoId&&!current.videoId.startsWith("local_")?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:current?.art||current?.thumbnail} />
+      {!adminSettingsMode?<nav className="settings-personal-options" aria-label="Settings sections"><SwitchRoom current={code} onSwitch={url=>{setToolsOpen(false);exit.request(url);}}/><AppearanceSettings onSaved={()=>{setNotice("Appearance saved for everyone.");}} onSave={patch=>new Promise((resolve,reject)=>{socketRef.current?.timeout(5000).emit(EVENTS.APPEARANCE_SET,patch,(err:any,result:any)=>err||result?.error?reject(Error(result?.error||"Could not save. Try again.")):(result?.appearance&&receiveRoomAppearance(result.appearance),resolve()));})} persistentSpace={persistentSpace} canManagePersistentSpace={Boolean(isHost)} onPersistentSpaceChange={enabled=>emit(EVENTS.PERSONAL_SPACE_SET,{enabled},(result:any)=>setNotice(result?.error|| (enabled?"Appearance and settings will be reused in new rooms.":"Appearance and settings stay room-local.")))} onUploadImage={uploadChatImage} mediaQuery={mediaQuery} artwork={current?.videoId&&!current.videoId.startsWith("local_")?`/api/artwork?videoId=${encodeURIComponent(current.videoId)}`:current?.art||current?.thumbnail} />
+      {isHost&&<button type="button" onClick={()=>{setToolsOpen(false);openPeople("admin");}}><Users size={18}/>Manage hosts · add a co-host<ArrowRight size={16}/></button>}
       <button type="button" onClick={()=>{setAdminSettingsMode(true);setSettingsSection("overview");}}><Users size={18}/>Room management<ArrowRight size={16}/></button>
       <label className="settings-check-row"><input type="checkbox" aria-label="Continuous play" checked={continuousPlay} disabled={!canControl} onChange={event=>roomAction("control:continuous-play",{enabled:event.target.checked}).then(()=>setNotice(event.target.checked?"Continuous play on":"Continuous play off")).catch(error=>setNotice(error.message))}/><span><strong>Continuous play</strong><small>Play a recommended song when the queue ends. Shuffle controls queue order separately.</small></span></label>
-      <PersonalCookies code={code} token={uploadToken} onChanged={()=>setPersonalCookieRevision(value=>value+1)}/><button type="button" disabled={!canControl} onClick={()=>setResetRequested(true)}><RotateCcw size={18}/>Reset appearance & playback</button>
+      <PersonalCookies code={code} token={uploadToken} onChanged={()=>{setPersonalCookieRevision(value=>value+1);if(playbackError)emit(EVENTS.CONTROL_RETRY);}}/><button type="button" disabled={!canControl} onClick={()=>setResetRequested(true)}><RotateCcw size={18}/>Reset appearance & playback</button>
       <button type="button" onClick={()=>setSoundOpen(true)}><SlidersHorizontal size={18}/>Sound & playback<ArrowRight size={16}/></button>
       <button type="button" onClick={()=>{setAdminSettingsMode(true);setSettingsSection("dj");}}><Sparkles size={18}/>AI DJ<ArrowRight size={16}/></button>
       <button type="button" onClick={()=>setHelpOpen(true)}><Keyboard size={18}/>Keyboard shortcuts<ArrowRight size={16}/></button>
@@ -1571,22 +1620,23 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       {settingsSection==="dj"&&<section><h3>AI DJ</h3><p>{aiDj?`${aiDj} is available. Use /dj in chat to request music.`:"AI DJ is currently disabled."}</p><AdminRoomSettings/></section>}
       </>}
       </DialogContent></Dialog>
-      <div className="studio-frame">
+      <div className="studio-frame" data-sidebar-collapsed={sidebarCollapsed}>
         <aside className="studio-sidebar" aria-label="Room navigation">
+          <button type="button" className="kn-sidebar-toggle" aria-label={sidebarCollapsed?'Expand sidebar':'Collapse sidebar'} aria-expanded={!sidebarCollapsed} title={sidebarCollapsed?'Expand sidebar':'Collapse sidebar'} onClick={toggleSidebar}><span className="kn-sidebar-toggle-track"><span/></span><span className="kn-sidebar-toggle-label">{sidebarCollapsed?'Expand':'Collapse'}</span></button>
           <button type="button" className="studio-sidebar-brand" onClick={homeView} aria-label="Home"><Logo size="md"/><span>Konnectivity</span></button>
           <nav aria-label="Listening room">
-            <button type="button" aria-pressed={tab === "now"} onClick={() => { setSceneOnly(false); setTab("now"); }}><Radio size={19}/>Now playing</button>
-            <button type="button" aria-pressed={tab === "queue"} onClick={() => { setSceneOnly(false); setTab("queue"); }}><ListMusic size={19}/>Queue{queue.length > 0 && <span>{queue.length}</span>}</button>
-            <button type="button" aria-pressed={companionOpen} onClick={() => {setSceneOnly(false);setTab("chat");setPane("chat");setCompanionOpen(true);window.dispatchEvent(new Event("konnectivity:open-chat"));}}><MessageSquare size={19}/>Conversation{unread > 0 && <span>{unread}</span>}</button>
+            <button type="button" aria-label="Now playing" title="Now playing" aria-pressed={tab === "now"} onClick={() => { setSceneOnly(false); setTab("now"); }}><Radio size={19}/>Now playing</button>
+            <button type="button" aria-label="Queue" title="Queue" aria-pressed={tab === "queue"} onClick={() => { setSceneOnly(false); setTab("queue"); }}><ListMusic size={19}/>Queue{queue.length > 0 && <span>{queue.length}</span>}</button>
+            <button type="button" aria-label="Conversation" title="Conversation" aria-pressed={companionOpen} onClick={() => {setSceneOnly(false);setTab("chat");setPane("chat");setCompanionOpen(true);window.dispatchEvent(new Event("konnectivity:open-chat"));}}><MessageSquare size={19}/>Conversation{unread > 0 && <span>{unread}</span>}</button>
           </nav>
           <nav aria-label="Room activities"><button type="button" aria-pressed={tab==="activities"} onClick={()=>openActivities("plans")}><CalendarDays size={19}/>Polls &amp; Plans</button></nav>
           <nav aria-label="Collections">
-            <button type="button" onClick={() => openLibrary("songs")}><Music2 size={19}/>Library</button>
-            <button type="button" onClick={() => openLibrary("playlists")}><ListMusic size={19}/>Playlists</button>
+            <button type="button" aria-label="Library" title="Library" onClick={() => openLibrary("songs")}><Music2 size={19}/>Library</button>
+            <button type="button" aria-label="Playlists" title="Playlists" onClick={() => openLibrary("playlists")}><ListMusic size={19}/>Playlists</button>
           </nav>
           <nav className="studio-sidebar-bottom" aria-label="Room tools">
-            <button type="button" onClick={() => {setAdminSettingsMode(false);setToolsOpen(true);}}><Menu size={19}/>Room management</button>
-            <button type="button" onClick={() => {setAdminSettingsMode(false);setToolsOpen(true);}}><Settings size={19}/>Settings</button>
+            <button type="button" aria-label="Room management" title="Room management" onClick={() => {setAdminSettingsMode(false);setToolsOpen(true);}}><Menu size={19}/>Room management</button>
+            <button type="button" aria-label="Settings" title="Settings" onClick={() => {setAdminSettingsMode(false);setToolsOpen(true);}}><Settings size={19}/>Settings</button>
           </nav>
         </aside>
         <div className="studio-workspace">
@@ -1606,7 +1656,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       </div></div>}</div>
 
             <div className="studio-search">
-              <SearchPanel roomCode={code}
+              <SearchPanel roomCode={code} suggestionSeed={recommendationTrack||current||[...history].reverse().find(track=>track.addedBy!=="Autoplay"&&!track.isShort)||null}
           library={library} playlists={playlists} onPlaylistAdd={addToPlaylist} onCreatePlaylist={createPlaylistFor}
                 onSaveSelection={saveSearchSelection} onPlayNow={playFromSearch}
           onSearchActivity={reportSearchActivity}
@@ -1623,7 +1673,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
             <div className="studio-header-tools"><div className="kn-people-controls"><RoomPeople onBack={()=>{setAdminSettingsMode(true);setSettingsSection("overview");setToolsOpen(true);}} onHostRole={async(id,enabled)=>{await roomAction("host:role-set",{id,enabled});}} shortcut={peopleShortcut} roomName={roomName} onRoomName={async name=>{await roomAction(EVENTS.ROOM_NAME_SET,{name});}} onRename={renameMe} onProfile={updateProfile} mediaQuery={mediaQuery} mood={mood?.label||""}
           onMood={async label=>{await roomAction(EVENTS.MOOD_SET,{label});}} onBuzz={async targetId=>{await roomAction(EVENTS.ROOM_BUZZ,{targetId});}} socket={socketRef.current} list={participants} you={you} isHost={Boolean(isHost)} pending={pendingRequests} inviteOnly={inviteOnly} discoverable={discoverable}
             onApprovalChange={enabled=>socketRef.current?.emit(EVENTS.HOST_APPROVAL_SET,{enabled})}
-            onApprove={approveJoin} onDeny={denyJoin} onKick={kickParticipant} onMute={muteParticipant}/></div>{isHost&&<button type="button" className="global-buzz" aria-label="Buzz listeners" title="Buzz listeners" onClick={()=>openPeople("buzz")}><Zap size={18}/><span>Buzz</span></button>}<div className="global-share"><ShareButton code={code}/></div><div className="global-room-call"><RoomTogether onClose={homeView} activitiesTarget={activitiesTarget} inlineActivities={tab==="activities"} openRequest={activityRequest} socket={socketRef.current} muted={Boolean(participants.find(p=>p.id===you)?.muted)}/></div><div className="global-notifications"><RoomNotifications room={code} socket={socketRef.current} onOpen={openActivities} onMention={openSongComments}/></div>              <button type="button" className="studio-more" onClick={() => {setAdminSettingsMode(false);setToolsOpen(true);}} aria-label="Settings" aria-haspopup="dialog"><Menu size={20}/></button>
+            onApprove={approveJoin} onDeny={denyJoin} onKick={kickParticipant} onMute={muteParticipant}/></div>{isHost&&<button type="button" className="global-buzz" aria-label="Buzz listeners" title="Buzz listeners" onClick={()=>openPeople("buzz")}><Zap size={18}/><span>Buzz</span></button>}<div className="global-share"><ShareButton code={code} onRefresh={isHost?async()=>{const result=await roomAction("room:invite-refresh",{});return result.invite;}:undefined}/></div><div className="global-room-call"><RoomTogether onClose={homeView} activitiesTarget={activitiesTarget} inlineActivities={tab==="activities"} openRequest={activityRequest} socket={socketRef.current} muted={Boolean(participants.find(p=>p.id===you)?.muted)}/></div><div className="global-notifications"><RoomNotifications room={code} socket={socketRef.current} onOpen={openActivities} onMention={openSongComments} onChat={openChatNotice}/></div>              <button type="button" className="studio-more" onClick={() => {setAdminSettingsMode(false);setToolsOpen(true);}} aria-label="Settings" aria-haspopup="dialog"><Menu size={20}/></button>
             </div>
           </header>
           <Dialog open={roomActionsOpen} onOpenChange={setRoomActionsOpen}>
@@ -1635,6 +1685,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
                 <button type="button" onClick={() => { setRoomActionsOpen(false); setAdminSettingsMode(false); setToolsOpen(true); }}><Settings size={20}/>Settings</button>
                 <button type="button" onClick={() => { setRoomActionsOpen(false); homeView(); }}><Home size={20}/>Home</button>
                 <button type="button" className="kn-forward-control" disabled={viewIndex.current>=viewHistory.current.length-1} onClick={() => { setRoomActionsOpen(false); navigateView(1); }}><ArrowRight size={20}/>Forward</button>
+                <SwitchRoom current={code} onSwitch={url=>exit.request(url)}/>
                 <button type="button" className="studio-leave" onClick={() => { setRoomActionsOpen(false); exit.request(); }}><LogOut size={20}/>Leave party</button>
               </div>
             </DialogContent>
@@ -1657,16 +1708,19 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
           </div>
           <button type="button" onClick={() => openLibrary("songs")} aria-label="Open media library" title="Library and playlists"><ListMusic size={18}/><span>Library</span></button>
           <button type="button" aria-label="Change room mood" title="Change room mood" onClick={()=>openPeople("mood")}><span aria-hidden="true">{mood?.emoji||"✨"}</span><span>{mood?.label||"Mood"}</span></button>
-          <button type="button" className="room-chat-toggle" aria-label="Open room chat" title="Open chat" onClick={openChatNotice}><MessageSquare size={18}/></button>
-          <button type="button" className="room-focus-toggle" aria-label={sceneOnly?"Restore song details":"Focus on background"} title={sceneOnly?"Restore song details":"Focus on background"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(value=>!value)}>{sceneOnly?<Minimize2 size={18}/>:<Scan size={18}/>}</button>
+          <button type="button" className="room-games-toggle" aria-label="Open games" title={gameTurn?"Games · your turn":"Play games together"} onClick={openGame}><Gamepad2 size={18}/><span>Games</span>{gameTurn&&<b className="kn-game-turn-dot"/>}</button>
+          <button type="button" className="room-chat-toggle" aria-label="Open room chat" title="Open chat" onClick={openChatNotice}><MessageSquare size={18}/><span>Chat</span></button>
+          <button type="button" className="room-focus-toggle" aria-label={sceneOnly?"Restore song details":"Focus on background"} title={sceneOnly?"Restore song details":"Focus on background"} aria-pressed={sceneOnly} onClick={()=>setSceneOnly(value=>!value)}>{sceneOnly?<Minimize2 size={18}/>:<Scan size={18}/>}<span>{sceneOnly?"Details":"Focus"}</span></button>
         </nav>
         {videoActive && current && <div className="sw-video-stage">
-          <PlaybackBoundary onMusic={()=>setVideoMode(false)}><VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={replayMedia} mediaKey={current.videoId} aspectRatio={current.aspectRatio} shorts={Boolean(current.isShort)} onNext={()=>emit(EVENTS.CONTROL_SKIP)} onPrevious={()=>{const previous=history.at(-1);if(previous)emit(EVENTS.CONTROL_PLAY_NOW,{track:{...previous,mediaType:"video"},preferVideo:true});else replayMedia();}}><>{localVideo?<UploadedVideo src={`/audio/${current.videoId}${mediaQuery}&token=${encodeURIComponent(uploadToken)}`} title={current.title} volume={deviceVolume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo} onBuffer={updateDeviceBuffer}/>:<YouTubePlayer videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={deviceVolume} title={current.title}
-            onPlaying={(playing) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_PLAY_STATE, { playing }); }} onEnded={onEnded}
-            onMetadata={(duration, title) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title }); }}
+          <PlaybackBoundary onMusic={()=>setVideoMode(false)}><VideoStage transport={renderPlayer()} hidden={videoControlsHidden} onToggle={()=>setVideoControlsHidden(v=>!v)} onReplay={replayMedia} mediaKey={current.videoId} aspectRatio={current.aspectRatio} shorts={Boolean(current.isShort)} onNext={()=>emit("shorts:next",{videoId:current.videoId})} onPrevious={()=>emit("shorts:previous",{videoId:current.videoId})}><>{localVideo?<UploadedVideo src={`/audio/${current.videoId}${mediaQuery}&token=${encodeURIComponent(uploadToken)}`} title={current.title} volume={deviceVolume} syncKey={syncKey} getPosition={getMediaPosition} getRunning={getMediaRunning} onReadyChange={reportReady} onEnded={onEnded} onElement={setLocalVideo} onBuffer={updateDeviceBuffer}/>:<YouTubePlayer shorts={Boolean(current.isShort)} onNextShort={()=>emit("shorts:next",{videoId:current.videoId})} onPreviousShort={()=>emit("shorts:previous",{videoId:current.videoId})} videoId={current.videoId} position={position} playing={isPlaying && !preparing && !syncHolding && serverNow() >= resumeAt} desiredPlaying={isPlaying} holding={syncHolding} volume={deviceVolume} title={current.title} artist={current.artist}
+            onVolume={changeVolume} onPlaying={(playing) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_PLAY_STATE, { playing }); }} onEnded={onEnded}
+            onSeek={seekTo} onVideoChange={videoId=>emit(EVENTS.CONTROL_VIDEO_PLAY,{url:current.isShort?`https://www.youtube.com/shorts/${videoId}`:`https://www.youtube.com/watch?v=${videoId}`})}
+            onMetadata={(duration, title, artist) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title, artist }); }}
             getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} onPlaybackSampler={setYouTubePlaybackSampler} onBuffer={updateDeviceBuffer} />}</></VideoStage></PlaybackBoundary>
         </div>}
         {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
+        {videoActive&&current&&!current.isShort&&<VideoSuggestions track={current} onPlay={track=>emit(EVENTS.CONTROL_PLAY_NOW,{track,preferVideo:true})}/>}
         {videoActive&&current&&(commentsOpen||lyricsOpen)&&<section className="kn-video-detail-panel" aria-label={commentsOpen?"Video comments":"Video lyrics"}>{commentsOpen?<SongComments compact onClose={()=>setCommentsOpen(false)} socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:<Lyrics track={current} position={position} playing={isPlaying&&!syncHolding&&!preparing}/>}</section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
         <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&!(lyricsOpen&&!commentsOpen)&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
@@ -1757,7 +1811,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
               )}
             >
               <Recommendations
-                seed={current}
+                seed={recommendationTrack||current}
                 mood={mood}
                 excludeIds={roomIds}
                 onAdd={addTrack}

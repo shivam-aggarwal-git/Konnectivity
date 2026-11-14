@@ -16,7 +16,7 @@ private enum EntryRole: String, CaseIterable, Identifiable {
 private struct RoomDestination: Identifiable { let id = UUID(); let url: URL }
 
 private struct RolePicker: View {
-    @AppStorage("server") private var server = "https://probably-myth-ticket-wisconsin.trycloudflare.com"
+    @AppStorage("server") private var server = ""
     @AppStorage("listenerName") private var name = ""
     @State private var role: EntryRole?
     @State private var roomURL = ""

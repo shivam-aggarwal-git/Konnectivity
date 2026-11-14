@@ -7,6 +7,8 @@ export type Status = { state: "cached" | "downloading" | "pending"; percent: num
 
 export type Track = {
   mediaType?:"audio"|"video";
+  autoplay?:boolean;
+  recommendationSeedId?:string;
   isShort?:boolean;
   aspectRatio?:number;
   hasAudio?:boolean;

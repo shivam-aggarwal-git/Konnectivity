@@ -88,7 +88,7 @@ export default function CreateRoom({defaultInviteOnly=true}:{defaultInviteOnly?:
         <p className="text-sm text-muted">You become the group admin and decide who can join.</p>
         <label className="w-full max-w-xs text-left text-sm text-muted">
           Group name <span className="text-xs">(optional)</span>
-          <input value={name} onChange={e => setName(e.target.value)} maxLength={80}
+          <input value={name} onChange={e => setName(e.target.value)} maxLength={15}
             className="mt-1 h-11 w-full rounded-full border border-current/20 px-4 text-ink" placeholder="Name your group" />
         </label>
         <Button

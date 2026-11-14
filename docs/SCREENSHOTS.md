@@ -1,3 +1,16 @@
+# Konnectivity mobile screenshots
+
+## 10.07 multiplayer games and searchable settings
+
+Captured in a fictional test room at 390 × 844. No production profile, private room credential or personal media appears in these images.
+
+- [Six-game chooser](screenshots/10.07-mobile-games.png)
+- [How to play](screenshots/10.07-mobile-game-help.png)
+- [Movable game window](screenshots/10.07-mobile-floating-game.png)
+- [Fuzzy Settings search](screenshots/10.07-mobile-settings-search.png)
+
+## Earlier core-player reference screens
+
 # Konnectivity 10.06 Mobile Screenshots: Music Rooms, Chat and Settings
 
 Fresh 390 × 844 captures of the current 10.06 interface, using an isolated test room. Fictional verification content is shown; no personal conversations or credentials are included.

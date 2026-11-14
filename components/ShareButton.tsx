@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Link2, Check, Globe, Wifi, Copy, QrCode } from "lucide-react";
+import {notify} from "./FeedbackToast";
+import { Link2, RefreshCw, Check, Globe, Wifi, Copy, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {Dialog,DialogContent,DialogTitle,DialogDescription} from "./ui/dialog";
 import { cn } from "@/lib/cn";
@@ -14,8 +15,9 @@ import { cn } from "@/lib/cn";
  * address the outside world can reach — a tunnel, a domain, whatever — and that
  * is what gets offered when it exists.
  */
-export default function ShareButton({ code }: { code: string }) {
+export default function ShareButton({ code,onRefresh }: { code: string;onRefresh?:()=>Promise<string> }) {
   const wrapRef=useRef<HTMLDivElement>(null);
+  const [refreshing,setRefreshing]=useState(false),[confirmRefresh,setConfirmRefresh]=useState(false);
   const [invite,setInvite]=useState("");
   const [open, setOpen] = useState(false);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
@@ -112,10 +114,11 @@ export default function ShareButton({ code }: { code: string }) {
               )}
             </p>
 
+            {onRefresh&&<div className="kn-invite-refresh"><Button variant="outline" disabled={refreshing} onClick={()=>setConfirmRefresh(value=>!value)}><RefreshCw size={16}/>Refresh room invite</Button>{confirmRefresh&&<><p className="text-sm text-muted">The old invitation will stop accepting new joins. People already in this room stay connected. Other rooms and the server tunnel are unchanged.</p><Button disabled={refreshing} onClick={async()=>{setRefreshing(true);try{setInvite(await onRefresh());setConfirmRefresh(false);setCopied(null);notify('Room invitation refreshed. Copy and share the new link.');}catch(error){notify(error instanceof Error?error.message:'Could not refresh the invite.');}finally{setRefreshing(false);}}}>{refreshing?'Refreshing…':'Confirm refresh'}</Button></>}</div>}
             {reachable && publicUrl && (
               <p className="mt-2 flex items-start gap-1.5 text-[11px] text-muted">
                 <QrCode className="mt-0.5 size-3 shrink-0" />
-                This room link expires when the host leaves. New rooms have a new invitation.
+                Invitations belong to this room. A host can refresh the invite without interrupting anyone.
               </p>
             )}
           </DialogContent></Dialog>

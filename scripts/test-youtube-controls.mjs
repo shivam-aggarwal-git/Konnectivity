@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {nativeTransportIntent} from '../lib/youtube-transport.mjs';
+import {reconcileYouTubeVolume} from '../lib/youtube-volume.mjs';
+const active={state:2,desiredPlaying:true,holding:false,ready:true,command:1,commandUntil:3000,now:2500,lastSeek:0,requestedAt:0};
+assert.equal(nativeTransportIntent(active),false);assert.equal(nativeTransportIntent({...active,state:1,desiredPlaying:false,command:2}),true);assert.equal(nativeTransportIntent({...active,command:2}),null);assert.equal(nativeTransportIntent({...active,holding:true}),null);assert.equal(nativeTransportIntent({...active,state:3}),null);
+let state={applied:0,prop:80,audible:false,pending:null,until:0};let result=reconcileYouTubeVolume(state,{desired:80,actual:0,audible:true,now:1});assert.equal(result.apply,80);assert.equal(result.notify,null);state=result.state;
+result=reconcileYouTubeVolume(state,{desired:80,actual:35,audible:true,now:2});assert.equal(result.notify,.35);assert.equal(result.apply,null);state=result.state;
+result=reconcileYouTubeVolume(state,{desired:80,actual:35,audible:true,now:3});assert.equal(result.apply,null);assert.equal(result.notify,null);state=result.state;
+result=reconcileYouTubeVolume(state,{desired:35,actual:35,audible:true,now:4});assert.equal(result.apply,null);state=result.state;
+result=reconcileYouTubeVolume(state,{desired:60,actual:35,audible:true,now:5});assert.equal(result.apply,60);assert.equal(result.notify,null);state=result.state;
+result=reconcileYouTubeVolume(state,{desired:60,actual:0,audible:true,now:6});assert.equal(result.notify,0);
+result=reconcileYouTubeVolume(state,{desired:60,actual:0,audible:false,now:7});assert.equal(result.notify,null);
+console.log('PASS: native play/pause vs app echoes and holds; native volume/mute, media-player volume, acknowledgement and silent priming');

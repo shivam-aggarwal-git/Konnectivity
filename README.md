@@ -2,17 +2,27 @@
 
 **Listen together with synchronized playback, shared playlists, video and live chat.**
 
-Konnectivity runs on a computer or server you control. Create a listening room, share its invitation, and enjoy a shared queue with friends on mobile or desktop. Version **10.06** brings a mobile-first interface, organized Settings, inline lyrics and song comments, co-host controls, and clearer playlist navigation.
+Konnectivity runs on a computer or server you control. Create a listening room, share its invitation, and enjoy a shared queue with friends on mobile or desktop. Version **10.07** adds six multiplayer room games, invitations and a floating game window, fuzzy Settings search, room switching, refreshed room invites, and synchronized YouTube transport and volume controls.
 
 **One Beat. Two Hearts.**
 
-[Download 10.06](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.06.zip) · [Setup guide](docs/SETUP.md) · [User guide](docs/USER_GUIDE.md) · [Mobile screenshots](docs/SCREENSHOTS.md) · [Release notes](docs/RELEASE_10.06.md)
+[Download 10.07](https://github.com/shivam-aggarwal-git/Konnectivity/archive/refs/heads/10.07.zip) · [Setup guide](docs/SETUP.md) · [User guide](docs/USER_GUIDE.md) · [Mobile screenshots](docs/SCREENSHOTS.md) · [Release notes](docs/RELEASE_10.07.md)
 
 ![Konnectivity branding](public/konnectivity-logo-light.png)
 
 ## Mobile screenshots
 
-Current Konnectivity 10.06 screens captured at 390 × 844 in an isolated demonstration room with fictional content.
+Konnectivity 10.07, captured at 390 × 844 in an isolated demonstration room with fictional content.
+
+| Six multiplayer games | Fuzzy Settings search |
+| --- | --- |
+| ![Konnectivity mobile multiplayer game chooser with tic tac toe, Connect Four, memory pairs, dice and rock paper scissors](docs/screenshots/10.07-mobile-games.png) | ![Konnectivity fuzzy settings search finding YouTube cookie settings despite typing errors](docs/screenshots/10.07-mobile-settings-search.png) |
+
+| How to play | Floating game window |
+| --- | --- |
+| ![Konnectivity mobile game instructions with invitation and turn controls](docs/screenshots/10.07-mobile-game-help.png) | ![Konnectivity movable multiplayer game window with Open, Hide and Quit controls](docs/screenshots/10.07-mobile-floating-game.png) |
+
+The following core-player reference screens were captured for 10.06.
 
 | Shared music player | Settings and appearance |
 | --- | --- |
@@ -116,7 +126,7 @@ npm start
 | [Troubleshooting](docs/TROUBLESHOOTING.md) · [FAQ](docs/FAQ.md) | Common setup, playback, lyrics and navigation questions. |
 | [Architecture](docs/ARCHITECTURE.md) | Server, synchronization, persistence and trust boundaries. |
 | [Validation](docs/VALIDATION.md) | What was checked and what remains environment-dependent. |
-| [Release notes](docs/RELEASE_10.06.md) · [Changelog](CHANGELOG.md) | Changes in 10.06 and earlier releases. |
+| [Release notes](docs/RELEASE_10.07.md) · [Changelog](CHANGELOG.md) | Changes in 10.06 and earlier releases. |
 
 ## Development
 
