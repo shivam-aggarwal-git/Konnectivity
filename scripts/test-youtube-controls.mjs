@@ -11,3 +11,5 @@ result=reconcileYouTubeVolume(state,{desired:60,actual:35,audible:true,now:5});a
 result=reconcileYouTubeVolume(state,{desired:60,actual:0,audible:true,now:6});assert.equal(result.notify,0);
 result=reconcileYouTubeVolume(state,{desired:60,actual:0,audible:false,now:7});assert.equal(result.notify,null);
 console.log('PASS: native play/pause vs app echoes and holds; native volume/mute, media-player volume, acknowledgement and silent priming');
+
+assert.equal(nativeTransportIntent({...active,state:1,desiredPlaying:false,holding:true,ready:true,lastSeek:2499,requestedAt:2499,command:2}),true);assert.equal(nativeTransportIntent({...active,state:1,desiredPlaying:false,ready:false}),null);

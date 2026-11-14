@@ -229,6 +229,8 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   useEffect(()=>{try{setSidebarCollapsed(localStorage.getItem('kn_sidebar_collapsed')==='1');}catch{}},[]);
   const toggleSidebar=()=>setSidebarCollapsed(value=>{try{localStorage.setItem('kn_sidebar_collapsed',value?'0':'1');}catch{}return !value;});
   const [companionOpen, setCompanionOpen] = useState(true);
+  const [chatMinimized,setChatMinimized]=useState(false);
+  const minimizeChat=()=>{setChatMinimized(true);setCompanionOpen(false);setChatExpanded(false);setTab(value=>value==='chat'?'now':value);};
   const [playerExpanded,setPlayerExpanded]=useState(false);
   const goHome = useCallback(() => {
     setPlayerExpanded(true);
@@ -256,7 +258,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     setCommentsOpen(true);setPlayerExpanded(false);setSceneOnly(false);setTab("now");
     requestAnimationFrame(()=>requestAnimationFrame(()=>{window.dispatchEvent(new Event('konnectivity:show-comments'));const fields=Array.from(document.querySelectorAll<HTMLTextAreaElement>('.kn-song-comments-inline textarea'));fields.find(field=>field.getBoundingClientRect().height>0)?.focus();}));
   }
-  const openChatNotice=useCallback(()=>{setPlayerExpanded(false);setSceneOnly(false);setCompanionOpen(true);setTab('chat');setPane('chat');setUnread(0);setDismissedUnread(0);window.dispatchEvent(new Event('konnectivity:open-chat'));},[]);
+  const openChatNotice=useCallback(()=>{setChatMinimized(false);setPlayerExpanded(false);setSceneOnly(false);setCompanionOpen(true);setTab('chat');setPane('chat');setUnread(0);setDismissedUnread(0);window.dispatchEvent(new Event('konnectivity:open-chat'));},[]);
 
   const [toolsOpen,setToolsOpen]=useState(false),[playbackError,setPlaybackError]=useState<string|null>(null);
   const [guideOpen, setGuideOpen] = useState(false);
@@ -1284,10 +1286,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       setTab("queue");
       setCenter("history");
     },
-    chat: () => {
-      setTab("chat");
-      setPane("chat");
-    },
+    chat: openChatNotice,
     like: () => current?.id && likeTrack(current.id),
     mute: () => changeVolume(volume === 0 ? 1 : 0),
     help: () => setHelpOpen((v) => !v),
@@ -1510,6 +1509,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       />
 
       <Reactions incoming={lastReaction} />
+      {chatMinimized&&<button type="button" className="kn-chat-restore" aria-label="Restore chat" title="Open chat" onClick={openChatNotice}><MessageSquare size={21}/>{unread>0&&<b>{Math.min(unread,99)}</b>}</button>}
       {videoActive&&<PlaybackBoundary key={`preload:${queue[0]?.videoId||"none"}`} silent><NextVideoPreload track={current?.isShort?nextShort:queue[0]} room={code} token={uploadToken}/></PlaybackBoundary>}
       <PlayerMessageOverlay message={playerMessage} expanded={playerExpanded}/>
 
@@ -1627,7 +1627,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
           <nav aria-label="Listening room">
             <button type="button" aria-label="Now playing" title="Now playing" aria-pressed={tab === "now"} onClick={() => { setSceneOnly(false); setTab("now"); }}><Radio size={19}/>Now playing</button>
             <button type="button" aria-label="Queue" title="Queue" aria-pressed={tab === "queue"} onClick={() => { setSceneOnly(false); setTab("queue"); }}><ListMusic size={19}/>Queue{queue.length > 0 && <span>{queue.length}</span>}</button>
-            <button type="button" aria-label="Conversation" title="Conversation" aria-pressed={companionOpen} onClick={() => {setSceneOnly(false);setTab("chat");setPane("chat");setCompanionOpen(true);window.dispatchEvent(new Event("konnectivity:open-chat"));}}><MessageSquare size={19}/>Conversation{unread > 0 && <span>{unread}</span>}</button>
+            <button type="button" aria-label="Conversation" title="Conversation" aria-pressed={companionOpen} onClick={() => {setChatMinimized(false);setSceneOnly(false);setTab("chat");setPane("chat");setCompanionOpen(true);window.dispatchEvent(new Event("konnectivity:open-chat"));}}><MessageSquare size={19}/>Conversation{unread > 0 && <span>{unread}</span>}</button>
           </nav>
           <nav aria-label="Room activities"><button type="button" aria-pressed={tab==="activities"} onClick={()=>openActivities("plans")}><CalendarDays size={19}/>Polls &amp; Plans</button></nav>
           <nav aria-label="Collections">
@@ -1718,9 +1718,9 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
             onSeek={seekTo} onVideoChange={videoId=>emit(EVENTS.CONTROL_VIDEO_PLAY,{url:current.isShort?`https://www.youtube.com/shorts/${videoId}`:`https://www.youtube.com/watch?v=${videoId}`})}
             onMetadata={(duration, title, artist) => { if (!detachedHostDevice.current) emit(EVENTS.CONTROL_VIDEO_METADATA, { videoId: current.videoId, duration, title, artist }); }}
             getPosition={getMediaPosition} getRunning={getMediaRunning} syncKey={syncKey} onReadyChange={reportReady} onPlaybackSampler={setYouTubePlaybackSampler} onBuffer={updateDeviceBuffer} />}</></VideoStage></PlaybackBoundary>
+          {!current.isShort&&<VideoSuggestions track={current} onPlay={track=>emit(EVENTS.CONTROL_PLAY_NOW,{track,preferVideo:true})}/>}
         </div>}
         {!current&&lastVideo&&<section className="kn-video-finished"><button className="kn-video-finished-close" title="Close finished video" aria-label="Close finished video" onClick={()=>setLastVideo(null)}><X size={20}/></button><p>Video finished</p><h2>{lastVideo.title}</h2><button title="Replay video" aria-label="Replay video" onClick={()=>emit(EVENTS.CONTROL_PLAY_NOW,{track:lastVideo,preferVideo:true})}><RotateCcw size={24}/></button></section>}
-        {videoActive&&current&&!current.isShort&&<VideoSuggestions track={current} onPlay={track=>emit(EVENTS.CONTROL_PLAY_NOW,{track,preferVideo:true})}/>}
         {videoActive&&current&&(commentsOpen||lyricsOpen)&&<section className="kn-video-detail-panel" aria-label={commentsOpen?"Video comments":"Video lyrics"}>{commentsOpen?<SongComments compact onClose={()=>setCommentsOpen(false)} socket={socketRef.current} track={current} members={participants.filter(member=>member.id!==you)}/>:<Lyrics track={current} position={position} playing={isPlaying&&!syncHolding&&!preparing}/>}</section>}
         <RoomBackground videoId={current?.videoId} mediaQuery={mediaQuery} artwork={current?.art || current?.thumbnail} />
         <RoomLights position={position} playing={isPlaying&&!syncHolding&&!preparing}/>{sceneOnly&&!(lyricsOpen&&!commentsOpen)&&<AmbientVisualizer room playing={isPlaying&&!syncHolding&&!preparing}/>}
@@ -1823,7 +1823,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
 
           {/* ── column 3: the people ── */}
           <Panel
-            className={cn(tab === "chat" ? "flex flex-1" : "hidden", "kn-community-surface min-h-0 overflow-hidden md:gap-4")}
+            className={cn(chatMinimized?"!hidden":tab === "chat" ? "flex flex-1" : "hidden", "kn-community-surface min-h-0 overflow-hidden md:gap-4")}
           >
             <div className="room-conversation-header">
               <nav className="room-conversation-tabs" aria-label="Conversation views">
@@ -1860,7 +1860,8 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
               onRead={markChatRead}
               mediaQuery={mediaQuery}
               mobileOpen={tab==="chat"}
-              onMobileClose={()=>setTab("now")}
+              onMinimize={minimizeChat}
+              onMobileClose={minimizeChat}
               onExpandedChange={setChatExpanded}
               onTyping={onTyping}
               statuses={statuses}
@@ -1907,7 +1908,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       </div>
       {renderPlayer()}
       <div className="kn-room-dock sw-safe-x relative z-40 shrink-0 border-t border-white/8 bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] px-4 py-2 backdrop-blur-xl md:hidden">
-        <TabBar tab={libraryOpen&&librarySection==="playlists"?"playlists":toolsOpen?"settings":tab} setTab={(value) => value === "settings" ? setToolsOpen(true) : value === "playlists" ? openLibrary("playlists") : value === "search" ? openSearch() : value === "activities" ? openActivities("plans") : (window.dispatchEvent(new Event("konnectivity:home")),setSceneOnly(false),setTab(value))} queueCount={queue.length} unread={unread} />
+        <TabBar tab={libraryOpen&&librarySection==="playlists"?"playlists":toolsOpen?"settings":tab} setTab={(value) => value === "settings" ? setToolsOpen(true) : value === "playlists" ? openLibrary("playlists") : value === "search" ? openSearch() : value === "activities" ? openActivities("plans") : value === "chat" ? openChatNotice() : (window.dispatchEvent(new Event("konnectivity:home")),setSceneOnly(false),setTab(value))} queueCount={queue.length} unread={unread} />
       </div>
     </div>
   );

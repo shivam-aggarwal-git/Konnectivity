@@ -2,7 +2,7 @@
 import EmojiPicker from "./EmojiPicker";
 
 import { memo, useEffect, useRef, useState } from "react";
-import { MoreHorizontal, Download, Film, ImagePlus, Images, Lock, Plus, Reply, Pencil, Search, Video, MapPin, X, MessageSquare, Send, Smile, Maximize2, Minimize2, Zap, Phone, Users } from "lucide-react";
+import { ChevronDown, MoreHorizontal, Download, Film, ImagePlus, Images, Lock, Plus, Reply, Pencil, Search, Video, MapPin, X, MessageSquare, Send, Smile, Maximize2, Minimize2, Zap, Phone, Users } from "lucide-react";
 import VoiceNoteRecorder from "./VoiceNoteRecorder";
 import VoiceMessage from "./VoiceMessage";
 import {normalizeEmojiText} from "@/lib/emoji-text";
@@ -41,7 +41,7 @@ function ChatPanel({
   aiDj,
   djTyping,
   onUploadImage, onUploadVideo, mediaQuery, onExpandedChange, receipts, onRead,
-  onSend, onEdit, onReact, onRecordingChange, onLiveLocation, canShareLocation, mobileOpen, onMobileClose,
+  onSend, onEdit, onReact, onRecordingChange, onLiveLocation, canShareLocation, mobileOpen, onMobileClose, onMinimize,
   onTyping,
   statuses,
   muted,
@@ -53,7 +53,7 @@ function ChatPanel({
   canUploadPhotos: boolean;
   canUploadVideos: boolean;
   canSharePrivately: boolean;
-  mobileOpen?:boolean; onMobileClose?:()=>void;
+  mobileOpen?:boolean; onMobileClose?:()=>void; onMinimize?:()=>void;
   onExpandedChange?: (expanded:boolean)=>void;
   /** nick → presence, so a name in the thread says whether they're still here. */
   statuses?: Record<string, PresenceStatus>;
@@ -137,7 +137,7 @@ function ChatPanel({
   const [hidden,setHidden]=useState(false);
   const [expanded, setExpanded] = useState(false);
   useEffect(()=>{onExpandedChange?.(expanded);},[expanded,onExpandedChange]);
-  useEffect(()=>{const open=()=>setExpanded(true);window.addEventListener('konnectivity:open-chat',open);return()=>window.removeEventListener('konnectivity:open-chat',open);},[]);
+  useEffect(()=>{const open=()=>{setHidden(false);followRef.current=true;};window.addEventListener('konnectivity:open-chat',open);return()=>window.removeEventListener('konnectivity:open-chat',open);},[]);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const followRef = useRef(true);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -294,7 +294,7 @@ function ChatPanel({
     return () => { observer.disconnect(); document.removeEventListener("visibilitychange", refresh); };
   }, [chat, hidden, expanded, mobileOpen, onRead]);
   useEffect(()=>{if(mobileOpen)setHidden(false);},[mobileOpen]);
-  if(hidden&&!expanded)return <button className="kn-background-upload" onClick={()=>setHidden(false)}><MessageSquare size={15}/>Open chat</button>;
+  if(hidden&&!expanded)return <button type="button" className="kn-chat-restore" aria-label="Restore chat" title="Open chat" onClick={()=>setHidden(false)}><MessageSquare size={20}/></button>;
   const content = (
     <div data-room-chat data-mobile-open={mobileOpen&&!expanded} className={cn("flex min-h-0 flex-col overflow-hidden", expanded ? "w-full flex-1"  : className)}>
       <div className="studio-chat-heading shrink-0"><SectionHeader
@@ -314,7 +314,8 @@ function ChatPanel({
             <button type="button" onClick={event=>openPhotos("",event.currentTarget)}><Images size={17}/>Shared photos</button>
           </div></details>
           <button type="button" onClick={()=>{followRef.current=true;setExpanded(v=>!v);}} aria-label={expanded?"Collapse chat":"Expand chat"} className="kn-chat-expand">{expanded?<Minimize2 size={18}/>:<Maximize2 size={18}/>}</button>
-          <button type="button" className="kn-chat-close" aria-label="Close chat" onClick={()=>expanded?setExpanded(false):mobileOpen&&matchMedia("(max-width:767px)").matches?onMobileClose?.():setHidden(true)}><X size={18}/></button>
+          <button type="button" aria-label="Minimize chat" title="Minimize chat" onClick={()=>{setExpanded(false);if(onMinimize)onMinimize();else setHidden(true);}}><ChevronDown size={18}/></button>
+          <button type="button" className="kn-chat-close" aria-label="Close chat" onClick={()=>{setExpanded(false);if(onMinimize)onMinimize();else if(mobileOpen&&matchMedia("(max-width:767px)").matches)onMobileClose?.();else setHidden(true);}}><X size={18}/></button>
         </div>}
 
       />{searchOpen&&<div className="mb-2 flex items-center gap-2">

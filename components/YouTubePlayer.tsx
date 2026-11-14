@@ -36,6 +36,7 @@ export default function YouTubePlayer(props:Props) {
  const mount=useRef<HTMLDivElement>(null),player=useRef<Player|null>(null),ready=useRef(false),localReady=useRef(false);
  const actualSample=useRef<{position:number;time:number}|null>(null),pendingSeek=useRef(0),requestedAt=useRef(performance.now()),nativeVideo=useRef("");
  const volumeState=useRef<any>({applied:0,audible:false,prop:null,pending:null,until:0});
+ const observedState=useRef<number|null>(null);
  const transportCommand=useRef<{state:number;until:number}>({state:-1,until:0}),nativeIntent=useRef<{playing:boolean;until:number}|null>(null);
  const commandTransport=(p:Player,playing:boolean)=>{const state=playing?1:2;if(p.getPlayerState()===state)return;transportCommand.current={state,until:performance.now()+2000};if(playing)p.playVideo();else p.pauseVideo();};
  const previousTarget=useRef<{position:number;time:number}|null>(null);
@@ -77,10 +78,12 @@ export default function YouTubePlayer(props:Props) {
     onAutoplayBlocked:()=>{setBlocked(true);localReady.current=false;latest.current.onReadyChange(false,latest.current.syncKey);},
     onStateChange:(e:{data:number})=>{
      if(!ready.current)return;
+     observedState.current=e.data;
      const now=performance.now(),s=latest.current,data=p.getVideoData();
      // A recommendation that changes the video inside the embed becomes room media.
      if(data.video_id&&data.video_id!==s.videoId&&now-requestedAt.current>1000){if(nativeVideo.current!==data.video_id){nativeVideo.current=data.video_id;s.onVideoChange(data.video_id);}return;}
-     const intent=nativeTransportIntent({state:e.data,desiredPlaying:s.desiredPlaying,holding:s.holding,ready:aligned.current,command:transportCommand.current.state,commandUntil:transportCommand.current.until,now,lastSeek:lastSeek.current,requestedAt:requestedAt.current});
+     const intent=nativeTransportIntent({state:e.data,desiredPlaying:s.desiredPlaying,holding:s.holding,ready:ready.current,command:transportCommand.current.state,commandUntil:transportCommand.current.until,now,lastSeek:lastSeek.current,requestedAt:requestedAt.current});
+     if(e.data===transportCommand.current.state||intent!==null)transportCommand.current={state:-1,until:0};
      if(intent!==null){nativeIntent.current={playing:intent,until:now+2500};s.onPlaying(intent);}
      if(e.data===1){setBlocked(false);bufferSince.current=0;localReady.current=true;latest.current.onReadyChange(true,latest.current.syncKey);}
      if(e.data===3 && !bufferSince.current)bufferSince.current=performance.now();
@@ -109,6 +112,8 @@ export default function YouTubePlayer(props:Props) {
   const tick=()=>{
    const p=player.current;if(!p||!ready.current)return;
    const s=latest.current,state=p.getPlayerState(),now=performance.now(),target=s.getPosition(),running=s.getRunning();
+   // Polling is a fallback for browsers which miss/delay the iframe state event.
+   if(!nativeIntent.current&&state!==observedState.current){observedState.current=state;const intent=nativeTransportIntent({state,desiredPlaying:s.desiredPlaying,holding:s.holding,ready:ready.current,command:transportCommand.current.state,commandUntil:transportCommand.current.until,now,lastSeek:lastSeek.current,requestedAt:requestedAt.current});if(state===transportCommand.current.state||intent!==null)transportCommand.current={state:-1,until:0};if(intent!==null){nativeIntent.current={playing:intent,until:now+2500};s.onPlaying(intent);}}
    const waiting=nativeIntent.current;
    if(waiting){if(s.desiredPlaying===waiting.playing||now>waiting.until)nativeIntent.current=null;else return;}
    const duration = p.getDuration();

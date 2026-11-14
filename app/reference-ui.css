@@ -979,3 +979,11 @@ body:has(.kn-groups-app){background:#071019;color:#e7eef7;}
 /* Leave the native YouTube caption, quality, volume and fullscreen controls touchable. */
 .kn-short-gesture-surface{top:52px!important;bottom:64px!important;height:auto!important;}
 .kn-invite-refresh{display:grid;gap:12px;margin-top:18px;padding-top:16px;border-top:1px solid var(--kn-border);}
+/* Keep mode tabs fixed while content below scrolls. */
+.studio-room main>.room-media-toolbar{position:sticky!important;top:0!important;z-index:25!important;align-self:start;flex-shrink:0!important;width:100%;max-width:100%;overflow:hidden!important;overscroll-behavior:none;}
+.kn-game-floating{width:min(216px,calc(100vw - 24px));border-radius:14px;}.kn-game-floating-drag{min-height:20px;height:20px;}.kn-game-floating-main{padding:8px 12px;gap:8px;}.kn-game-floating-main strong{font-size:13px;line-height:17px;}.kn-game-floating-main small{font-size:11px;line-height:14px;margin-top:1px;}.kn-game-floating-main>svg{width:18px;height:18px;}.kn-game-floating-actions{justify-content:flex-end;padding:0 4px;}.kn-game-floating-actions button:first-child{flex:0;}.kn-game-floating-actions button{width:44px;height:44px;padding:0;}
+.kn-chat-restore{position:fixed!important;right:16px;bottom:calc(110px + env(safe-area-inset-bottom));z-index:44;display:grid!important;place-items:center;width:48px!important;height:48px!important;padding:0!important;border:1px solid var(--accent)!important;border-radius:50%!important;background:var(--kn-panel-b,var(--bg))!important;color:var(--ink)!important;box-shadow:0 6px 18px #0003;}.kn-chat-restore b{position:absolute;right:-3px;top:-5px;background:var(--accent);color:var(--primary-foreground);border-radius:12px;font-size:11px;min-width:19px;line-height:19px;text-align:center;}
+.kn-chat-restore{bottom:calc(230px + env(safe-area-inset-bottom));}
+.studio-room main.sw-watching>.sw-video-stage{flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;min-width:0!important;}
+.studio-room main.sw-watching>.sw-video-stage>.kn-video-stage{flex:0 0 auto!important;width:100%!important;min-width:0!important;max-width:100%!important;}
+.studio-room main.sw-watching>.sw-video-stage>.kn-video-suggestions{flex:0 0 auto;width:100%;min-width:0;}
