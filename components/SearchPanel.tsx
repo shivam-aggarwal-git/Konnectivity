@@ -1,4 +1,5 @@
 "use client";
+import {artistAffinity} from "@/lib/recommendation-match.mjs";
 import PlaylistPicker from "./PlaylistPicker";
 import type { Playlist } from "@/lib/types";
 
@@ -303,14 +304,14 @@ function SearchPanel({
 
   /** The rows the arrow keys walk, whatever the current tab is showing. */
   const rows = useMemo(() => {
-    if(q.trim().length<2 && !album){ const offset=library.length?(refresh*4)%library.length:0;const local=source==='youtube'?[]:[...library.slice(offset),...library.slice(0,offset)].slice(0,source==='local'?8:4);return [...local,...(source==='local'?[]:results.slice(0,6))]; }
+    if(q.trim().length<2 && !album){ const pool=source==='local'?library:suggestionSeed?library.filter(track=>track.videoId!==suggestionSeed.videoId&&artistAffinity(track,suggestionSeed)>0):[];const offset=pool.length?(refresh*4)%pool.length:0;const local=source==='youtube'?[]:[...pool.slice(offset),...pool.slice(0,offset)].slice(0,source==='local'?8:4);return [...new Map([...local,...(source==='local'?[]:results.slice(0,6).filter((track):track is Track=>'videoId' in track))].map(track=>[track.videoId,track])).values()]; }
     if (source === "youtube" || tab === "videos") return album ? album.tracks : results;
     if (album) return album.tracks;
     if (tab !== "songs" || q.trim().length < 2 || isLink) return results;
     const term = q.trim().toLowerCase();
     const local = library.filter(t => `${t.title} ${t.artist}`.toLowerCase().includes(term)).slice(0, 40);
     return source === "local" ? local : [...local, ...results];
-  }, [album, results, tab, q, isLink, library, source,refresh]);
+  }, [album, results, tab, q, isLink, library, source,refresh,suggestionSeed?.videoId,suggestionSeed?.artist]);
 
   const playResult = useCallback((track: Track) => { if(q.trim().length>=2&&!looksLikeLink(q))remember(q.trim()); onPlayNow?.(track); setOpen(false); }, [onPlayNow,q,remember]);
 
@@ -473,7 +474,7 @@ function SearchPanel({
       )}
 
       {!album && recent.length > 0 && <li className="px-1 pb-2 pt-2"><div className="sw-label mb-2 text-[10px]"><Clock3 className="size-3"/>Recent searches<button type="button" aria-label="Clear all recent searches" className="ml-auto" onClick={()=>{setRecent([]);try{localStorage.removeItem(RECENT_KEY);}catch{}}}>Clear all</button></div><div className="flex flex-wrap gap-2">{recent.map(term=><div key={term} className="flex max-w-full items-center rounded-full border border-white/10 bg-white/5"><button type="button" className="truncate py-2 pl-3 pr-2 text-xs text-ink-soft" onClick={()=>{setQ(term);setAlbum(null);inputRef.current?.focus();}}>{term}</button><button type="button" aria-label={`Remove ${term} from search history`} title="Remove from history" className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:bg-white/10" onClick={()=>setRecent(prev=>{const next=prev.filter(v=>v!==term);try{localStorage.setItem(RECENT_KEY,JSON.stringify(next));}catch{}return next;})}><X size={12}/></button></div>)}</div></li>}
-      {!album && isEmptyQuery && rows.length>0 && <li className="sw-label kn-suggestion-heading px-1 pb-1 pt-2 text-[10px]"><span>Based on your listening</span><button type="button" className="kn-suggestion-refresh" aria-label="Refresh suggestions" title="Show different suggestions" disabled={loading} onClick={()=>setRefresh(n=>n+1)}><RefreshCw size={15} className={loading?"animate-spin":""}/><span>Refresh</span></button></li>}
+      {!album && isEmptyQuery && rows.length>0 && <li className="sw-label kn-suggestion-heading px-1 pb-1 pt-2 text-[10px]"><span>{source==='local'?'Local library':'Based on your listening'}</span><button type="button" className="kn-suggestion-refresh" aria-label="Refresh suggestions" title="Show different suggestions" disabled={loading} onClick={()=>setRefresh(n=>n+1)}><RefreshCw size={15} className={loading?"animate-spin":""}/><span>Refresh</span></button></li>}
 
       {!album && isEmptyQuery && recent.length === 0 && rows.length === 0 && (
         <li className="flex flex-1">

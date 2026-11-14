@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {normalizeMusicTrack} from '../lib/music-metadata.mjs';
-import {recommendationSeed,keepQueueTrack,matchingRecommendations} from '../lib/recommendation-match.mjs';
+import {recommendationSeed,keepQueueTrack,matchingRecommendations,artistAffinity} from '../lib/recommendation-match.mjs';
 // This is the package's actual Up Next response shape, not its TypeScript schema.
 const song=normalizeMusicTrack({type:'SONG',videoId:'abcdefghijk',title:'Safar',artists:'Juss',duration:'3:18',thumbnail:'https://i.ytimg.com/vi/abcdefghijk/default.jpg'});
 assert.equal(song.artist,'Juss');assert.equal(song.duration,198);assert.ok(song.thumbnail);
@@ -12,3 +12,5 @@ assert.equal(keepQueueTrack(old,chosen),false);assert.equal(keepQueueTrack({...o
 assert.equal(matchingRecommendations([old,song],chosen).length,1);
 assert.equal(matchingRecommendations([{...song,title:'한국어'}],chosen).length,0);
 console.log('PASS: real Up Next string fields, duration conversion, artist and artwork, stable original seed, stale autoplay cleanup and manual queue preservation');
+
+assert.ok(artistAffinity({artist:'Juss'},chosen)>0);assert.equal(artistAffinity({artist:'Kenny Rogers'},chosen),0);assert.equal(artistAffinity({artist:'Unknown'},chosen),0);
