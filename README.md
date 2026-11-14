@@ -22,6 +22,10 @@ Konnectivity 10.07, captured at 390 × 844 in an isolated demonstration room wit
 | --- | --- |
 | ![Konnectivity mobile game instructions with invitation and turn controls](docs/screenshots/10.07-mobile-game-help.png) | ![Konnectivity movable multiplayer game window with Open, Hide and Quit controls](docs/screenshots/10.07-mobile-floating-game.png) |
 
+| Mobile chat with wrapped links and delivery receipts | Centered playback broadcasts |
+| --- | --- |
+| ![Konnectivity mobile chat with clickable wrapped links, delivery ticks and a collapsible music player](docs/screenshots/10.07-mobile-chat.png) | ![Konnectivity centered playback broadcast with emoji and compact hide controls](docs/screenshots/10.07-mobile-broadcast.png) |
+
 The following core-player reference screens were captured for 10.06.
 
 | Shared music player | Settings and appearance |

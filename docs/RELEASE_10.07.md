@@ -31,3 +31,14 @@ Includes shared local-library restoration, inline lyrics retry, chat mentions, c
 ## Validation
 
 Production build and TypeScript checks; full isolated integration suite; regression tests for private cookie access, invitations and game quitting, Shorts lanes, all six game engines, SVG conversion and active-content rejection, native transport/volume state handling, shared catalogs, roles, persistence and security. Mobile chooser/help/floating window/search and desktop sidebar were inspected in a browser. Screenshots use fictional demonstration data.
+
+## Chat, broadcasts and game feedback — 15 November 2026
+
+- Chat mentions appear above the composer, with keyboard selection and room notifications.
+- Web links are clickable and long messages wrap within the conversation. A single tick means server accepted; double ticks mean another authorized device acknowledged delivery; theme-colored double ticks indicate a read receipt.
+- Mobile chat retains Close and can hide the media player without stopping playback. Broadcast, comments and reactions remain accessible with chat open.
+- Broadcasts accept every emoji in the bundled Emoji Mart catalog. The picker fits its dialog, and messages use a centered title treatment with local hide/dismiss controls.
+- Dice duel displays animated dice faces; X & O starters can select their symbol. Game notifications also appear in Activity and invitations remain visible while a game dialog is open.
+- Background audio avoids source swaps and transient ready-state pauses while hidden. Lock-screen Play/Pause handlers are idempotent. Real iPhone lock/background verification remains necessary; desktop testing cannot certify OS suspension behavior.
+
+Validated with isolated two-client server tests, mobile browser interaction, unit/integration suites, production build and TypeScript checks.

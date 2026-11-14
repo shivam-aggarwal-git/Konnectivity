@@ -72,6 +72,7 @@ export type SystemKind =
 export type RoomGif = {id:number|string;url:string;source:string;title:string;creator:string;license:string};
 
 export type ChatMsg = {
+  delivered?: boolean;
   id: string;
   ts: number;
   nick?: string;

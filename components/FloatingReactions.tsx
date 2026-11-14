@@ -24,7 +24,7 @@ export default function FloatingReactions({onReact}:{onReact:(emoji:string)=>voi
  useEffect(()=>{
   if(!mounted)return;
   const check=()=>{setHost(document.querySelector<HTMLElement>(".kn-expanded-player")||document.body);const box=button.current?.getBoundingClientRect();if(!box)return;
-   const overlays=Array.from(document.querySelectorAll<HTMLElement>('.player-volume-popup,[data-playlist-menu],.kn-search-results,[role="dialog"]'));
+   const overlays=Array.from(document.querySelectorAll<HTMLElement>('.player-volume-popup,[data-playlist-menu],.kn-search-results,.kn-chat-composer,.kn-chat-footer,.kn-chat-mentions,[role="dialog"]'));
    const overlap=overlays.some(el=>{if(el.closest('.kn-expanded-player')===el||el.classList.contains('kn-expanded-player'))return false;const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&getComputedStyle(el).visibility!=='hidden'&&box.left<r.right&&box.right>r.left&&box.top<r.bottom&&box.bottom>r.top;});setCovered(overlap);
   };
   checkCollision.current=check;check();const observer=new MutationObserver(check);observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['data-state','hidden']});window.addEventListener('resize',check);

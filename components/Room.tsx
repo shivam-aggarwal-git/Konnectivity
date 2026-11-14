@@ -230,6 +230,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   const toggleSidebar=()=>setSidebarCollapsed(value=>{try{localStorage.setItem('kn_sidebar_collapsed',value?'0':'1');}catch{}return !value;});
   const [companionOpen, setCompanionOpen] = useState(true);
   const [chatMinimized,setChatMinimized]=useState(false);
+  const [chatPlayerHidden,setChatPlayerHidden]=useState(false);
   const minimizeChat=()=>{setChatMinimized(true);setCompanionOpen(false);setChatExpanded(false);setTab(value=>value==='chat'?'now':value);};
   const [playerExpanded,setPlayerExpanded]=useState(false);
   const goHome = useCallback(() => {
@@ -651,6 +652,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       setQueue(s.queue);
       setParticipants(s.participants);
       setChat(s.chat || []);
+      socket.emit("chat:delivered",{ids:(s.chat||[]).filter((m:ChatMsg)=>!m.system&&!m.dj).map((m:ChatMsg)=>m.id)});
       setReceipts(s.receipts || {});
       try {
         const profile=JSON.parse(localStorage.getItem(`kn_profile_${code}`) || "null");
@@ -692,6 +694,9 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     socket.on(EVENTS.MOOD_UPDATE, (s: { mood: Mood }) => setMood(s.mood));
     socket.on(EVENTS.DJ_TYPING, (s: { typing: boolean }) => setDjTyping(s.typing));
     socket.on(EVENTS.PLAYBACK_UPDATE, (s: any) => applyPlayback(s));
+    socket.on('social:notification',(notice:any)=>{
+      if(notice.kind==='game')setChat(previous=>[...previous.filter(m=>m.id!==notice.id).slice(-199),{id:notice.id,ts:notice.at,system:true,text:notice.text}]);
+    });
     socket.on(EVENTS.CHAT_RECEIPTS, (update: Record<string, string[]>) => {
       setReceipts(previous => Object.fromEntries(Object.entries({...previous, ...update}).slice(-200)));
     });
@@ -704,6 +709,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     });
     socket.on(EVENTS.CHAT_NEW, (m: ChatMsg) => {
       setChat((c) => [...c.slice(-199), m]);
+      if(!m.system&&!m.dj)socket.emit("chat:delivered",{ids:[m.id]});
       if (m.image) {
         const photo = { id: m.id, image: m.image, nick: m.nick, text: m.text, ts: m.ts, privateMedia: m.privateMedia };
         setPhotos(previous => [...previous.slice(1 - ROOM_PHOTO_LIMIT), photo]);
@@ -822,7 +828,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
     const wantSrc = `/audio/${current.videoId}?room=${encodeURIComponent(code)}&token=${encodeURIComponent(uploadToken)}&account=${personalCookieRevision}`;
 
     const downloaded = localAudioUrl && active.src === localAudioUrl;
-    const adoptDownload = localAudioUrl && (!isPlaying || !audioPrimed.current) && !downloaded;
+    const adoptDownload = localAudioUrl && document.visibilityState === "visible" && (!isPlaying || !audioPrimed.current) && !downloaded;
     if (adoptDownload || (!downloaded && !active.src.endsWith(wantSrc))) {
       if (!adoptDownload && inactive && inactive.src.endsWith(wantSrc) && !inactive.paused) {
         // Already faded into this exact track — adopt it rather than
@@ -875,11 +881,11 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       // seeks to the advancing room clock can otherwise discard every request.
       const playbackTargetChanged = bufferPlaybackStart.current !== undefined && bufferPlaybackStart.current !== pb.startedAt;
       bufferPlaybackStart.current = pb.startedAt;
-      if (playbackTargetChanged && Math.abs(active.currentTime - clampedTarget) > 1.25) {
+      if ((document.visibilityState === "visible" || active.paused) && playbackTargetChanged && Math.abs(active.currentTime - clampedTarget) > 1.25) {
         audioPrimed.current = false;
         bufferAnchor.current = null;
       }
-      if (running && !active.paused && active.readyState < 2 && !active.seeking) {
+      if (document.visibilityState === "visible" && running && !active.paused && active.readyState < 2 && !active.seeking) {
         audioPrimed.current = false;
         active.pause();
       }
@@ -999,7 +1005,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
       setBuffering(pb.isPlaying && !ready);
     };
     tick();
-    const events = ["loadedmetadata", "progress", "canplay", "playing", "waiting", "stalled", "seeked"];
+    const events = ["loadedmetadata", "progress", "canplay", "playing", "waiting", "stalled", "seeked", "pause"];
     for (const name of events) active.addEventListener(name, tick);
     const onVisibility = () => {
       if (document.visibilityState === "visible") {
@@ -1464,7 +1470,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
   );
 
   return (
-    <div className="studio-room kn-room-shell sw-couple flex h-[var(--kn-app-height,100dvh)] flex-col overflow-hidden" data-video-active={videoActive} data-room-background={appearance.background}>
+    <div className="studio-room kn-room-shell sw-couple flex h-[var(--kn-app-height,100dvh)] flex-col overflow-hidden" data-chat-open={tab==="chat"} data-video-active={videoActive} data-room-background={appearance.background}>
       {isRoomOwner && roomScoped && <RoomCookies key={code} code={code} onboarding />}
       <RoomGuide open={guideOpen} onOpenChange={setGuideOpen} />
       <Dialog open={playerExpanded} onOpenChange={setPlayerExpanded}>
@@ -1878,7 +1884,7 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
         </div>
       </main>
 
-      {tab==="now"&&<div className="room-visible-actions" aria-label="Artwork actions and emoji reactions"><button type="button" onClick={()=>setMessageComposerOpen(true)} aria-label="Broadcast playback message"><MessageSquare size={17}/><span>Broadcast</span></button><button type="button" onClick={()=>commentsOpen?setCommentsOpen(false):openSongComments()} aria-pressed={commentsOpen} aria-label="Song comments and tags" title="Song comments & tags"><span className="song-comments-at" aria-hidden="true">@</span><span className="sr-only">Comments</span></button><ReactionBar onReact={react}/></div>}
+      {(tab==="now"||tab==="chat")&&<div className="room-visible-actions" aria-label="Artwork actions and emoji reactions"><button type="button" onClick={()=>setMessageComposerOpen(true)} aria-label="Broadcast playback message"><MessageSquare size={17}/><span>Broadcast</span></button><button type="button" onClick={()=>commentsOpen?setCommentsOpen(false):openSongComments()} aria-pressed={commentsOpen} aria-label="Song comments and tags" title="Song comments & tags"><span className="song-comments-at" aria-hidden="true">@</span><span className="sr-only">Comments</span></button><ReactionBar onReact={react}/></div>}
       {!videoActive&&(!audioSetupDone||needsGesture)&&<div className="kn-scene-controls audio-permission-row">
       {/* autoplay blocked (mobile) — a tap satisfies the gesture requirement */}
       {!videoActive && (!audioSetupDone || needsGesture) && (
@@ -1906,7 +1912,8 @@ export default function Room({ code, asHost, requestingJoin }: { code: string; a
 
       </div>
       </div>
-      {renderPlayer()}
+      <div className="kn-chat-player-toggle"><button type="button" aria-label={chatPlayerHidden?"Show media player":"Hide media player"} onClick={()=>setChatPlayerHidden(v=>!v)}>{chatPlayerHidden?<ChevronUp size={18}/>:<ChevronDown size={18}/>}<span>{chatPlayerHidden?"Show player":"Hide player"}</span></button></div>
+      <div className={chatPlayerHidden&&tab==="chat"?"kn-chat-player-hidden":"contents"}>{renderPlayer()}</div>
       <div className="kn-room-dock sw-safe-x relative z-40 shrink-0 border-t border-white/8 bg-[color-mix(in_srgb,var(--bg)_88%,transparent)] px-4 py-2 backdrop-blur-xl md:hidden">
         <TabBar tab={libraryOpen&&librarySection==="playlists"?"playlists":toolsOpen?"settings":tab} setTab={(value) => value === "settings" ? setToolsOpen(true) : value === "playlists" ? openLibrary("playlists") : value === "search" ? openSearch() : value === "activities" ? openActivities("plans") : value === "chat" ? openChatNotice() : (window.dispatchEvent(new Event("konnectivity:home")),setSceneOnly(false),setTab(value))} queueCount={queue.length} unread={unread} />
       </div>

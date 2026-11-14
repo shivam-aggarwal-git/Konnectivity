@@ -75,8 +75,8 @@ export function useMediaSession({
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
     const session = navigator.mediaSession;
 
-    session.setActionHandler("play", isHost ? onPlayPause : null);
-    session.setActionHandler("pause", isHost ? onPlayPause : null);
+    session.setActionHandler("play", isHost ? () => { if (!isPlaying) onPlayPause(); } : null);
+    session.setActionHandler("pause", isHost ? () => { if (isPlaying) onPlayPause(); } : null);
     session.setActionHandler("nexttrack", isHost ? onSkip : null);
     session.setActionHandler("seekto", isHost ? (details) => onSeek(details.seekTime ?? 0) : null);
 
@@ -86,5 +86,5 @@ export function useMediaSession({
       session.setActionHandler("nexttrack", null);
       session.setActionHandler("seekto", null);
     };
-  }, [isHost, onPlayPause, onSkip, onSeek]);
+  }, [isHost, isPlaying, onPlayPause, onSkip, onSeek]);
 }

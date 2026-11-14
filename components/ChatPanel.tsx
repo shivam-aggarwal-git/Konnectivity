@@ -2,7 +2,7 @@
 import EmojiPicker from "./EmojiPicker";
 
 import { memo, useEffect, useRef, useState } from "react";
-import { ChevronDown, MoreHorizontal, Download, Film, ImagePlus, Images, Lock, Plus, Reply, Pencil, Search, Video, MapPin, X, MessageSquare, Send, Smile, Maximize2, Minimize2, Zap, Phone, Users } from "lucide-react";
+import { Check, CheckCheck, ChevronDown, MoreHorizontal, Download, Film, ImagePlus, Images, Lock, Plus, Reply, Pencil, Search, Video, MapPin, X, MessageSquare, Send, Smile, Maximize2, Minimize2, Zap, Phone, Users } from "lucide-react";
 import VoiceNoteRecorder from "./VoiceNoteRecorder";
 import VoiceMessage from "./VoiceMessage";
 import {normalizeEmojiText} from "@/lib/emoji-text";
@@ -131,7 +131,7 @@ function ChatPanel({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [mentionQuery,setMentionQuery]=useState<string|null>(null);
   const [mentionIndex,setMentionIndex]=useState(0);
-  const mentionOptions=mentionQuery===null?[]:members.filter(member=>member.id!==youId&&member.status!=="reconnecting"&&member.nick.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0,8);
+  const mentionOptions=mentionQuery===null?[]:members.filter(member=>member.id!==youId&&member.nick.toLowerCase().includes(mentionQuery.toLowerCase())).slice(0,8);
   function findChatMention(value:string,caret:number){const hit=value.slice(0,caret).match(/(?:^|\s)@([^@\n]{0,40})$/);setMentionQuery(hit?hit[1]:null);setMentionIndex(0);}
   function tagMember(member:Participant){const caret=inputRef.current?.selectionStart??text.length;const before=text.slice(0,caret);const hit=before.match(/(?:^|\s)@([^@\n]{0,40})$/);if(!hit)return;const start=caret-hit[1].length-1;const next=text.slice(0,start)+"@"+member.nick+" "+text.slice(caret);setText(next);setMentionQuery(null);requestAnimationFrame(()=>{inputRef.current?.focus();const end=start+member.nick.length+2;inputRef.current?.setSelectionRange(end,end);});}
   const [hidden,setHidden]=useState(false);
@@ -419,10 +419,11 @@ function ChatPanel({
           </div>
         )}
 
-        {mentionOptions.length>0&&<div className="kn-chat-mentions" role="listbox" aria-label="Tag a room member">{mentionOptions.map((member,index)=><button key={member.id} type="button" role="option" aria-selected={index===mentionIndex} onMouseDown={e=>e.preventDefault()} onClick={()=>tagMember(member)}>@{member.nick}</button>)}</div>}
+
         {pickerOpen && <div ref={emojiPanel} className="kn-chat-emoji-panel"><EmojiPicker onSelect={emoji => { setText(value => value + emoji); inputRef.current?.focus(); }}/></div>}
 
         </div>
+        {mentionOptions.length>0&&<div className="kn-chat-mentions" role="listbox" aria-label="Tag a room member">{mentionOptions.map((member,index)=><button key={member.id} type="button" role="option" aria-selected={index===mentionIndex} onMouseDown={e=>e.preventDefault()} onClick={()=>tagMember(member)}>@{member.nick}</button>)}</div>}
         {!muted&&(optionsOpen||recording)&&<div ref={optionsPanel} className="kn-chat-options" aria-label="Message options">
           <button type="button" disabled={attachmentBlocked||!canUploadPhotos||Boolean(editing)||Boolean(recipients&&(video||location))} onClick={()=>{setOptionsOpen(false);photoInput.current?.click();}}><ImagePlus size={16}/>Photo</button>
           <button type="button" disabled={attachmentBlocked||!canUploadVideos||Boolean(editing)||Boolean(recipients&&(image||location))} onClick={()=>{setOptionsOpen(false);videoInput.current?.click();}}><Video size={16}/>Video</button>
@@ -452,6 +453,7 @@ function ChatPanel({
                 // costs one packet rather than one per keystroke.
                 if (e.target.value) onTyping?.();
               }}
+              onClick={e=>findChatMention(text,e.currentTarget.selectionStart)}
               onKeyDown={e=>{if(mentionOptions.length&&["ArrowDown","ArrowUp","Enter","Tab","Escape"].includes(e.key)){e.preventDefault();if(e.key==="Escape")setMentionQuery(null);else if(e.key==="ArrowDown")setMentionIndex(i=>(i+1)%mentionOptions.length);else if(e.key==="ArrowUp")setMentionIndex(i=>(i+mentionOptions.length-1)%mentionOptions.length);else tagMember(mentionOptions[mentionIndex]||mentionOptions[0]);return;}if(e.key==="Enter"&&!e.shiftKey&&!e.nativeEvent.isComposing){e.preventDefault();void send();}}}
               onPaste={e => { const file = Array.from(e.clipboardData.files).find(f => f.type.startsWith("image/")); if (file) { e.preventDefault(); void attachImage(file); } }}
               aria-label="Chat message"
@@ -601,6 +603,7 @@ function Bubble({ mediaQuery, onMediaLoad, onOpenPhoto,
           {msg.reactions?.filter(item=>item.count>0).map(item=><button type="button" key={item.emoji} onClick={()=>onReact?.(item.emoji)} disabled={!onReact}>{item.emoji} {item.count}</button>)}
         </div>}
         {reactionsOpen&&<div className="kn-message-emoji-panel"><EmojiPicker onSelect={emoji=>{onReact?.(emoji);setReactionsOpen(false);}}/></div>}
+        {own&&<span className="kn-message-receipt" data-read={Boolean(readers?.length)} aria-label={readers?.length?"Read":msg.delivered?"Delivered":"Sent to server"} title={readers?.length?`Read by ${readers.join(", ")}`:msg.delivered?"Delivered to another device":"Sent · waiting for delivery"}>{readers?.length||msg.delivered?<CheckCheck size={15}/>:<Check size={15}/>}</span>}
         {own&&Boolean(readers?.length)&&<span className="mt-1 text-right text-[11px] text-muted" title={readers?.join(", ")}>
           {readers?.length===1?`Read by ${readers[0]}`:`Read by ${readers?.length}`}
         </span>}
